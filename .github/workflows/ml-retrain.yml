@@ -1,0 +1,67 @@
+name: ML Model Retraining
+
+on:
+  schedule:
+    # Every Sunday at 02:30 UTC (30 min after k8s cronjob as fallback)
+    - cron: "30 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Comma-separated list of models to retrain"
+        required: false
+        default: "price_spike,load_forecast,ancillary_forecast"
+      lookback_days:
+        description: "Training lookback window in days"
+        required: false
+        default: "90"
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options: [staging, prod]
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', upper(inputs.environment || 'STAGING'))] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', upper(inputs.environment || 'STAGING'))] }}
+          aws-region: us-west-2
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region us-west-2 --name vela-${{ inputs.environment || 'staging' }}
+
+      - name: Trigger retraining job
+        run: |
+          kubectl create job --from=cronjob/vela-ml-retrain \
+            vela-ml-retrain-manual-$(date +%Y%m%d%H%M) \
+            -n vela \
+            --dry-run=client -o yaml | \
+          kubectl set env --local -f - \
+            RETRAIN_MODELS="${{ inputs.models || 'price_spike,load_forecast,ancillary_forecast' }}" \
+            RETRAIN_LOOKBACK_DAYS="${{ inputs.lookback_days || '90' }}" \
+            -o yaml | kubectl apply -f -
+
+      - name: Wait for completion
+        run: |
+          JOB_NAME=$(kubectl get jobs -n vela -l app=vela-ml-retrain-job --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+          kubectl wait --for=condition=complete job/$JOB_NAME -n vela --timeout=14400s
+
+      - name: Check model metrics
+        run: |
+          kubectl logs -n vela job/$JOB_NAME --tail=50
+
+      - name: Notify on completion
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"ML retraining ${{ job.status }}: ${{ inputs.environment || '"'"'staging'"'"' }} env"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

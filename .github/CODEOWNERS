@@ -1,0 +1,51 @@
+# CODEOWNERS for Vela VPP
+# Each line is a file pattern followed by one or more owners.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+*                               @vela-energy/core-team
+
+# Optimizer — requires domain expert review
+vela/m6_optimizer/             @vela-energy/optimization-team
+vela/m3_assets/                @vela-energy/optimization-team
+tests/test_*milp*              @vela-energy/optimization-team
+tests/test_stochastic*         @vela-energy/optimization-team
+
+# Market integrations — requires market ops approval
+vela/m8_market/                @vela-energy/market-ops
+vela/m9_settlement/            @vela-energy/market-ops @vela-energy/finance
+tests/test_ercot*              @vela-energy/market-ops
+tests/test_caiso*              @vela-energy/market-ops
+
+# ML / forecasting
+vela/m5_forecasting/           @vela-energy/ml-team
+tests/test_price_spike*        @vela-energy/ml-team
+
+# Infrastructure — requires infra team approval
+docker/                        @vela-energy/infra-team
+k8s/                           @vela-energy/infra-team
+helm/                          @vela-energy/infra-team
+terraform/                     @vela-energy/infra-team
+.github/workflows/             @vela-energy/infra-team
+
+# Security-sensitive files require security team
+.github/workflows/security-scan.yml  @vela-energy/security-team @vela-energy/infra-team
+terraform/modules/networking/        @vela-energy/security-team @vela-energy/infra-team
+k8s/networkpolicies/                 @vela-energy/security-team @vela-energy/infra-team
+k8s/rbac/                            @vela-energy/security-team @vela-energy/infra-team
+
+# Schemas and protos — API contract
+schemas/                       @vela-energy/api-team @vela-energy/core-team
+proto/                         @vela-energy/api-team @vela-energy/core-team
+
+# Database migrations — requires careful review
+alembic/                       @vela-energy/core-team @vela-energy/infra-team
+
+# Config files
+config/                        @vela-energy/core-team @vela-energy/market-ops
+
+# Dashboard
+dashboard/                     @vela-energy/frontend-team
+
+# Finance / settlement data
+data/                          @vela-energy/finance @vela-energy/core-team

@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type"
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install semantic-release
+        run: pip install python-semantic-release
+
+      - name: Run semantic release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          semantic-release version --${{ inputs.release_type || 'patch' }}
+          semantic-release publish
+
+      - name: Update Helm chart version
+        if: steps.release.outputs.released == 'true'
+        run: |
+          VERSION=${{ steps.release.outputs.version }}
+          sed -i "s/^version:.*/version: ${VERSION}/" helm/vela/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" helm/vela/Chart.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add helm/vela/Chart.yaml
+          git commit -m "chore: bump Helm chart to v${VERSION} [skip ci]"
+          git push
+
+      - name: Package and push Helm chart
+        if: steps.release.outputs.released == 'true'
+        run: |
+          helm package helm/vela
+          helm push vela-*.tgz oci://ghcr.io/vela-energy/helm
