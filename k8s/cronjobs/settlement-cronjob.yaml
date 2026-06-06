@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vela-settlement
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela-settlement
+    app.kubernetes.io/part-of: vela-vpp
+    app.kubernetes.io/component: settlement
+spec:
+  # Run hourly at :05 to allow market interval data to publish
+  schedule: "5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 24
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: vela-settlement-job
+        spec:
+          serviceAccountName: vela
+          restartPolicy: OnFailure
+          containers:
+            - name: settlement
+              image: ghcr.io/vela-energy/vela-worker:latest
+              command:
+                - python
+                - -m
+                - vela.m9_settlement.run_settlement
+              args:
+                - "--market=all"
+                - "--interval=previous_hour"
+              env:
+                - name: VELA_ENV
+                  value: production
+                - name: VELA_DB_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: vela-secrets
+                      key: db-url
+              envFrom:
+                - configMapRef:
+                    name: vela-config
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000

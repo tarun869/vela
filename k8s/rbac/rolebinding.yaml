@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vela
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela
+    app.kubernetes.io/part-of: vela-vpp
+subjects:
+  - kind: ServiceAccount
+    name: vela
+    namespace: vela
+roleRef:
+  kind: Role
+  name: vela
+  apiGroup: rbac.authorization.k8s.io

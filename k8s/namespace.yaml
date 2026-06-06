@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vela
+  labels:
+    app.kubernetes.io/name: vela
+    app.kubernetes.io/part-of: vela-vpp

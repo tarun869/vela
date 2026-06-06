@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vela-daily-report
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela-daily-report
+    app.kubernetes.io/part-of: vela-vpp
+    app.kubernetes.io/component: reporting
+spec:
+  # Run at 06:00 UTC daily
+  schedule: "0 6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 900
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: vela-daily-report-job
+        spec:
+          serviceAccountName: vela
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: ghcr.io/vela-energy/vela-worker:latest
+              command:
+                - python
+                - -m
+                - vela.reporting.daily_report
+              args:
+                - "--date=yesterday"
+                - "--output=email,s3"
+                - "--recipients-from-db"
+              env:
+                - name: VELA_ENV
+                  value: production
+                - name: VELA_DB_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: vela-secrets
+                      key: db-url
+                - name: VELA_SMTP_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: vela-secrets
+                      key: smtp-password
+                - name: VELA_REPORT_S3_BUCKET
+                  valueFrom:
+                    configMapKeyRef:
+                      name: vela-config
+                      key: report-s3-bucket
+              envFrom:
+                - configMapRef:
+                    name: vela-config
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000

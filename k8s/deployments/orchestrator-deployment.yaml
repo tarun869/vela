@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vela-orchestrator
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela-orchestrator
+    app.kubernetes.io/part-of: vela-vpp
+    app.kubernetes.io/component: orchestrator
+spec:
+  replicas: 1  # Single leader — HA via leader election
+  selector:
+    matchLabels:
+      app: vela-orchestrator
+  strategy:
+    type: Recreate  # Ensure no duplicate orchestrators during rollout
+  template:
+    metadata:
+      labels:
+        app: vela-orchestrator
+        app.kubernetes.io/name: vela-orchestrator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: vela
+      terminationGracePeriodSeconds: 120  # Allow in-flight dispatch to complete
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: orchestrator
+          image: ghcr.io/vela-energy/vela-worker:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - python
+            - -m
+            - vela.orchestrator.dispatch_loop
+          ports:
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: VELA_ENV
+              value: production
+            - name: VELA_ORCHESTRATOR_INTERVAL_SECONDS
+              value: "300"  # 5-minute dispatch cycle
+            - name: VELA_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vela-secrets
+                  key: db-url
+            - name: VELA_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vela-secrets
+                  key: redis-url
+            - name: VELA_KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: vela-config
+                  key: kafka-brokers
+          envFrom:
+            - configMapRef:
+                name: vela-config
+          resources:
+            requests:
+              cpu: "2"
+              memory: 2Gi
+            limits:
+              cpu: "8"
+              memory: 8Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 9090
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+      volumes:
+        - name: config
+          configMap:
+            name: vela-config

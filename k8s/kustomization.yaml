@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: vela
+
+resources:
+  - namespace.yaml
+  - rbac/service-account.yaml
+  - rbac/role.yaml
+  - rbac/rolebinding.yaml
+  - configmaps/vela-config.yaml
+  - configmaps/prometheus-config.yaml
+  - pvcs/postgres-pvc.yaml
+  - pvcs/redis-pvc.yaml
+  - statefulsets/postgres-statefulset.yaml
+  - statefulsets/redis-statefulset.yaml
+  - statefulsets/kafka-statefulset.yaml
+  - deployments/api-deployment.yaml
+  - deployments/worker-deployment.yaml
+  - deployments/dashboard-deployment.yaml
+  - deployments/orchestrator-deployment.yaml
+  - services/api-service.yaml
+  - services/dashboard-service.yaml
+  - services/redis-service.yaml
+  - ingress/vela-ingress.yaml
+  - hpa/api-hpa.yaml
+  - hpa/worker-hpa.yaml
+  - networkpolicies/default-deny.yaml
+  - monitoring/prometheus-deployment.yaml
+  - monitoring/grafana-deployment.yaml
+  - cronjobs/settlement-cronjob.yaml
+  - cronjobs/ml-retrain-cronjob.yaml
+  - cronjobs/report-cronjob.yaml
+
+images:
+  - name: ghcr.io/vela-energy/vela-api
+    newTag: latest
+  - name: ghcr.io/vela-energy/vela-worker
+    newTag: latest
+  - name: ghcr.io/vela-energy/vela-dashboard
+    newTag: latest
+
+commonLabels:
+  managed-by: kustomize
+  app.kubernetes.io/managed-by: kustomize

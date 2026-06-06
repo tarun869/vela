@@ -1,0 +1,112 @@
+---
+# Default deny all ingress and egress within the vela namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: vela
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow API pods to accept traffic from ingress controller and dashboard
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-ingress
+  namespace: vela
+spec:
+  podSelector:
+    matchLabels:
+      app: vela-api
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: vela-dashboard
+      ports:
+        - port: 8000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports: [{ port: 5432 }]
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports: [{ port: 6379 }]
+    - to:
+        - podSelector:
+            matchLabels:
+              app: kafka
+      ports: [{ port: 9092 }]
+    # DNS
+    - to: []
+      ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
+    # External market APIs (HTTPS)
+    - to: []
+      ports: [{ port: 443 }]
+---
+# Allow workers to connect to DB, Redis, Kafka, and external market APIs
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-egress
+  namespace: vela
+spec:
+  podSelector:
+    matchLabels:
+      app: vela-worker
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports: [{ port: 5432 }]
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports: [{ port: 6379 }]
+    - to:
+        - podSelector:
+            matchLabels:
+              app: kafka
+      ports: [{ port: 9092 }]
+    - to:
+        - podSelector:
+            matchLabels:
+              app: vela-api
+      ports: [{ port: 8000 }]
+    - to: []
+      ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
+    - to: []
+      ports: [{ port: 443 }]
+---
+# Allow Prometheus to scrape all pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: vela
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - port: 8000
+        - port: 9090
+        - port: 5555

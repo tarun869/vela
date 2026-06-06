@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vela-worker
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela-worker
+    app.kubernetes.io/part-of: vela-vpp
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: vela-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  template:
+    metadata:
+      labels:
+        app: vela-worker
+        app.kubernetes.io/name: vela-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5555"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: vela
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: worker
+          image: ghcr.io/vela-energy/vela-worker:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - vela.workers.celery_app
+            - worker
+            - --loglevel=info
+            - --concurrency=4
+            - --queues=dispatch,settlement,forecast,default
+          env:
+            - name: VELA_ENV
+              value: production
+            - name: VELA_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vela-secrets
+                  key: db-url
+            - name: VELA_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vela-secrets
+                  key: redis-url
+            - name: VELA_KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: vela-config
+                  key: kafka-brokers
+          envFrom:
+            - configMapRef:
+                name: vela-config
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+          livenessProbe:
+            exec:
+              command:
+                - celery
+                - -A
+                - vela.workers.celery_app
+                - inspect
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+      volumes:
+        - name: config
+          configMap:
+            name: vela-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: [vela-worker]
+                topologyKey: kubernetes.io/hostname
