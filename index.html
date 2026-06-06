@@ -496,16 +496,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="hero-left">
           <div class="hero-kicker">
             <span class="hero-kicker-dot"></span>
-            ERCOT &middot; CAISO &middot; PJM &middot; NYISO &middot; MISO
+            For mid-market VPP operators &mdash; not trading desks
           </div>
           <h1 class="hero-h1">
-            The grid clears<br>every 15 minutes.<br>
-            <em>Vela never<br>misses one.</em>
+            The neutral<br>dispatch layer<br>
+            <em>for any fleet.</em>
           </h1>
           <p class="hero-sub">
-            Bid optimization, dispatch coordination, and settlement reconciliation
-            for battery, DR, and flexible load portfolios &mdash; across ERCOT,
-            CAISO, PJM, NYISO, and MISO.
+            Co-optimization exists &mdash; Tesla, AutoGrid, and PCI all do it.
+            But it's locked inside hardware ecosystems or built for 20-person trading desks.
+            Vela is hardware-agnostic: it couples market revenue, live per-asset degradation,
+            and contractual obligations in one explainable solve, and hands the schedule to
+            whatever EMS you already run.
           </p>
           <div class="hero-btns">
             <a href="/app.html" target="_blank" class="btn-primary">
@@ -590,19 +592,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="hero-stats">
         <div class="hstat">
           <div class="hstat-val g" id="s0">+44%</div>
-          <div class="hstat-lbl">AVG. REVENUE UPLIFT</div>
+          <div class="hstat-lbl">SHADOW MODE UPLIFT VS. THRESHOLD DISPATCH</div>
         </div>
         <div class="hstat">
-          <div class="hstat-val" id="s1">364 MW</div>
-          <div class="hstat-lbl">PORTFOLIO UNDER MANAGEMENT</div>
+          <div class="hstat-val" id="s1">0</div>
+          <div class="hstat-lbl">CONSTRAINT VIOLATIONS IN PRODUCTION</div>
         </div>
         <div class="hstat">
-          <div class="hstat-val" id="s2">96</div>
-          <div class="hstat-lbl">DISPATCH INTERVALS / DAY</div>
+          <div class="hstat-val" id="s2">5</div>
+          <div class="hstat-lbl">ASSET PROTOCOLS NATIVELY SUPPORTED</div>
         </div>
         <div class="hstat">
-          <div class="hstat-val g" id="s3">$23,147</div>
-          <div class="hstat-lbl">FORECAST NET THIS WINDOW</div>
+          <div class="hstat-val g" id="s3">48h</div>
+          <div class="hstat-lbl">TO FIRST SHADOW-MODE BID</div>
         </div>
       </div>
     </div>
@@ -693,9 +695,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         <div class="proof-left">
           <div class="eyebrow">Shadow Mode &middot; Verified</div>
           <h2 class="proof-h">
-            <em class="proof-pct">44%</em> more revenue.<br>Proven before<br>a single live dispatch.
+            <em class="proof-pct">+44%</em> over threshold<br>dispatch. In shadow<br>mode, before going live.
           </h2>
-          <p class="proof-body">Run alongside your existing strategy for 30 days. No dispatch risk, no regulatory exposure. We show what we would have bid and what you would have earned. Flip the switch when you trust the numbers.</p>
+          <p class="proof-body">The ancillary services row is the one to look at &mdash; $3,190 found from zero. That's a program the existing strategy wasn't enrolled in. Degradation-aware stack optimization finds the slack that static thresholds can't see. Thirty days, no dispatch risk, no regulatory exposure. The table is what Vela would have earned.</p>
           <a href="/landing/panel-2-shadow.html" target="_blank" class="btn-ghost" style="display:inline-flex;margin-top:24px">View shadow mode panel &rarr;</a>
         </div>
         <div class="proof-right">
@@ -747,44 +749,44 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="wrap">
       <div class="det-split">
         <div class="det-left">
-          <h2 class="det-title">The bid reasoning is the product.</h2>
-          <p class="det-body">Every dispatch recommendation Vela generates includes the LMP forecast it used, the degradation cost it factored, the constraints it checked, and the alternatives it rejected. If you'd have made a different call, you can see exactly why the engine didn't.</p>
-          <p class="det-body">Constraints are hard limits, not soft suggestions. SOC floor, cycle cap, backup reserve, customer opt-out windows &mdash; the engine cannot violate them. Your ops team sets the box; Vela works inside it.</p>
+          <h2 class="det-title">Each piece exists somewhere.<br>The combination doesn't.</h2>
+          <p class="det-body">Fleet-level co-optimization isn't new. PCI, AutoGrid, and Tesla all do it. But it's either locked inside a hardware vendor's ecosystem or engineered for operators with a dedicated trading desk. Vela's position is the intersection: hardware-agnostic, mid-market, with live degradation state and full transparency baked into the solve.</p>
+          <p class="det-body">Vela never touches your hardware directly. It reads from any asset &mdash; battery, EV depot, HVAC, industrial load &mdash; and hands a recommended schedule to your existing EMS. The lack of hardware is the moat.</p>
           <div class="det-protocols">
-            <span class="det-proto">OpenADR 2.0</span>
-            <span class="det-proto">IEEE 2030.5</span>
-            <span class="det-proto">Modbus TCP</span>
-            <span class="det-proto">OCPP 2.0.1</span>
+            <span class="det-proto">SunSpec Modbus</span>
             <span class="det-proto">DNP3</span>
+            <span class="det-proto">IEEE 2030.5</span>
+            <span class="det-proto">OpenADR 2.0</span>
+            <span class="det-proto">OCPP 2.0.1</span>
           </div>
         </div>
         <div class="det-right">
           <div class="det-item">
             <div class="det-num">01</div>
             <div class="det-content">
-              <div class="det-name">Bid with rationale</div>
-              <div class="det-desc">Each recommendation shows the LMP threshold used, the SOC at dispatch time, the revenue estimate, and the next-best alternative &mdash; before you approve it.</div>
+              <div class="det-name">Fleet-relative degradation arbitrage</div>
+              <div class="det-desc">Degradation enters the solve as a per-asset time-varying state &mdash; remaining equivalent full cycles, capacity fade, calendar age &mdash; that couples assets in the joint dispatch. If Battery A is 87% through its warranty life and Battery B is fresh, Vela cycles B harder today even if A is better-placed for the current price signal. That arbitrage compounds across a fleet; incumbents mostly optimize revenue streams, not wear.</div>
             </div>
           </div>
           <div class="det-item">
             <div class="det-num">02</div>
             <div class="det-content">
-              <div class="det-name">Any asset, any protocol</div>
-              <div class="det-desc">Batteries, EV charging depots, HVAC, industrial flex load. If it has a control interface, Vela can dispatch it. New asset types onboard in under 48 hours.</div>
+              <div class="det-name">Neutral execution — no hardware skin in the game</div>
+              <div class="det-desc">Fluence's software exists to sell Fluence boxes. Tesla's optimizer runs inside Tesla's ecosystem. A genuinely neutral decision layer can only come from a company with no hardware to defend. Vela reads from any asset class via a protocol-adapter layer (SunSpec, DNP3, OCPP, OpenADR) and outputs schedules; your EMS executes them. Operators don't rip out working control systems &mdash; they add a brain on top.</div>
             </div>
           </div>
           <div class="det-item">
             <div class="det-num">03</div>
             <div class="det-content">
-              <div class="det-name">Settlement to the interval</div>
-              <div class="det-desc">AMI-metered actuals compared against ISO settlement statements, flagged by asset, with root cause on every shortfall &mdash; not just the total.</div>
+              <div class="det-name">Explainability via shadow prices</div>
+              <div class="det-desc">After each solve, Vela reads the dual variables of the binding constraints and surfaces the decisive ones in plain language: which constraint drove the decision, what the unconstrained play would have been, and the exact dollar cost of each active limit. An operator who can see the trade-off uses the tool. An operator who can't, overrides it &mdash; which destroys the value.</div>
             </div>
           </div>
           <div class="det-item">
             <div class="det-num">04</div>
             <div class="det-content">
-              <div class="det-name">Shadow mode, then live</div>
-              <div class="det-desc">Run alongside your existing strategy for 30 days. No dispatch. No regulatory exposure. See the P&amp;L delta. Flip the switch when you trust it.</div>
+              <div class="det-name">Risk-aware dispatch (CVaR) instead of point forecasts</div>
+              <div class="det-desc">Forecasts are distributions, not numbers. Vela carries a CVaR constraint at a configurable tail percentile &mdash; it maximizes expected revenue subject to a floor on the bad-but-plausible scenario. Point-forecast optimizers are occasionally catastrophic; tail-risk management is standard in finance and underused in DER dispatch, especially at the mid-market.</div>
             </div>
           </div>
         </div>
