@@ -1,0 +1,35 @@
+# Production environment overrides
+_extends: base
+
+api:
+  workers: 8
+  cors_origins:
+    - "https://app.vela.energy"
+
+database:
+  pool_size: 20
+  max_overflow: 40
+
+redis:
+  max_connections: 200
+
+celery:
+  worker_prefetch_multiplier: 1
+  task_acks_late: true
+  task_reject_on_worker_lost: true
+
+logging:
+  level: INFO
+  format: json
+
+telemetry:
+  trace_sample_rate: 0.05  # 5% sampling in prod
+
+optimizer:
+  timeout_seconds: 25
+  mip_gap: 0.001
+
+markets:
+  mock: false
+  retry_attempts: 5
+  retry_backoff_factor: 2.0

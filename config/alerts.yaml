@@ -1,0 +1,129 @@
+# Alert thresholds for VPP operations monitoring
+
+# Channels for routing alerts
+channels:
+  slack_ops:
+    type: slack
+    webhook_env: SLACK_OPS_WEBHOOK_URL
+    default: true
+  slack_critical:
+    type: slack
+    webhook_env: SLACK_CRITICAL_WEBHOOK_URL
+  pagerduty:
+    type: pagerduty
+    integration_key_env: PAGERDUTY_INTEGRATION_KEY
+  email_finance:
+    type: email
+    recipients: [finance@vela.energy]
+
+asset_alerts:
+  soc_low:
+    threshold_pct: 10
+    severity: warning
+    channels: [slack_ops]
+    message: "Asset {asset_id} SOC at {value:.1f}% — approaching minimum"
+
+  soc_critical:
+    threshold_pct: 5
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "CRITICAL: Asset {asset_id} SOC at {value:.1f}% — risk of over-discharge"
+
+  soc_high:
+    threshold_pct: 95
+    severity: warning
+    channels: [slack_ops]
+    message: "Asset {asset_id} SOC at {value:.1f}% — near full charge, reducing headroom"
+
+  asset_offline:
+    offline_minutes: 5
+    severity: warning
+    channels: [slack_ops]
+    message: "Asset {asset_id} offline for {duration}"
+
+  asset_offline_critical:
+    offline_minutes: 30
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "CRITICAL: Asset {asset_id} offline for {duration} — may miss dispatch"
+
+  temperature_high:
+    threshold_celsius: 40
+    severity: warning
+    channels: [slack_ops]
+
+optimizer_alerts:
+  solve_timeout:
+    threshold_seconds: 30
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "Dispatch solver timed out after {value:.1f}s"
+
+  solve_infeasible:
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "Dispatch optimization infeasible for fleet — using fallback"
+
+  mip_gap_high:
+    threshold_pct: 5.0
+    severity: warning
+    channels: [slack_ops]
+    message: "Solver MIP gap at {value:.1f}% — solution quality degraded"
+
+  dispatch_cycle_missed:
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "Dispatch cycle missed by {value:.0f} seconds"
+
+market_alerts:
+  connection_failed:
+    consecutive_failures: 3
+    severity: critical
+    channels: [slack_critical, pagerduty]
+    message: "Market {market} connection failed {value} consecutive times"
+
+  price_spike:
+    threshold_usd_per_mwh: 500
+    severity: info
+    channels: [slack_ops]
+    message: "Price spike detected at {node}: ${value:.0f}/MWh"
+
+  price_extreme:
+    threshold_usd_per_mwh: 2000
+    severity: warning
+    channels: [slack_ops, slack_critical]
+    message: "Extreme price at {node}: ${value:.0f}/MWh — verifying dispatch"
+
+  bid_rejection:
+    severity: warning
+    channels: [slack_ops, email_finance]
+    message: "Bid rejected by {market}: {reason}"
+
+settlement_alerts:
+  calculation_error:
+    severity: critical
+    channels: [slack_critical, email_finance, pagerduty]
+    message: "Settlement calculation error for {market} interval {interval}"
+
+  revenue_shortfall:
+    threshold_fraction: 0.20  # 20% below forecast
+    severity: warning
+    channels: [email_finance, slack_ops]
+    message: "Settlement revenue for {market} is {value:.1f}% below forecast"
+
+infrastructure_alerts:
+  api_error_rate:
+    threshold_pct: 1.0
+    window_minutes: 5
+    severity: critical
+    channels: [slack_critical, pagerduty]
+
+  queue_backlog:
+    threshold_tasks: 1000
+    severity: warning
+    channels: [slack_ops]
+
+  db_connection_pool_low:
+    threshold_available: 2
+    severity: critical
+    channels: [slack_critical, pagerduty]

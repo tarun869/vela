@@ -1,0 +1,157 @@
+# Asset fleet configuration template
+# Override per-deployment with actual asset IDs and parameters
+
+fleet:
+  name: "Vela Demo Fleet"
+  timezone: "America/Los_Angeles"
+  default_market: caiso
+
+assets:
+  - id: BAT-001
+    type: battery
+    name: "Lithium Ion Battery 1"
+    location:
+      lat: 37.7749
+      lon: -122.4194
+      node: PGAE_APND
+      market: caiso
+    capacity_mwh: 10.0
+    power_mw: 5.0              # Max charge/discharge power
+    soc_min: 0.05              # 5% minimum SOC
+    soc_max: 0.95              # 95% maximum SOC
+    soc_initial: 0.50
+    soc_target_end: 0.50       # Target SOC at end of horizon
+    round_trip_efficiency: 0.88
+    charge_efficiency: 0.94
+    discharge_efficiency: 0.94
+    ramp_rate_mw_per_min: 5.0  # Full power ramp in 1 minute
+    cycle_cost_usd_per_kwh: 0.05
+    degradation_model: rainflow
+    max_daily_cycles: 2.0
+    chemistry: lfp              # LFP, NMC, etc.
+    installed_date: "2024-01-15"
+    warranty_cycles: 6000
+    ancillary:
+      regup_capable: true
+      regdn_capable: true
+      rrs_capable: true
+      nsrs_capable: false
+      min_reg_mw: 0.5
+
+  - id: BAT-002
+    type: battery
+    name: "Lithium Ion Battery 2"
+    location:
+      lat: 37.3382
+      lon: -121.8863
+      node: PGAE_APND
+      market: caiso
+    capacity_mwh: 20.0
+    power_mw: 10.0
+    soc_min: 0.05
+    soc_max: 0.95
+    soc_initial: 0.60
+    soc_target_end: 0.50
+    round_trip_efficiency: 0.89
+    charge_efficiency: 0.944
+    discharge_efficiency: 0.944
+    ramp_rate_mw_per_min: 10.0
+    cycle_cost_usd_per_kwh: 0.05
+    degradation_model: rainflow
+    max_daily_cycles: 1.5
+    chemistry: nmc
+    installed_date: "2023-06-01"
+    ancillary:
+      regup_capable: true
+      regdn_capable: true
+      rrs_capable: true
+      nsrs_capable: true
+      min_reg_mw: 1.0
+
+  - id: CAES-001
+    type: compressed_air
+    name: "CAES Unit 1"
+    location:
+      lat: 32.7767
+      lon: -96.7970
+      node: HB_NORTH
+      market: ercot
+    capacity_mwh: 500.0
+    charge_power_mw: 50.0
+    discharge_power_mw: 40.0
+    soc_min: 0.10
+    soc_max: 0.90
+    soc_initial: 0.60
+    round_trip_efficiency: 0.72
+    ramp_rate_mw_per_min: 2.0   # Slower ramp for CAES
+    fuel_type: natural_gas
+    heat_rate_mmbtu_per_mwh: 4.5
+    compression_power_factor: 0.85
+    ancillary:
+      rrs_capable: true
+      nsrs_capable: true
+      regup_capable: false      # CAES typically too slow for reg
+
+  - id: FW-001
+    type: flywheel
+    name: "Flywheel Array 1"
+    location:
+      lat: 41.8781
+      lon: -87.6298
+      node: "33092371"
+      market: pjm
+    capacity_mwh: 0.25          # Flywheels have low energy but high power
+    power_mw: 2.0
+    soc_min: 0.20
+    soc_max: 0.95
+    soc_initial: 0.70
+    round_trip_efficiency: 0.92
+    standby_losses_kw: 5.0      # Idle friction losses
+    ramp_rate_mw_per_min: 200.0 # Near-instantaneous response
+    ancillary:
+      rrs_capable: true
+      regup_capable: true
+      regdn_capable: true
+      regulation_performance_score: 0.99
+      min_reg_mw: 0.1
+
+  - id: PH-001
+    type: pumped_hydro
+    name: "Pumped Hydro Unit 1"
+    location:
+      lat: 38.5816
+      lon: -121.4944
+      node: PGAE_APND
+      market: caiso
+    capacity_mwh: 2000.0
+    pump_power_mw: 200.0
+    turbine_power_mw: 180.0
+    soc_min: 0.05
+    soc_max: 0.95
+    soc_initial: 0.50
+    pump_efficiency: 0.85
+    turbine_efficiency: 0.90
+    ramp_rate_mw_per_min: 10.0
+    min_generation_mw: 20.0     # Minimum stable generation
+    ancillary:
+      regup_capable: true
+      regdn_capable: true
+      rrs_capable: true
+
+# Default parameters (can be overridden per asset)
+defaults:
+  battery:
+    soc_min: 0.05
+    soc_max: 0.95
+    round_trip_efficiency: 0.88
+    cycle_cost_usd_per_kwh: 0.05
+    max_daily_cycles: 2.0
+  flywheel:
+    soc_min: 0.20
+    soc_max: 0.95
+    round_trip_efficiency: 0.92
+  pumped_hydro:
+    pump_efficiency: 0.85
+    turbine_efficiency: 0.90
+  compressed_air:
+    round_trip_efficiency: 0.72

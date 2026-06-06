@@ -1,0 +1,38 @@
+# Development environment overrides
+_extends: base
+
+app:
+  debug: true
+
+api:
+  reload: true
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8501"
+
+database:
+  url: "postgresql+asyncpg://vela:vela@localhost:5432/vela_dev"
+  echo: true
+
+redis:
+  url: "redis://localhost:6379/0"
+
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/1"
+
+kafka:
+  brokers: "localhost:9092"
+
+logging:
+  level: DEBUG
+  format: text  # Human-readable in dev
+
+metrics:
+  enabled: true
+
+optimizer:
+  timeout_seconds: 60  # More lenient in dev
+
+markets:
+  mock: true  # Use mock price data in dev, no real API calls

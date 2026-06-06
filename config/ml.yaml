@@ -1,0 +1,120 @@
+# ML model configuration for Vela forecasting and price spike detection
+
+tracking:
+  backend: mlflow
+  uri: "http://mlflow.vela.svc.cluster.local:5000"  # Or S3-backed: "s3://vela-ml-models/mlflow"
+  experiment_name: vela-forecasting
+  auto_log: true
+
+registry:
+  backend: mlflow
+  model_store: "s3://vela-ml-models/registry"
+  staging_alias: staging
+  production_alias: production
+  min_score_to_promote: 0.85  # Minimum R2 / AUROC to promote to production
+
+price_spike_detector:
+  model_type: xgboost
+  features:
+    - lmp_1h_lag
+    - lmp_24h_lag
+    - lmp_168h_lag
+    - lmp_rolling_mean_6h
+    - lmp_rolling_std_6h
+    - load_forecast_mw
+    - renewable_generation_mw
+    - net_load_mw
+    - hour_of_day
+    - day_of_week
+    - month
+    - is_weekend
+    - temperature_f
+    - is_holiday
+  spike_threshold_usd_per_mwh: 200
+  training:
+    lookback_days: 365
+    test_split: 0.2
+    cv_folds: 5
+    hyperparameter_tuning: optuna
+    n_trials: 100
+  xgboost:
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 10  # Class imbalance adjustment
+    eval_metric: aucpr
+
+load_forecast:
+  model_type: lgbm
+  forecast_horizons_hours: [1, 4, 24, 48]
+  features:
+    - historical_load_1h
+    - historical_load_24h
+    - historical_load_168h
+    - temperature_f
+    - dew_point_f
+    - hour_of_day
+    - day_of_week
+    - month
+    - is_holiday
+    - sunrise_hour
+    - sunset_hour
+  training:
+    lookback_days: 730
+    test_split: 0.15
+  lgbm:
+    n_estimators: 500
+    num_leaves: 63
+    min_child_samples: 50
+    learning_rate: 0.03
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    objective: quantile
+    quantiles: [0.1, 0.25, 0.50, 0.75, 0.90]  # Probabilistic forecast
+
+ancillary_forecast:
+  model_type: lgbm
+  products: [regup, regdn, rrs, nsrs]
+  features:
+    - historical_clearing_price_1h
+    - historical_clearing_price_24h
+    - load_forecast_mw
+    - renewable_forecast_mw
+    - hour_of_day
+    - day_of_week
+    - is_holiday
+  training:
+    lookback_days: 365
+  lgbm:
+    n_estimators: 200
+    num_leaves: 31
+    learning_rate: 0.05
+    objective: regression
+
+price_forecast:
+  model_type: ensemble
+  components:
+    - name: lgbm_base
+      weight: 0.4
+    - name: price_spike_detector
+      weight: 0.3
+    - name: historical_average
+      weight: 0.3
+  forecast_horizons_hours: [1, 4, 8, 24, 48]
+
+retraining:
+  schedule: "0 2 * * 0"  # Sunday 02:00 UTC
+  lookback_days: 90
+  min_samples: 2000
+  performance_degradation_threshold: 0.10  # Retrain if metric drops > 10%
+  auto_promote: false  # Require manual review before promoting to production
+
+feature_store:
+  backend: redis
+  ttl_seconds:
+    realtime: 300    # 5 minutes for real-time features
+    daily: 86400     # 1 day for daily aggregates
+    historical: 604800  # 1 week for historical features
