@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vela-config
+  namespace: vela
+  labels:
+    app.kubernetes.io/name: vela
+    app.kubernetes.io/part-of: vela-vpp
+data:
+  VELA_ENV: "production"
+  VELA_LOG_LEVEL: "INFO"
+  VELA_LOG_FORMAT: "json"
+  VELA_API_HOST: "0.0.0.0"
+  VELA_API_PORT: "8000"
+  VELA_API_WORKERS: "4"
+
+  # Service discovery
+  api-internal-url: "http://vela-api.vela.svc.cluster.local"
+  kafka-brokers: "kafka-0.kafka-headless.vela.svc.cluster.local:9092,kafka-1.kafka-headless.vela.svc.cluster.local:9092,kafka-2.kafka-headless.vela.svc.cluster.local:9092"
+
+  # Optimizer settings
+  VELA_OPTIMIZER_HORIZON_HOURS: "24"
+  VELA_OPTIMIZER_DT_MINUTES: "5"
+  VELA_OPTIMIZER_SOLVER: "highs"
+  VELA_OPTIMIZER_MIP_GAP: "0.005"
+  VELA_OPTIMIZER_TIMEOUT_SECONDS: "30"
+
+  # Market connections
+  VELA_MARKETS_ENABLED: "caiso,ercot,pjm"
+  VELA_CAISO_NODE: "PGAE_APND"
+  VELA_ERCOT_NODE: "HB_NORTH"
+
+  # Celery
+  VELA_CELERY_BROKER_URL: "redis://redis.vela.svc.cluster.local:6379/0"
+  VELA_CELERY_RESULT_BACKEND: "redis://redis.vela.svc.cluster.local:6379/1"
+  VELA_CELERY_TASK_SERIALIZER: "json"
+  VELA_CELERY_RESULT_SERIALIZER: "json"
+  VELA_CELERY_ACCEPT_CONTENT: "json"
+  VELA_CELERY_TIMEZONE: "UTC"
+  VELA_CELERY_ENABLE_UTC: "true"
+
+  # Kafka topics
+  VELA_KAFKA_TOPIC_TELEMETRY: "vela.telemetry"
+  VELA_KAFKA_TOPIC_DISPATCH: "vela.dispatch"
+  VELA_KAFKA_TOPIC_SETTLEMENT: "vela.settlement"
+  VELA_KAFKA_TOPIC_EVENTS: "vela.events"
+  VELA_KAFKA_CONSUMER_GROUP: "vela-main"
