@@ -1,0 +1,56 @@
+# Staging environment overrides
+
+api:
+  replicaCount: 2
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 6
+  env:
+    VELA_ENV: staging
+    VELA_LOG_LEVEL: DEBUG
+
+worker:
+  replicaCount: 2
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 4
+
+dashboard:
+  replicaCount: 1
+
+orchestrator:
+  intervalSeconds: 300
+
+kafka:
+  replicas: 1
+  defaultReplicationFactor: 1
+  minInsyncReplicas: 1
+  storage: 50Gi
+
+postgres:
+  storage: 20Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+redis:
+  storage: 5Gi
+
+prometheus:
+  retention: 7d
+  storage: 20Gi
+
+ingress:
+  hosts:
+    api: api.staging.vela.energy
+    dashboard: app.staging.vela.energy
+  tls:
+    secretName: vela-staging-tls
+
+cronjobs:
+  mlRetrain:
+    enabled: false  # Only run in prod

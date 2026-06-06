@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vela.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "vela.labels" . | nindent 4 }}
+data:
+  VELA_ENV: {{ .Values.api.env.VELA_ENV | default "production" | quote }}
+  VELA_LOG_LEVEL: {{ .Values.api.env.VELA_LOG_LEVEL | default "INFO" | quote }}
+  VELA_LOG_FORMAT: {{ .Values.api.env.VELA_LOG_FORMAT | default "json" | quote }}
+
+  kafka-brokers: {{ printf "kafka-0.kafka-headless.%s.svc.cluster.local:9092,kafka-1.kafka-headless.%s.svc.cluster.local:9092,kafka-2.kafka-headless.%s.svc.cluster.local:9092" .Release.Namespace .Release.Namespace .Release.Namespace | quote }}
+  api-internal-url: {{ printf "http://%s-api.%s.svc.cluster.local" (include "vela.fullname" .) .Release.Namespace | quote }}
+
+  VELA_OPTIMIZER_HORIZON_HOURS: {{ .Values.optimizer.horizonHours | quote }}
+  VELA_OPTIMIZER_DT_MINUTES: {{ .Values.optimizer.dtMinutes | quote }}
+  VELA_OPTIMIZER_SOLVER: {{ .Values.optimizer.solver | quote }}
+  VELA_OPTIMIZER_MIP_GAP: {{ .Values.optimizer.mipGap | quote }}
+  VELA_OPTIMIZER_TIMEOUT_SECONDS: {{ .Values.optimizer.timeoutSeconds | quote }}
+
+  VELA_CELERY_BROKER_URL: {{ printf "redis://redis.%s.svc.cluster.local:6379/0" .Release.Namespace | quote }}
+  VELA_CELERY_RESULT_BACKEND: {{ printf "redis://redis.%s.svc.cluster.local:6379/1" .Release.Namespace | quote }}
+
+  VELA_MARKETS_ENABLED: {{ .Values.markets.enabled | join "," | quote }}
+  VELA_CAISO_NODE: {{ .Values.markets.caiso.node | quote }}
+  VELA_ERCOT_NODE: {{ .Values.markets.ercot.node | quote }}
+
+  VELA_KAFKA_TOPIC_TELEMETRY: "vela.telemetry"
+  VELA_KAFKA_TOPIC_DISPATCH: "vela.dispatch"
+  VELA_KAFKA_TOPIC_SETTLEMENT: "vela.settlement"
+  VELA_KAFKA_TOPIC_EVENTS: "vela.events"
+  VELA_KAFKA_CONSUMER_GROUP: "vela-main"

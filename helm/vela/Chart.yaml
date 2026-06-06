@@ -1,0 +1,12 @@
+apiVersion: v2
+name: vela
+description: VPP Dispatch Optimization Engine
+type: application
+version: 0.0.4
+appVersion: "0.0.4"
+keywords:
+  - vpp
+  - energy-storage
+  - dispatch-optimization
+maintainers:
+  - name: Vela Team

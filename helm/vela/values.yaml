@@ -1,0 +1,197 @@
+# Default values for vela Helm chart
+
+global:
+  imageRegistry: ghcr.io/vela-energy
+  imagePullPolicy: IfNotPresent
+  storageClass: gp3
+
+image:
+  api:
+    repository: ghcr.io/vela-energy/vela-api
+    tag: latest
+  worker:
+    repository: ghcr.io/vela-energy/vela-worker
+    tag: latest
+  dashboard:
+    repository: ghcr.io/vela-energy/vela-dashboard
+    tag: latest
+
+api:
+  enabled: true
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  env:
+    VELA_ENV: production
+    VELA_LOG_LEVEL: INFO
+    VELA_LOG_FORMAT: json
+
+worker:
+  enabled: true
+  replicaCount: 4
+  concurrency: 4
+  queues: dispatch,settlement,forecast,default
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 16
+    targetCPUUtilizationPercentage: 75
+
+dashboard:
+  enabled: true
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8501
+
+orchestrator:
+  enabled: true
+  intervalSeconds: 300
+  resources:
+    requests:
+      cpu: "2"
+      memory: 2Gi
+    limits:
+      cpu: "8"
+      memory: 8Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    api: api.vela.energy
+    dashboard: app.vela.energy
+  tls:
+    enabled: true
+    secretName: vela-tls
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  storage: 100Gi
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "4"
+      memory: 8Gi
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+  storage: 20Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+kafka:
+  enabled: true
+  replicas: 3
+  storage: 200Gi
+  defaultReplicationFactor: 3
+  minInsyncReplicas: 2
+  numPartitions: 12
+
+prometheus:
+  enabled: true
+  retention: 30d
+  storage: 100Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+grafana:
+  enabled: true
+  storage: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+cronjobs:
+  settlement:
+    enabled: true
+    schedule: "5 * * * *"
+  mlRetrain:
+    enabled: true
+    schedule: "0 2 * * 0"
+  dailyReport:
+    enabled: true
+    schedule: "0 6 * * *"
+
+optimizer:
+  horizonHours: 24
+  dtMinutes: 5
+  solver: highs
+  mipGap: 0.005
+  timeoutSeconds: 30
+
+markets:
+  enabled: [caiso, ercot, pjm]
+  caiso:
+    node: PGAE_APND
+  ercot:
+    node: HB_NORTH
+
+serviceAccount:
+  create: true
+  name: vela
+  annotations: {}
+
+networkPolicies:
+  enabled: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
