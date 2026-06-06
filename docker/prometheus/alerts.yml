@@ -1,0 +1,167 @@
+groups:
+  - name: vela.vpp_operations
+    interval: 30s
+    rules:
+      - alert: DispatchLatencyHigh
+        expr: histogram_quantile(0.95, rate(vela_dispatch_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          team: operations
+        annotations:
+          summary: "Dispatch optimization latency above 5s p95"
+          description: "Dispatch p95 latency is {{ $value | humanizeDuration }}. SLA requires < 5s."
+          runbook: "https://docs.vela.energy/runbooks/dispatch-latency"
+
+      - alert: DispatchSolverFailed
+        expr: increase(vela_solver_failures_total[5m]) > 2
+        for: 1m
+        labels:
+          severity: critical
+          team: operations
+        annotations:
+          summary: "MILP solver failures detected"
+          description: "{{ $value }} solver failures in the last 5 minutes."
+          runbook: "https://docs.vela.energy/runbooks/solver-failure"
+
+      - alert: AssetOffline
+        expr: vela_asset_online == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Asset {{ $labels.asset_id }} offline"
+          description: "Asset {{ $labels.asset_id }} (type={{ $labels.asset_type }}) has been offline for > 5 minutes."
+
+      - alert: BatterySOCCritical
+        expr: vela_asset_soc_percent < 5
+        for: 1m
+        labels:
+          severity: critical
+          team: operations
+        annotations:
+          summary: "Battery {{ $labels.asset_id }} SOC critically low"
+          description: "Battery SOC at {{ $value | humanize }}%. Risk of over-discharge."
+
+      - alert: BatterySOCOvercharge
+        expr: vela_asset_soc_percent > 98
+        for: 2m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Battery {{ $labels.asset_id }} approaching full charge"
+          description: "Battery SOC at {{ $value | humanize }}%. Reducing charge headroom."
+
+      - alert: MarketConnectionLost
+        expr: vela_market_connection_status == 0
+        for: 3m
+        labels:
+          severity: critical
+          team: markets
+        annotations:
+          summary: "Market connection lost: {{ $labels.market }}"
+          description: "Unable to connect to {{ $labels.market }} for {{ $for | humanizeDuration }}."
+
+      - alert: FrequencyRegulationMissed
+        expr: rate(vela_ancillary_regulation_missed_total[10m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: markets
+        annotations:
+          summary: "High frequency regulation miss rate on {{ $labels.asset_id }}"
+          description: "Regulation miss rate is {{ $value | humanizePercentage }}. Above 5% threshold."
+
+      - alert: SettlementCalculationFailed
+        expr: increase(vela_settlement_errors_total[1h]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          team: finance
+        annotations:
+          summary: "Settlement calculation error for {{ $labels.market }}"
+          description: "{{ $value }} settlement errors in the last hour for market {{ $labels.market }}."
+
+      - alert: PriceSpikeDetected
+        expr: vela_lmp_price_usd_per_mwh > 500
+        for: 1m
+        labels:
+          severity: info
+          team: markets
+        annotations:
+          summary: "Price spike at {{ $labels.node }}: ${{ $value }}/MWh"
+          description: "LMP at {{ $labels.node }} has exceeded $500/MWh."
+
+  - name: vela.infrastructure
+    rules:
+      - alert: APIHighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "API error rate above 1%"
+          description: "Current error rate: {{ $value | humanizePercentage }}."
+
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "API p99 latency above 2s"
+          description: "API p99 latency is {{ $value | humanizeDuration }}."
+
+      - alert: WorkerQueueBacklog
+        expr: celery_queue_length > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Celery queue backlog: {{ $value }} tasks"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending tasks."
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: vela_db_pool_available_connections < 2
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Only {{ $value }} connections available in pool."
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Redis memory usage above 85%"
+          description: "Redis is using {{ $value | humanizePercentage }} of max memory."
+
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_group_lag > 10000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Kafka consumer lag on {{ $labels.topic }}"
+          description: "Consumer group {{ $labels.group }} is {{ $value }} messages behind on topic {{ $labels.topic }}."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Filesystem {{ $labels.mountpoint }} is {{ $value | humanizePercentage }} free."

@@ -1,0 +1,14 @@
+FROM python:3.11-slim AS builder
+WORKDIR /app
+RUN pip install --no-cache-dir build
+COPY pyproject.toml .
+COPY vela/ vela/
+RUN python -m build --wheel --no-isolation
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /app/dist/*.whl .
+RUN pip install --no-cache-dir *.whl uvicorn[standard]
+COPY config/ config/
+EXPOSE 8000
+CMD ["uvicorn", "vela.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

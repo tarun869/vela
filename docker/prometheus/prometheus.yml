@@ -1,0 +1,76 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: vela-prod
+    region: us-west-2
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]
+
+  # Vela API
+  - job_name: vela_api
+    metrics_path: /metrics
+    scrape_interval: 10s
+    static_configs:
+      - targets: [api:8000]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Celery workers via flower
+  - job_name: vela_worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: [flower:5555]
+
+  # Node exporter for host metrics
+  - job_name: node
+    static_configs:
+      - targets:
+          - node-exporter:9100
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: host
+
+  # PostgreSQL
+  - job_name: postgres
+    static_configs:
+      - targets: [postgres-exporter:9187]
+
+  # Redis
+  - job_name: redis
+    static_configs:
+      - targets: [redis-exporter:9121]
+
+  # Kafka via JMX exporter
+  - job_name: kafka
+    static_configs:
+      - targets: [kafka:7071]
+
+  # Nginx
+  - job_name: nginx
+    static_configs:
+      - targets: [nginx-exporter:9113]
+
+  # cAdvisor container metrics
+  - job_name: cadvisor
+    scrape_interval: 30s
+    static_configs:
+      - targets: [cadvisor:8080]
+    metric_relabel_configs:
+      - source_labels: [container_label_com_docker_compose_service]
+        target_label: service
