@@ -10,8 +10,18 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-vela/
 *.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+.env
 
 # Editor directories and files
 .vscode/*
