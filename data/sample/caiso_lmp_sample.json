@@ -1,0 +1,112 @@
+{
+  "market": "caiso",
+  "node_id": "PGAE_APND",
+  "interval_type": "RTM",
+  "query_start": "2024-06-01T00:00:00-07:00",
+  "query_end": "2024-06-01T01:00:00-07:00",
+  "data": [
+    {
+      "interval_start": "2024-06-01T00:00:00-07:00",
+      "interval_end": "2024-06-01T00:05:00-07:00",
+      "lmp_usd_per_mwh": 42.15,
+      "energy_component": 40.82,
+      "congestion_component": 1.20,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:05:00-07:00",
+      "interval_end": "2024-06-01T00:10:00-07:00",
+      "lmp_usd_per_mwh": 39.88,
+      "energy_component": 38.60,
+      "congestion_component": 1.15,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:10:00-07:00",
+      "interval_end": "2024-06-01T00:15:00-07:00",
+      "lmp_usd_per_mwh": 41.32,
+      "energy_component": 40.00,
+      "congestion_component": 1.19,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:15:00-07:00",
+      "interval_end": "2024-06-01T00:20:00-07:00",
+      "lmp_usd_per_mwh": 38.45,
+      "energy_component": 37.20,
+      "congestion_component": 1.12,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:20:00-07:00",
+      "interval_end": "2024-06-01T00:25:00-07:00",
+      "lmp_usd_per_mwh": 45.00,
+      "energy_component": 43.62,
+      "congestion_component": 1.25,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:25:00-07:00",
+      "interval_end": "2024-06-01T00:30:00-07:00",
+      "lmp_usd_per_mwh": 52.18,
+      "energy_component": 50.75,
+      "congestion_component": 1.30,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:30:00-07:00",
+      "interval_end": "2024-06-01T00:35:00-07:00",
+      "lmp_usd_per_mwh": 48.72,
+      "energy_component": 47.35,
+      "congestion_component": 1.24,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:35:00-07:00",
+      "interval_end": "2024-06-01T00:40:00-07:00",
+      "lmp_usd_per_mwh": 43.90,
+      "energy_component": 42.55,
+      "congestion_component": 1.22,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:40:00-07:00",
+      "interval_end": "2024-06-01T00:45:00-07:00",
+      "lmp_usd_per_mwh": 40.11,
+      "energy_component": 38.80,
+      "congestion_component": 1.18,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:45:00-07:00",
+      "interval_end": "2024-06-01T00:50:00-07:00",
+      "lmp_usd_per_mwh": 37.55,
+      "energy_component": 36.28,
+      "congestion_component": 1.14,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:50:00-07:00",
+      "interval_end": "2024-06-01T00:55:00-07:00",
+      "lmp_usd_per_mwh": 36.98,
+      "energy_component": 35.72,
+      "congestion_component": 1.13,
+      "loss_component": 0.13
+    },
+    {
+      "interval_start": "2024-06-01T00:55:00-07:00",
+      "interval_end": "2024-06-01T01:00:00-07:00",
+      "lmp_usd_per_mwh": 38.20,
+      "energy_component": 36.95,
+      "congestion_component": 1.12,
+      "loss_component": 0.13
+    }
+  ],
+  "statistics": {
+    "count": 12,
+    "mean_lmp": 42.04,
+    "min_lmp": 36.98,
+    "max_lmp": 52.18,
+    "std_lmp": 4.78
+  }
+}
