@@ -1854,9 +1854,12 @@ function App() {
     <main className={`vela-shell${density !== 'comfortable' ? ` density-${density}` : ''}`}>
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">V</div>
+          <svg width="28" height="28" viewBox="0 0 100 96" fill="var(--ink)" xmlns="http://www.w3.org/2000/svg" aria-label="Vela">
+            <path d="M4 90 C4 90 1 83 1 78 C16 54 32 26 50 2 C54 30 50 60 36 90 Z"/>
+            <path d="M36 90 C50 60 56 32 50 2 C66 24 82 54 90 78 C90 83 88 90 36 90 Z"/>
+          </svg>
           <div>
-            <strong>VELA</strong>
+            <strong>Vela</strong>
             <span>Virtual energy operations</span>
           </div>
         </div>

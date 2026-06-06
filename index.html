@@ -3,1182 +3,1989 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Vela &mdash; Agentic Energy Intelligence</title>
+<title>Vela</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <style>
-/* ── RESET & TOKENS ─────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-:root{
-  --bg:#070B09; --bg1:#0D1510; --bg2:#111916; --bg3:#1A2420;
-  --green:#1D9E75; --gdim:rgba(29,158,117,.12); --gmid:rgba(29,158,117,.25);
-  --amber:#EF9F27;
-  --text:#F0EDE6; --muted:rgba(240,237,230,.5); --faint:rgba(240,237,230,.22);
-  --rule:rgba(29,158,117,.1); --ruleh:rgba(29,158,117,.28);
-  --sans:'Syne',sans-serif; --mono:'DM Mono',monospace;
-  --r:6px;
-}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);
-  -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.55}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
+  :root {
+    --color-bg: #F0EDE6;
+    --color-panel: #FAFAF8;
+    --color-card: #FAFAF8;
+    --color-accent: #1A7A5E;
+    --color-accent-dark: #145540;
+    --color-amber: #EF9F27;
+    --color-text: #1A1A18;
+    --color-text-muted: #5A5A54;
+    --color-text-faint: #9A9A90;
+    --color-rule: rgba(0,0,0,0.08);
+    --font-display: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
 
-/* ── TICKER ─────────────────────────────────────── */
-#ticker{
-  position:fixed;top:0;left:0;right:0;z-index:300;height:28px;
-  background:#071009;border-bottom:0.5px solid var(--rule);
-  display:flex;align-items:center;overflow:hidden;
-  font-family:var(--mono);font-size:10px;letter-spacing:.06em;
-}
-.ticker-inner{display:flex;gap:0;white-space:nowrap;
-  animation:tick 32s linear infinite}
-@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.tick-item{display:flex;align-items:center;gap:8px;padding:0 28px;
-  border-right:0.5px solid var(--rule);color:var(--faint)}
-.tick-mkt{color:var(--green);letter-spacing:.1em}
-.tick-val{color:var(--text)}
-.tick-up{color:#4ade80}.tick-dn{color:#f87171}
-.tick-label{color:var(--faint);letter-spacing:.04em}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── NAV ────────────────────────────────────────── */
-#nav{
-  position:fixed;top:28px;left:0;right:0;z-index:200;height:56px;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;
-  background:rgba(7,11,9,.88);backdrop-filter:blur(16px);
-  border-bottom:0.5px solid var(--rule);
-}
-.nl{display:flex;align-items:center;gap:10px}
-.nlogo{font-weight:800;font-size:19px;color:var(--green);letter-spacing:-.02em}
-.ndot{width:8px;height:8px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 10px rgba(29,158,117,.7);
-  animation:ndp 2.5s ease-in-out infinite}
-@keyframes ndp{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
-.nbadge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;
-  border:0.5px solid var(--ruleh);color:var(--green);padding:2px 8px;border-radius:3px}
-.nlinks{display:flex;gap:2px;list-style:none}
-.nlinks a{font-family:var(--mono);font-size:12px;letter-spacing:.04em;
-  color:var(--muted);padding:6px 14px;border-radius:4px;
-  transition:color .15s,background .15s}
-.nlinks a:hover{color:var(--text);background:rgba(29,158,117,.07)}
-.ncta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;
-  background:var(--green);color:#071009;padding:8px 20px;border-radius:var(--r);
-  font-weight:500;transition:opacity .15s;display:flex;align-items:center;gap:7px}
-.ncta:hover{opacity:.85}
-.ncta-dot{width:6px;height:6px;border-radius:50%;background:#071009;opacity:.7;
-  animation:ndp 2s ease-in-out infinite}
+  html { scroll-behavior: smooth; }
 
-/* ── SHARED UTILS ───────────────────────────────── */
-.wrap{max-width:1160px;margin:0 auto;padding:0 40px}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-  color:var(--green);text-transform:uppercase;margin-bottom:14px;
-  display:flex;align-items:center;gap:10px}
-.eyebrow::before{content:'';width:22px;height:1px;background:var(--green)}
-.rule-h{border:none;border-top:0.5px solid var(--rule);margin:0}
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
 
-/* ── HERO ───────────────────────────────────────── */
-#hero{
-  padding:110px 0 90px;
-  background:
-    radial-gradient(ellipse 70% 55% at 50% -10%,rgba(29,158,117,.09) 0%,transparent 65%),
-    var(--bg);
-  position:relative;overflow:hidden;
-}
-#hero::after{/* subtle grid */
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background-image:linear-gradient(var(--rule) 1px,transparent 1px),
-                   linear-gradient(90deg,var(--rule) 1px,transparent 1px);
-  background-size:60px 60px;
-  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 30%,transparent 80%);
-  opacity:.45;
-}
-.hero-inner{position:relative;z-index:1;text-align:center}
-.hero-kicker{display:inline-flex;align-items:center;gap:8px;
-  font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--green);
-  border:0.5px solid var(--ruleh);background:var(--gdim);
-  padding:5px 14px;border-radius:20px;margin-bottom:32px}
-.hero-kicker-dot{width:5px;height:5px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 6px rgba(29,158,117,.8)}
-.hero-h1{font-size:clamp(38px,5.5vw,70px);font-weight:800;line-height:1.02;
-  letter-spacing:-.03em;margin-bottom:24px}
-.hero-h1 em{font-style:normal;color:var(--green)}
-.hero-sub{font-family:var(--mono);font-size:15px;color:var(--muted);
-  max-width:520px;margin:0 auto 40px;line-height:1.7;letter-spacing:.01em}
-.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
-.btn-primary{font-family:var(--mono);font-size:13px;letter-spacing:.04em;
-  background:var(--green);color:#071009;padding:11px 28px;
-  border-radius:var(--r);font-weight:500;transition:opacity .15s}
-.btn-primary:hover{opacity:.85}
-.btn-ghost{font-family:var(--mono);font-size:13px;letter-spacing:.04em;
-  color:var(--text);border:0.5px solid var(--ruleh);padding:11px 28px;
-  border-radius:var(--r);transition:border-color .15s,color .15s}
-.btn-ghost:hover{border-color:var(--green);color:var(--green)}
-/* stat strip */
-.hero-stats{display:flex;justify-content:center;gap:0;
-  border:0.5px solid var(--rule);border-radius:var(--r);
-  background:var(--bg1);overflow:hidden;max-width:680px;margin:0 auto}
-.hstat{flex:1;padding:18px 28px;border-right:0.5px solid var(--rule);text-align:center}
-.hstat:last-child{border-right:none}
-.hstat-val{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--text);
-  margin-bottom:4px}
-.hstat-val.g{color:var(--green)}
-.hstat-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted)}
-/* hero layout: two-col on wide screens */
-.hero-layout{display:grid;grid-template-columns:1fr 520px;gap:64px;
-  align-items:center;margin-bottom:56px}
-.hero-left{text-align:left}
-.hero-left .hero-kicker{justify-content:flex-start}
-.hero-left .hero-sub{margin:0 0 32px;max-width:none}
-.hero-left .hero-btns{justify-content:flex-start}
-/* mini dashboard preview card */
-.hero-dash{background:var(--bg1);border:0.5px solid var(--ruleh);
-  border-radius:10px;overflow:hidden;
-  box-shadow:0 40px 80px -20px rgba(0,0,0,.6),0 0 0 0.5px rgba(0,0,0,.4)}
-.hd-chrome{background:#050805;height:34px;display:flex;align-items:center;
-  padding:0 12px;border-bottom:0.5px solid var(--rule);gap:8px}
-.hd-dots{display:flex;gap:6px}
-.hd-dot{width:10px;height:10px;border-radius:50%}
-.hd-url{flex:1;text-align:center;font-family:var(--mono);font-size:10px;
-  color:var(--faint);background:rgba(255,255,255,.04);
-  border-radius:3px;padding:3px 12px;letter-spacing:.03em}
-.hd-body{padding:0}
-/* sidebar + main layout inside preview */
-.hd-app{display:grid;grid-template-columns:140px 1fr;height:320px}
-.hd-sidebar{background:#0A0F0C;border-right:0.5px solid var(--rule);
-  padding:14px 0;display:flex;flex-direction:column;gap:2px}
-.hd-brand{padding:8px 16px 12px;font-family:var(--mono);font-size:11px;
-  color:var(--green);letter-spacing:.06em;border-bottom:0.5px solid var(--rule);
-  margin-bottom:6px}
-.hd-nav-item{font-family:var(--mono);font-size:10px;color:var(--muted);
-  padding:7px 16px;display:flex;align-items:center;gap:8px;letter-spacing:.04em}
-.hd-nav-item.active{background:var(--gdim);color:var(--green);
-  border-right:2px solid var(--green)}
-.hd-nav-icon{width:8px;height:8px;border-radius:2px;
-  background:currentColor;opacity:.5;flex-shrink:0}
-.hd-main{padding:16px;overflow:hidden}
-.hd-eyebrow{font-family:var(--mono);font-size:9px;color:var(--muted);
-  letter-spacing:.1em;margin-bottom:4px}
-.hd-page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;
-  margin-bottom:14px;color:var(--text)}
-.hd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.hd-kpi{background:var(--bg2);border:0.5px solid var(--rule);
-  border-radius:4px;padding:10px 12px}
-.hd-kpi-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.1em;
-  color:var(--muted);margin-bottom:4px}
-.hd-kpi-val{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
-.hd-kpi-val.g{color:var(--green)}
-.hd-kpi-sub{font-family:var(--mono);font-size:8px;color:var(--faint);margin-top:2px}
-/* mini chart area */
-.hd-chart-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);
-  letter-spacing:.08em;margin-bottom:8px}
-.hd-chart{height:90px;background:var(--bg2);border:0.5px solid var(--rule);
-  border-radius:4px;overflow:hidden;position:relative}
-.hd-chart-svg{width:100%;height:100%}
-.hd-status-bar{display:flex;gap:8px;margin-top:10px;align-items:center}
-.hd-status-pill{font-family:var(--mono);font-size:8px;letter-spacing:.07em;
-  padding:3px 8px;border-radius:3px;background:var(--gdim);
-  color:var(--green);border:0.5px solid var(--ruleh)}
-.hd-status-pill.amber{background:rgba(239,159,39,.1);color:var(--amber);
-  border-color:rgba(239,159,39,.3)}
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
 
-/* ── PROOF ──────────────────────────────────────── */
-#proof{padding:96px 0;background:var(--bg1)}
-.proof-card{display:grid;grid-template-columns:1fr 1.1fr;gap:72px;align-items:center;
-  background:var(--bg2);border:0.5px solid var(--ruleh);
-  border-radius:10px;padding:56px 60px;position:relative;overflow:hidden}
-.proof-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:.6}
-.proof-h{font-size:clamp(28px,3vw,40px);font-weight:800;letter-spacing:-.025em;
-  line-height:1.1;margin-bottom:16px}
-.proof-pct{font-style:normal;color:var(--green)}
-.proof-body{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.75}
-/* table */
-.proof-table{display:flex;flex-direction:column;border:0.5px solid var(--rule);
-  border-radius:var(--r);overflow:hidden}
-.pt-header,.pt-row{display:grid;grid-template-columns:1.8fr .9fr .9fr .7fr;gap:0}
-.pt-header>div{font-family:var(--mono);font-size:9px;letter-spacing:.1em;
-  color:var(--muted);padding:10px 14px;background:var(--bg);
-  border-bottom:0.5px solid var(--rule)}
-.pt-header>div:not(:first-child){text-align:right}
-.pt-row{border-bottom:0.5px solid var(--rule)}
-.pt-row:last-child{border-bottom:none}
-.pt-stream,.pt-agent,.pt-base,.pt-delta{font-family:var(--mono);font-size:12px;
-  padding:11px 14px;display:flex;align-items:center}
-.pt-stream{color:var(--muted)}
-.pt-agent{color:var(--text);justify-content:flex-end}
-.pt-base{color:var(--faint);justify-content:flex-end}
-.pt-delta{color:var(--green);justify-content:flex-end}
-.pt-flat{color:var(--faint)}
-.pt-zero{color:var(--faint)}
-.pt-new{background:rgba(239,159,39,.04)}
-.pt-new-tag{font-size:8px;letter-spacing:.08em;padding:2px 6px;margin-left:6px;
-  background:rgba(239,159,39,.15);color:var(--amber);
-  border:0.5px solid rgba(239,159,39,.4);border-radius:3px}
-.pt-total{background:rgba(29,158,117,.05);border-top:0.5px solid var(--ruleh)}
-.pt-total .pt-stream{color:var(--text);font-weight:500}
-.pt-total .pt-agent{color:var(--text);font-weight:500}
-.pt-total .pt-delta{color:var(--green);font-weight:500}
-.proof-note{font-family:var(--mono);font-size:10px;color:var(--faint);
-  margin-top:12px;letter-spacing:.06em}
+  /* ============ NAV ============ */
+  #mainNav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    height: 56px;
+    background: rgba(240,237,230,0.93);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  }
 
-/* ── SHOWCASE ───────────────────────────────────── */
-#showcase{padding:96px 0}
-.sc-header{margin-bottom:56px}
-.sc-title{font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-.03em;
-  line-height:1.08;margin-bottom:14px}
-.sc-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
-  max-width:480px;line-height:1.7}
-.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  background:var(--rule);border:0.5px solid var(--rule);border-radius:10px;
-  overflow:hidden}
-.sc-card{background:var(--bg1);display:flex;flex-direction:column;
-  transition:background .2s}
-.sc-card:hover{background:var(--bg2)}
-.sc-card-top{padding:28px 28px 22px;border-bottom:0.5px solid var(--rule)}
-.sc-num{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  color:var(--green);margin-bottom:10px}
-.sc-card-name{font-size:20px;font-weight:700;letter-spacing:-.02em;
-  margin-bottom:8px}
-.sc-card-desc{font-family:var(--mono);font-size:12px;color:var(--muted);
-  line-height:1.65}
-/* embedded mini-preview */
-.sc-preview{position:relative;height:260px;overflow:hidden;
-  border-bottom:0.5px solid var(--rule);background:#070B09}
-.sc-preview iframe{
-  position:absolute;top:0;left:0;
-  width:880px;height:800px;
-  border:none;
-  transform:scale(.46);transform-origin:top left;
-  pointer-events:none}
-.sc-card-bot{padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
-.sc-tags{display:flex;flex-wrap:wrap;gap:6px}
-.sc-tag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;
-  padding:3px 8px;border-radius:3px;
-  background:var(--gdim);color:var(--green);border:0.5px solid var(--ruleh)}
-.sc-open{font-family:var(--mono);font-size:11px;letter-spacing:.05em;
-  color:var(--green);border:0.5px solid var(--ruleh);
-  padding:7px 16px;border-radius:var(--r);
-  display:inline-flex;align-items:center;gap:6px;
-  transition:background .15s,border-color .15s;white-space:nowrap}
-.sc-open:hover{background:var(--gdim);border-color:var(--green)}
+  .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 24px;
+  }
 
-/* ── DETAILS ────────────────────────────────────── */
-#features{padding:96px 0}
-.det-split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
-.det-title{font-size:clamp(24px,2.8vw,38px);font-weight:800;
-  letter-spacing:-.025em;line-height:1.12;margin-bottom:20px}
-.det-body{font-family:var(--mono);font-size:13px;color:var(--muted);
-  line-height:1.8;margin-bottom:16px}
-.det-protocols{display:flex;flex-wrap:wrap;gap:8px;margin-top:32px}
-.det-proto{font-family:var(--mono);font-size:10px;letter-spacing:.08em;
-  color:var(--faint);border:0.5px solid var(--rule);
-  padding:4px 10px;border-radius:3px}
-.det-right{display:flex;flex-direction:column;gap:0;
-  border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
-.det-item{display:grid;grid-template-columns:48px 1fr;gap:0;
-  padding:28px 28px 28px 0;border-bottom:0.5px solid var(--rule)}
-.det-item:last-child{border-bottom:none}
-.det-num{font-family:var(--mono);font-size:11px;color:var(--green);
-  padding:28px 0 0 24px;letter-spacing:.06em}
-.det-name{font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
-.det-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
+  .nav-left {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--color-accent);
+    letter-spacing: -0.005em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-logo svg { display: block; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    border: 0.5px solid rgba(26,122,94,0.4);
+    color: var(--color-accent);
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
 
-/* ── USE CASES ──────────────────────────────────── */
-#usecases{padding:96px 0;background:var(--bg1)}
-.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
-  border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
-.uc-card{padding:40px 36px;border-right:0.5px solid var(--rule);background:var(--bg2)}
-.uc-card:last-child{border-right:none}
-.uc-num{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
-  color:var(--green);margin-bottom:20px}
-.uc-name{font-size:16px;font-weight:700;letter-spacing:-.015em;
-  margin-bottom:16px;line-height:1.35}
-.uc-desc{font-family:var(--mono);font-size:12px;color:var(--muted);
-  line-height:1.8;margin-bottom:24px}
-.uc-bullets{display:flex;flex-direction:column;gap:10px;
-  border-top:0.5px solid var(--rule);padding-top:20px}
-.uc-b{font-family:var(--mono);font-size:11px;color:var(--muted);
-  padding-left:14px;position:relative;line-height:1.5}
-.uc-b::before{content:'';position:absolute;left:0;top:7px;
-  width:5px;height:1px;background:var(--green)}
+  .nav-center {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    justify-content: center;
+  }
 
-/* ── MARKETS ────────────────────────────────────── */
-#markets{padding:96px 0}
-.mkt-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
-.mkt-title{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.025em;
-  line-height:1.1;margin-bottom:16px}
-.mkt-body{font-family:var(--mono);font-size:13px;color:var(--muted);
-  line-height:1.75;margin-bottom:20px}
-.mkt-note{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.03em}
-.mkt-grid{display:flex;flex-direction:column;gap:2px}
-.mkt-item{display:grid;grid-template-columns:80px 1fr auto;
-  align-items:center;gap:16px;padding:16px 20px;
-  border:0.5px solid var(--rule);border-radius:var(--r);
-  background:var(--bg1);transition:background .2s}
-.mkt-item.active{background:var(--bg2);border-color:rgba(29,158,117,.25)}
-.mkt-item:hover{background:var(--bg3)}
-.mkt-name{font-weight:700;font-size:15px;letter-spacing:-.01em}
-.mkt-detail{font-family:var(--mono);font-size:11px;color:var(--muted)}
-.mkt-badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;
-  padding:3px 8px;border-radius:3px;
-  background:rgba(29,158,117,.18);color:var(--green);
-  border:0.5px solid rgba(29,158,117,.35)}
-.mkt-badge.soon{background:rgba(239,159,39,.1);color:var(--amber);
-  border-color:rgba(239,159,39,.3)}
+  .nav-item {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #5A5A54;
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 150ms ease, background 150ms ease;
+    position: relative;
+    letter-spacing: 0.02em;
+  }
+  .nav-item:hover {
+    color: var(--color-text);
+    background: rgba(26,122,94,0.06);
+  }
+  .nav-item.active {
+    color: var(--color-text) !important;
+  }
+  .nav-item.active::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: -2px;
+    height: 1.5px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
 
-/* ── HOW IT WORKS ───────────────────────────────── */
-#how{padding:96px 0}
-.how-header{margin-bottom:64px}
-.how-title{font-size:clamp(26px,3vw,40px);font-weight:800;
-  letter-spacing:-.025em;line-height:1.1;margin-bottom:14px;max-width:560px}
-.how-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
-  max-width:440px;line-height:1.7}
-.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
-  background:var(--rule);border:0.5px solid var(--rule);
-  border-radius:var(--r);overflow:hidden}
-.how-step{background:var(--bg);padding:36px 32px 40px;
-  border-right:0.5px solid var(--rule);position:relative}
-.how-step:last-child{border-right:none}
-.how-step:nth-child(4),.how-step:nth-child(5),.how-step:nth-child(6){
-  border-top:0.5px solid var(--rule)}
-/* connect steps with a subtle right arrow on hover */
-.step-num{font-family:var(--mono);font-size:38px;color:var(--green);
-  opacity:.2;line-height:1;margin-bottom:20px;font-weight:400}
-.step-name{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
-.step-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
 
-/* ── CTA ────────────────────────────────────────── */
-#cta{padding:100px 0;text-align:center;position:relative;overflow:hidden;
-  background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(29,158,117,.08) 0%,transparent 65%)}
-#cta::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background-image:linear-gradient(var(--rule) 1px,transparent 1px),
-                   linear-gradient(90deg,var(--rule) 1px,transparent 1px);
-  background-size:60px 60px;opacity:.3}
-.cta-inner{position:relative;z-index:1}
-.cta-tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-  color:var(--amber);border:0.5px solid rgba(239,159,39,.35);
-  background:rgba(239,159,39,.08);padding:4px 14px;border-radius:20px;margin-bottom:28px}
-.cta-h{font-size:clamp(30px,4vw,52px);font-weight:800;letter-spacing:-.03em;
-  line-height:1.05;margin-bottom:18px}
-.cta-h em{font-style:normal;color:var(--green)}
-.cta-p{font-family:var(--mono);font-size:14px;color:var(--muted);
-  margin:0 auto 40px;max-width:420px;line-height:1.7}
-.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #1A1A18;
+    color: #F0EDE6;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    transition: background 150ms ease;
+    letter-spacing: 0.02em;
+  }
+  .nav-cta:hover { background: #2A2A24; }
 
-/* ── FOOTER ─────────────────────────────────────── */
-/* ── TRUST STRIP ────────────────────────────────── */
-#trust{padding:64px 0;background:var(--bg2)}
-.trust-inner{display:flex;flex-direction:column;align-items:center;gap:40px}
-.trust-label{font-family:var(--mono);font-size:9px;letter-spacing:.16em;
-  color:var(--faint);text-align:center}
-.trust-isos{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
-.trust-iso{font-weight:700;font-size:18px;color:var(--muted);letter-spacing:-.01em}
-.trust-iso.active{color:var(--faint)}
-.trust-sep{color:var(--faint)}
-.trust-soon{font-family:var(--mono);font-size:9px;letter-spacing:.1em;
-  color:var(--amber);border:0.5px solid rgba(239,159,39,.3);
-  padding:1px 5px;border-radius:2px;vertical-align:middle;margin-left:4px}
-.trust-stats{display:grid;grid-template-columns:repeat(4,1fr);
-  gap:0;width:100%;border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
-.tstat{padding:28px 32px;border-right:0.5px solid var(--rule);text-align:center}
-.tstat:last-child{border-right:none}
-.tstat-val{font-size:36px;font-weight:800;letter-spacing:-.03em;color:var(--green);line-height:1}
-.tstat-val span{font-size:18px;font-weight:600;opacity:.7}
-.tstat-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);
-  margin-top:8px;line-height:1.5}
+  /* ============ DROPDOWN ============ */
 
-/* ── FOOTER ─────────────────────────────────────── */
-#foot{border-top:0.5px solid var(--rule);background:var(--bg1)}
-.foot-inner{display:grid;grid-template-columns:280px 1fr;gap:80px;padding:64px 0 48px}
-.foot-logo{font-weight:800;font-size:20px;color:var(--green);
-  letter-spacing:-.02em;margin-bottom:12px}
-.foot-tagline{font-family:var(--mono);font-size:12px;color:var(--muted);
-  line-height:1.7;margin-bottom:20px}
-.foot-copy{font-family:var(--mono);font-size:10px;color:var(--faint)}
-.foot-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
-.foot-col{display:flex;flex-direction:column;gap:10px}
-.foot-col-title{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
-  color:var(--green);margin-bottom:4px}
-.foot-col a{font-family:var(--mono);font-size:12px;color:var(--muted);transition:color .15s}
-.foot-col a:hover{color:var(--text)}
-.foot-bottom{border-top:0.5px solid var(--rule);padding:20px 0;background:var(--bg)}
-.foot-bottom-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.foot-markets{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em}
-.foot-legal{font-family:var(--mono);font-size:10px;color:var(--faint)}
 
-/* ── RESPONSIVE ─────────────────────────────────── */
-@media(max-width:900px){
-  #nav{padding:0 20px}
-  .nlinks{display:none}
-  .wrap{padding:0 20px}
-  .sc-grid{grid-template-columns:1fr}
-  .feat-grid{grid-template-columns:1fr}
-  .feat-col{border-right:none;border-bottom:0.5px solid var(--rule)}
-  .feat-col:last-child{border-bottom:none}
-  .feat-header{grid-template-columns:1fr;gap:24px}
-  .how-steps{grid-template-columns:1fr 1fr}
-  .how-step:nth-child(4),.how-step:nth-child(5),.how-step:nth-child(6){border-top:0.5px solid var(--rule)}
-  .uc-grid{grid-template-columns:1fr}
-  .uc-card{border-right:none;border-bottom:0.5px solid var(--rule)}
-  .uc-card:last-child{border-bottom:none}
-  .mkt-layout{grid-template-columns:1fr;gap:48px}
-  .det-split{grid-template-columns:1fr;gap:48px}
-  .hero-stats{flex-direction:column;max-width:260px}
-  .hstat{border-right:none;border-bottom:0.5px solid var(--rule)}
-  .hstat:last-child{border-bottom:none}
-  .foot-inner{grid-template-columns:1fr;gap:40px}
-  .foot-cols{grid-template-columns:repeat(2,1fr)}
-  .trust-stats{grid-template-columns:repeat(2,1fr)}
-  .tstat:nth-child(2){border-right:none}
-  .tstat:nth-child(3){border-top:0.5px solid var(--rule)}
-  .tstat:nth-child(4){border-top:0.5px solid var(--rule)}
-}
-@media(max-width:600px){
-  .how-steps{grid-template-columns:1fr}
-  .how-step:nth-child(n){border-top:0.5px solid var(--rule)}
-  .how-step:first-child{border-top:none}
-  .cta-h{font-size:28px}
-  .hero-h1{font-size:34px}
-  .sc-grid{grid-template-columns:1fr}
-}
+  /* ============ APP / PAGES ============ */
+  #app { transition: opacity 150ms ease; }
+  .page { padding-top: 56px; min-height: 100vh; }
+  .page-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .page-hero { padding: 80px 0 60px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(26,122,94,0.6);
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+  }
+  .page-headline {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(32px, 5vw, 60px);
+    color: var(--color-text);
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+  }
+  .page-subhead {
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: #5A5A54;
+    max-width: 560px;
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  /* ============ HOME (preserved) ============ */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  hr.rule { border: none; border-top: 0.5px solid var(--color-rule); margin: 0; }
+
+  .cta {
+    font-family: var(--font-display); font-weight: 500; font-size: 14px;
+    padding: 12px 28px; border-radius: 4px; cursor: pointer;
+    transition: all 200ms ease; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    opacity: 0; transform: translateX(-10px);
+    border: 0.5px solid transparent;
+  }
+  .cta-primary {
+    background: #1A1A18; color: #F0EDE6;
+    border-color: #1A1A18;
+  }
+  .cta-primary:hover { background: #2A2A24; border-color: #2A2A24; }
+  .cta-secondary {
+    background: transparent; border-color: rgba(0,0,0,0.2); color: var(--color-text);
+  }
+  .cta-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .cta .arrow { transition: transform 200ms ease; }
+  .cta:hover .arrow { transform: translateX(3px); }
+
+  .section { padding: 120px 0; position: relative; }
+  .section-head {
+    margin-bottom: 64px; display: grid;
+    grid-template-columns: 1fr 2fr; gap: 64px; align-items: end;
+  }
+  .section-eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--color-accent); letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-eyebrow .num { color: var(--color-text-faint); }
+  .section-title {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(28px, 3.4vw, 44px); line-height: 1.08;
+    letter-spacing: -0.03em; color: var(--color-text);
+  }
+  .section-subtitle {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--color-text-muted); letter-spacing: 0.06em;
+  }
+
+  .stages-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: rgba(26,122,94,0.08);
+    border: 0.5px solid rgba(26,122,94,0.08);
+  }
+  .stage-card {
+    background: rgba(26,122,94,0.04);
+    border-left: 0.5px solid var(--color-accent);
+    padding: 36px 32px 40px; position: relative;
+    transition: background 250ms ease, border-color 250ms ease;
+    opacity: 0; transform: translateY(30px); overflow: hidden;
+  }
+  .stage-card:hover {
+    background: rgba(26,122,94,0.08); border-left-color: var(--color-amber);
+  }
+  .stage-num {
+    font-family: var(--font-mono); font-size: 48px;
+    color: var(--color-accent); opacity: 0.25;
+    line-height: 1; margin-bottom: 28px; font-weight: 400;
+  }
+  .stage-name {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 16px; margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+  .stage-desc {
+    font-family: var(--font-display); font-weight: 400; font-size: 14px;
+    color: #5A5A54; line-height: 1.55;
+  }
+
+  .metrics-card {
+    background: var(--color-panel);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 8px; max-width: 1080px; margin: 0 auto;
+    padding: 56px; display: grid; grid-template-columns: 1fr 1fr;
+    gap: 56px; position: relative; overflow: hidden;
+  }
+  .metrics-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    opacity: 0.4;
+  }
+  .metrics-tag {
+    font-family: var(--font-mono); font-size: 11px; color: var(--color-amber);
+    letter-spacing: 0.12em; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .metrics-tag::before {
+    content: ""; width: 8px; height: 8px; background: var(--color-amber);
+    border-radius: 50%; box-shadow: 0 0 6px rgba(239,159,39,0.3);
+  }
+  .metrics-headline {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(22px, 2.4vw, 30px); line-height: 1.15;
+    letter-spacing: -0.02em; margin-bottom: 20px;
+  }
+  .metrics-headline .pct {
+    color: var(--color-amber); font-style: italic; font-weight: 400;
+  }
+  .metrics-sub {
+    font-family: var(--font-display); font-size: 14px;
+    color: #5A5A54; line-height: 1.6; max-width: 380px;
+  }
+
+  .compare-table {
+    display: grid; grid-template-columns: 1.6fr 1fr 1fr 0.9fr;
+    column-gap: 12px; align-self: center;
+  }
+  .ct-header, .ct-row { display: contents; }
+  .ct-header > div {
+    font-family: var(--font-mono); font-size: 11px;
+    color: #9A9A90; letter-spacing: 0.06em;
+    padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    text-transform: uppercase;
+  }
+  .ct-header > div:not(:first-child) { text-align: right; }
+  .ct-row > div {
+    font-family: var(--font-mono); font-size: 13px; padding: 14px 0;
+    border-bottom: 0.5px solid rgba(26,122,94,0.08);
+    color: var(--color-text); opacity: 0; transform: translateX(-20px);
+  }
+  .ct-row > div:not(:first-child) { text-align: right; }
+  .ct-row > div:first-child { color: #5A5A54; }
+  .ct-row.total > div {
+    font-weight: 500; color: var(--color-text);
+    border-bottom: none; padding-top: 18px;
+  }
+  .ct-row .delta { color: var(--color-accent); }
+  .ct-row .new-tag {
+    color: var(--color-amber); border: 0.5px solid var(--color-amber);
+    padding: 2px 8px; border-radius: 2px; font-size: 10px;
+    display: inline-block;
+  }
+  .ct-row .dash { color: #9A9A90; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .feature-col {
+    padding: 0 32px; border-left: 0.5px solid rgba(0,0,0,0.08);
+    opacity: 0; transform: scale(0.96);
+  }
+  .feature-col:first-child { padding-left: 0; border-left: none; }
+  .feature-col:last-child { padding-right: 0; }
+
+  .feature-icon {
+    width: 48px; height: 48px; margin-bottom: 28px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .icon-rings, .icon-rings::before, .icon-rings::after {
+    border-radius: 50%; border: 0.5px solid var(--color-accent); position: absolute;
+  }
+  .icon-rings { width: 44px; height: 44px; animation: spin 18s linear infinite; }
+  .icon-rings::before {
+    content: ""; width: 28px; height: 28px; top: 7px; left: 7px;
+    border-color: rgba(26,122,94,0.6); animation: spin 12s linear infinite reverse;
+  }
+  .icon-rings::after {
+    content: ""; width: 14px; height: 14px; top: 14px; left: 14px;
+    background: var(--color-accent); border: none;
+    box-shadow: 0 0 6px rgba(26,122,94,0.2);
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .icon-bars { display: flex; align-items: flex-end; gap: 4px; width: 44px; height: 44px; }
+  .icon-bars span {
+    flex: 1; background: var(--color-accent); height: 0;
+    transition: height 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .icon-lock { width: 28px; height: 36px; position: relative; }
+  .icon-lock::before {
+    content: ""; position: absolute; top: 0; left: 5px;
+    width: 18px; height: 16px; border: 0.5px solid var(--color-accent);
+    border-bottom: none; border-radius: 9px 9px 0 0;
+  }
+  .icon-lock::after {
+    content: ""; position: absolute; top: 14px; left: 0;
+    width: 28px; height: 22px; border: 0.5px solid var(--color-accent);
+    border-radius: 2px;
+    background: radial-gradient(circle at 50% 30%, var(--color-accent) 0 2px, transparent 3px);
+  }
+  .feature-name {
+    font-family: var(--font-display); font-weight: 700; font-size: 18px;
+    margin-bottom: 14px; letter-spacing: -0.01em;
+  }
+  .feature-desc {
+    font-family: var(--font-display); font-size: 14px;
+    color: #5A5A54; line-height: 1.6; margin-bottom: 24px;
+  }
+  .feature-link {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--color-accent); text-decoration: none;
+    letter-spacing: 0.04em; display: inline-flex;
+    align-items: center; gap: 8px; transition: gap 200ms ease;
+  }
+  .feature-link:hover { gap: 14px; }
+
+  .markets-section { text-align: center; }
+  .markets-section .section-title { max-width: 700px; margin: 0 auto 18px; }
+  .markets-section .section-subtitle { margin-bottom: 56px; }
+  .pills {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 12px; margin-bottom: 48px;
+  }
+  .pill {
+    border: 0.5px solid rgba(26,122,94,0.4); color: var(--color-accent);
+    font-family: var(--font-mono); font-size: 13px;
+    padding: 8px 20px; border-radius: 40px;
+    transition: background 200ms ease, border-color 200ms ease;
+    cursor: default; letter-spacing: 0.04em; background: transparent;
+  }
+  .pill:hover { background: rgba(26,122,94,0.08); border-color: var(--color-accent); }
+  .markets-note {
+    font-family: var(--font-display); font-size: 14px;
+    color: #9A9A90; line-height: 1.65;
+    max-width: 640px; margin: 0 auto;
+  }
+
+  .site-footer {
+    border-top: 0.5px solid rgba(0,0,0,0.08);
+    padding: 32px 0; margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 32px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    align-items: center; gap: 24px;
+  }
+  .footer-center {
+    text-align: center; font-family: var(--font-mono);
+    font-size: 12px; color: var(--color-text-muted);
+  }
+  .footer-right {
+    text-align: right; font-family: var(--font-mono);
+    font-size: 12px; color: var(--color-text-faint);
+  }
+
+  /* ============ PRODUCT PAGE ============ */
+  .feature-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 64px; align-items: center; padding: 72px 0;
+  }
+  .feature-row.reverse { direction: rtl; }
+  .feature-row.reverse > * { direction: ltr; }
+  .feature-row > * { opacity: 0; }
+
+  .module-label {
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(26,122,94,0.6); letter-spacing: 0.12em;
+    margin-bottom: 18px;
+  }
+  .module-headline {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 28px; color: var(--color-text);
+    line-height: 1.15; letter-spacing: -0.015em; margin-bottom: 18px;
+  }
+  .module-body {
+    font-family: var(--font-display); font-size: 15px;
+    color: #5A5A54; line-height: 1.7; margin-bottom: 24px;
+  }
+  .module-bullets { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .module-bullets li {
+    font-family: var(--font-mono); font-size: 12px;
+    color: #5A5A54; letter-spacing: 0.01em;
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  .module-bullets li::before {
+    content: "→"; color: var(--color-accent); font-weight: 700;
+  }
+
+  /* Inline mockups (compact panel) */
+  .inline-panel {
+    background: var(--color-panel);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 8px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .ip-chrome {
+    background: var(--color-bg); height: 32px;
+    display: flex; align-items: center; padding: 0 12px;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    position: relative;
+  }
+  .ip-dots { display: flex; gap: 6px; }
+  .ip-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .ip-dot.r { background: #FF5F57; } .ip-dot.y { background: #FEBC2E; } .ip-dot.g { background: #28C840; }
+  .ip-url {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    font-family: var(--font-mono); font-size: 10px;
+    color: #9A9A90; background: rgba(255,255,255,0.05);
+    padding: 3px 12px; border-radius: 3px; letter-spacing: 0.02em;
+  }
+  .ip-status {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    font-family: var(--font-mono); font-size: 10px;
+  }
+  .ip-status .l { color: rgba(26,122,94,0.6); letter-spacing: 0.1em; }
+  .ip-status .r { color: #9A9A90; display: flex; align-items: center; gap: 6px; }
+  .ip-status .pulse {
+    width: 6px; height: 6px; border-radius: 50%; background: #28C840;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .ip-body { padding: 14px; }
+
+  /* Inline bid card */
+  .ip-bid {
+    background: #F5F2EC; border: 0.5px solid rgba(26,122,94,0.35);
+    border-left: 3px solid var(--color-accent); border-radius: 6px;
+    overflow: hidden;
+  }
+  .ip-bid-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 12px 14px; gap: 12px;
+  }
+  .ip-bid-asset .name {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+    color: var(--color-text); margin-bottom: 3px;
+  }
+  .ip-bid-asset .market {
+    font-family: var(--font-mono); font-size: 10px; color: #9A9A90;
+  }
+  .ip-bid-meta { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .ip-risk {
+    font-family: var(--font-mono); font-size: 9px; padding: 2px 7px;
+    border-radius: 3px; letter-spacing: 0.08em;
+    background: rgba(186,117,23,0.15); color: var(--color-amber);
+    border: 0.5px solid rgba(239,159,39,0.3);
+  }
+  .ip-spec {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--color-accent); font-weight: 700;
+  }
+  .ip-rev {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 14px;
+    border-top: 0.5px solid rgba(0,0,0,0.06);
+    border-bottom: 0.5px solid rgba(0,0,0,0.06);
+  }
+  .ip-rev .label { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; }
+  .ip-rev .val { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--color-text); letter-spacing: -0.01em; }
+  .ip-rev .val span { font-family: var(--font-mono); font-size: 10px; color: #9A9A90; font-weight: 400; margin-left: 4px; }
+  .ip-rationale {
+    margin: 12px 14px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: #5A5A54; line-height: 1.65;
+    background: rgba(0,0,0,0.04); padding: 9px 11px; border-radius: 4px;
+  }
+  .ip-rationale .em { color: var(--color-accent); }
+  .ip-rationale .am { color: var(--color-amber); }
+  .ip-tags-wrap { padding: 0 14px 12px; }
+  .ip-tags-label { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .ip-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ip-tag {
+    font-family: var(--font-mono); font-size: 9px;
+    background: rgba(26,122,94,0.08); border: 0.5px solid rgba(26,122,94,0.25);
+    color: rgba(26,122,94,0.8); padding: 2px 7px; border-radius: 3px;
+  }
+  .ip-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    border-top: 0.5px solid rgba(0,0,0,0.06);
+  }
+  .ip-actions .meta { font-family: var(--font-mono); font-size: 10px; color: #9A9A90; }
+  .ip-actions .btns { display: flex; gap: 6px; }
+  .ip-btn {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer;
+    letter-spacing: 0.04em;
+  }
+  .ip-btn.decline { background: transparent; border: 0.5px solid rgba(0,0,0,0.12); color: #9A9A90; }
+  .ip-btn.approve { background: #1A1A18; color: #F0EDE6; font-weight: 700; }
+
+  /* Inline shadow mode */
+  .ip-metric-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .ip-metric {
+    background: rgba(0,0,0,0.04); border: 0.5px solid rgba(26,122,94,0.08);
+    border-radius: 5px; padding: 10px 12px;
+  }
+  .ip-metric .l { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; }
+  .ip-metric .v { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--color-text); letter-spacing: -0.01em; margin-top: 4px; }
+  .ip-metric .v.dim { color: #9A9A90; }
+  .ip-metric .v.up { color: var(--color-accent); }
+  .ip-metric .s { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; margin-top: 2px; }
+  .ip-metric .s.up { color: var(--color-accent); }
+
+  .ip-table { display: flex; flex-direction: column; }
+  .ip-tr {
+    display: grid; grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr;
+    gap: 10px; padding: 8px 0;
+    border-bottom: 0.5px solid rgba(26,122,94,0.06);
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .ip-tr.h { font-size: 9px; color: #9A9A90; letter-spacing: 0.08em; padding-bottom: 6px; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+  .ip-tr > div:not(:first-child) { text-align: right; }
+  .ip-tr .stream { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--color-text); }
+  .ip-tr .ag { color: var(--color-text); }
+  .ip-tr .ba { color: #9A9A90; }
+  .ip-tr .dl { color: var(--color-accent); }
+  .ip-tr.tot { border-top: 0.5px solid rgba(26,122,94,0.25); border-bottom: none; padding-top: 10px; margin-top: 4px; }
+  .ip-tr.tot > div { font-weight: 700; }
+  .ip-new {
+    color: var(--color-amber); border: 0.5px solid rgba(239,159,39,0.4);
+    background: rgba(239,159,39,0.12); padding: 1px 6px; border-radius: 3px;
+    font-size: 9px; display: inline-block;
+  }
+
+  /* Inline settlement */
+  .ip-bar {
+    height: 5px; border-radius: 3px; background: rgba(26,122,94,0.08);
+    display: flex; overflow: hidden; margin-top: 12px;
+  }
+  .ip-bar-d { background: var(--color-accent); width: 96.4%; }
+  .ip-bar-s { background: rgba(239,159,39,0.5); width: 3.6%; }
+  .ip-bar-labels {
+    display: flex; justify-content: space-between; margin-top: 6px;
+    font-family: var(--font-mono); font-size: 9px;
+  }
+  .ip-bar-labels .l { color: var(--color-accent); }
+  .ip-bar-labels .r { color: var(--color-amber); }
+  .ip-asset-row {
+    display: grid; grid-template-columns: 1.3fr 0.6fr 0.7fr 0.9fr;
+    gap: 8px; padding: 7px 0;
+    border-bottom: 0.5px solid rgba(26,122,94,0.06);
+    font-family: var(--font-mono); font-size: 10px; align-items: center;
+  }
+  .ip-asset-row.h { font-size: 9px; color: #9A9A90; letter-spacing: 0.06em; }
+  .ip-asset-row > div:not(:first-child) { text-align: right; }
+  .ip-asset-row .a-name { font-family: var(--font-display); font-weight: 700; font-size: 11px; color: var(--color-text); }
+  .ip-asset-row .a-sub { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; margin-top: 1px; }
+  .ip-asset-row.flag { background: rgba(239,159,39,0.04); border-left: 2px solid rgba(239,159,39,0.4); padding-left: 6px; margin-left: -8px; }
+  .ip-asset-row .perf-up { color: var(--color-accent); }
+  .ip-asset-row .perf-down { color: var(--color-amber); }
+  .ip-status-pill {
+    font-family: var(--font-mono); font-size: 8px; padding: 2px 6px;
+    border-radius: 3px; letter-spacing: 0.05em; display: inline-block;
+  }
+  .ip-status-pill.ok { background: rgba(26,122,94,0.08); color: var(--color-accent); border: 0.5px solid rgba(26,122,94,0.3); }
+  .ip-status-pill.warn { background: rgba(239,159,39,0.12); color: var(--color-amber); border: 0.5px solid rgba(239,159,39,0.3); }
+
+  /* Product CTA block */
+  .cta-block {
+    text-align: center; padding: 80px 0;
+    border-top: 0.5px solid rgba(0,0,0,0.06);
+  }
+  .cta-block h2 {
+    font-family: var(--font-display); font-weight: 700; font-size: 32px;
+    color: var(--color-text); margin-bottom: 12px; letter-spacing: -0.02em;
+  }
+  .cta-block p {
+    font-family: var(--font-display); font-size: 16px;
+    color: #5A5A54; margin-bottom: 28px;
+  }
+  .cta-block .cta {
+    opacity: 1; transform: none;
+  }
+
+  /* ============ SOLUTIONS PAGE ============ */
+  .solution-card {
+    background: var(--color-panel);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 8px; padding: 32px 36px; margin-bottom: 16px;
+    opacity: 0; transform: translateY(20px);
+  }
+  .seg-label {
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(26,122,94,0.6); letter-spacing: 0.12em; margin-bottom: 14px;
+  }
+  .sol-headline {
+    font-family: var(--font-display); font-weight: 700; font-size: 22px;
+    color: var(--color-text); letter-spacing: -0.01em; margin-bottom: 14px;
+  }
+  .sol-body {
+    font-family: var(--font-display); font-size: 15px;
+    color: #5A5A54; line-height: 1.7; margin-bottom: 8px;
+  }
+  .pain-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px 24px; margin-top: 24px;
+    border-top: 0.5px solid rgba(0,0,0,0.06); padding-top: 20px;
+  }
+  .pain-grid .ph {
+    font-family: var(--font-mono); font-size: 10px;
+    color: #9A9A90; letter-spacing: 0.1em;
+    padding-bottom: 8px;
+  }
+  .pain-row {
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 8px 0; border-top: 0.5px solid rgba(0,0,0,0.05);
+    opacity: 0; transform: translateX(-8px);
+  }
+  .pain-row.pain { color: #9A9A90; }
+  .pain-row.pain::before { content: "✗ "; color: rgba(239,159,39,0.6); }
+  .pain-row.sol { color: var(--color-text); }
+  .pain-row.sol::before { content: "→ "; color: var(--color-accent); }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 32px; padding: 60px 0; text-align: center;
+    border-top: 0.5px solid rgba(0,0,0,0.06); margin-top: 40px;
+  }
+  .stat-num {
+    font-family: var(--font-display); font-weight: 700; font-size: 36px;
+    color: var(--color-text); letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .stat-lbl {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--color-text-muted); letter-spacing: 0.08em;
+  }
+
+  /* ============ RESOURCES PAGE ============ */
+  .resource-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-top: 48px;
+  }
+  .resource-card {
+    background: var(--color-panel);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 8px; padding: 28px 32px;
+    opacity: 0; transform: scale(0.97);
+    transition: border-color 200ms ease;
+  }
+  .resource-card:hover { border-color: rgba(26,122,94,0.35); }
+  .res-label {
+    font-family: var(--font-mono); font-size: 10px;
+    color: rgba(26,122,94,0.6); letter-spacing: 0.12em; margin-bottom: 12px;
+  }
+  .res-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 18px;
+    color: var(--color-text); margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+  .res-body {
+    font-family: var(--font-display); font-size: 14px;
+    color: #5A5A54; line-height: 1.65; margin-bottom: 18px;
+  }
+  .res-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .res-tag {
+    font-family: var(--font-mono); font-size: 10px;
+    background: rgba(26,122,94,0.08);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    color: rgba(26,122,94,0.7);
+    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.02em;
+  }
+  .res-link {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--color-accent); display: inline-flex;
+    align-items: center; gap: 6px; transition: gap 200ms ease;
+  }
+  .res-link:hover { gap: 12px; }
+
+  .timeline { border-left: 1.5px solid rgba(26,122,94,0.3); padding-left: 18px; margin-top: 4px; }
+  .tl-entry { margin-bottom: 16px; position: relative; }
+  .tl-entry::before {
+    content: ""; position: absolute; left: -24px; top: 5px;
+    width: 8px; height: 8px; background: var(--color-accent);
+    border-radius: 50%;
+  }
+  .tl-date {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--color-text-muted); letter-spacing: 0.06em;
+  }
+  .tl-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+    color: var(--color-text); margin: 2px 0 3px;
+  }
+  .tl-desc {
+    font-family: var(--font-mono); font-size: 11px;
+    color: #9A9A90; line-height: 1.5;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1024px) {
+    .stages-grid { grid-template-columns: repeat(2, 1fr); }
+    .metrics-card { grid-template-columns: 1fr; gap: 40px; padding: 40px; }
+    .features-grid { grid-template-columns: 1fr; gap: 0; }
+    .feature-col { padding: 32px 0; border-left: none; border-top: 0.5px solid rgba(0,0,0,0.08); }
+    .feature-col:first-child { border-top: none; padding-top: 0; }
+    .section-head { grid-template-columns: 1fr; gap: 24px; }
+  }
+  @media (max-width: 768px) {
+    .nav-center { display: none; }
+    .nav-inner { gap: 12px; }
+    .container, .page-inner { padding: 0 20px; }
+    .section { padding: 64px 0; }
+    .stages-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr; text-align: center; }
+    .footer-right, .footer-center { text-align: center; }
+    .feature-row, .resource-grid, .pain-grid {
+      grid-template-columns: 1fr;
+    }
+    .feature-row { gap: 32px; padding: 40px 0; }
+    .feature-row.reverse { direction: ltr; }
+    .stats-row { grid-template-columns: 1fr; gap: 24px; }
+    .compare-table { font-size: 11px; }
+    .metrics-card { padding: 28px; }
+  }
+
+  /* ============ NAV: HOME LIGHT THEME ============ */
+  #mainNav.home-active {
+    background: rgba(240,237,230,0.93);
+    border-bottom: 0.5px solid rgba(26,26,20,0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  #mainNav.home-active .nav-logo { color: #1A7A5E; }
+  #mainNav.home-active .nav-logo::before {
+    background: #1A7A5E; box-shadow: 0 0 10px rgba(26,122,94,0.45);
+  }
+  #mainNav.home-active .nav-badge { border-color: rgba(26,122,94,0.35); color: #1A7A5E; }
+  #mainNav.home-active .nav-item { color: rgba(26,26,20,0.5); }
+  #mainNav.home-active .nav-item:hover { color: #1A1A14; background: rgba(26,122,94,0.07); }
+  #mainNav.home-active .nav-item.active { color: #1A1A14 !important; }
+  #mainNav.home-active .nav-item.active::after { background: #1A7A5E; }
+  #mainNav.home-active .nav-cta { background: #1A1A18; color: #F0EDE6; }
+  #mainNav.home-active .nav-cta:hover { background: #2A2A24; }
+
+
+  /* ============ HERO EDITORIAL (light) ============ */
+  .hero-editorial {
+    background: #F0EDE6;
+    min-height: 100vh;
+    padding-top: 56px;
+    color: #1A1A14;
+    font-family: 'Inter', var(--font-display), sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .he-noise {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.025;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05  0 0 0 0 0.05  0 0 0 0 0.04  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .he-container {
+    position: relative; z-index: 1;
+    max-width: 1200px; margin: 0 auto; padding: 0 32px;
+  }
+
+  /* Editorial header */
+  .he-header {
+    padding: 60px 0 44px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: end;
+  }
+  .he-eyebrow {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: 0.15em; color: #1A7A5E; margin-bottom: 20px;
+    text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+    opacity: 0;
+  }
+  .he-eyebrow::before { content: ''; width: 20px; height: 0.5px; background: #1A7A5E; }
+  .he-headline {
+    font-family: 'Inter', sans-serif; font-weight: 800;
+    font-size: clamp(38px, 5.2vw, 68px); line-height: 1.02;
+    letter-spacing: -0.04em; color: #1A1A14;
+    opacity: 0; transform: translateY(22px);
+  }
+  .he-headline em { font-style: italic; font-weight: 500; color: #1A7A5E; letter-spacing: -0.02em; }
+  .he-right { display: flex; flex-direction: column; justify-content: flex-end; }
+  .he-sub {
+    font-family: 'Inter', sans-serif; font-size: 15px;
+    color: rgba(26,26,20,0.52); line-height: 1.72;
+    margin-bottom: 28px; max-width: 420px;
+    opacity: 0; transform: translateY(14px);
+  }
+  .he-ctas { display: flex; gap: 12px; flex-wrap: wrap; opacity: 0; }
+  .he-btn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    letter-spacing: 0.04em; padding: 10px 22px; border-radius: 3px;
+    cursor: pointer; text-decoration: none; display: inline-flex;
+    align-items: center; gap: 8px; transition: all 180ms ease;
+    border: 1px solid transparent;
+  }
+  .he-btn-primary { background: #1A1A18; color: #F0EDE6; border-color: #1A1A18; }
+  .he-btn-primary:hover { background: #2A2A24; border-color: #2A2A24; }
+  .he-btn-secondary { background: transparent; color: #1A1A14; border-color: rgba(0,0,0,0.2); }
+  .he-btn-secondary:hover { border-color: #1A7A5E; color: #1A7A5E; }
+
+  /* Metric strip */
+  .he-metrics {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-bottom: 28px;
+  }
+  .he-metric {
+    background: rgba(255,255,255,0.62); border: 0.5px solid rgba(26,26,20,0.09);
+    border-radius: 6px; padding: 16px 18px; position: relative; overflow: hidden;
+    opacity: 0; transform: translateY(10px);
+  }
+  .he-metric::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1.5px;
+    background: #1A7A5E; transform: scaleX(0); transform-origin: left;
+    transition: transform 700ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .he-metric.loaded::after { transform: scaleX(1); }
+  .he-m-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    letter-spacing: 0.14em; color: rgba(26,26,20,0.38); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .he-m-val {
+    font-family: 'Inter', sans-serif; font-weight: 700;
+    font-size: 26px; line-height: 1; letter-spacing: -0.03em; color: #1A1A14; margin-bottom: 6px;
+  }
+  .he-m-val.green { color: #1A7A5E; }
+  .he-m-delta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .he-m-delta.up { color: #1A7A5E; }
+  .he-m-delta.dim { color: rgba(26,26,20,0.35); }
+  .he-pulse { width: 5px; height: 5px; border-radius: 50%; background: #1A7A5E; flex-shrink: 0; animation: hePulse 1.8s ease-in-out infinite; }
+  @keyframes hePulse { 0%,100% { opacity:0.3; transform:scale(1); } 50% { opacity:1; transform:scale(1.5); } }
+
+  /* Dashboard panel */
+  .he-dashboard {
+    background: rgba(255,255,255,0.5); border: 0.5px solid rgba(26,26,20,0.09);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 2px 28px rgba(26,26,20,0.05), 0 0 0 0.5px rgba(26,26,20,0.04);
+    margin-bottom: 80px; opacity: 0; transform: translateY(18px);
+  }
+  .he-tabs {
+    display: flex; border-bottom: 0.5px solid rgba(26,26,20,0.09);
+    background: rgba(240,237,230,0.65); overflow-x: auto;
+  }
+  .he-tab {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
+    color: rgba(26,26,20,0.42); background: transparent; border: none;
+    padding: 13px 22px; cursor: pointer; position: relative;
+    transition: color 140ms ease; border-right: 0.5px solid rgba(26,26,20,0.07);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .he-tab:hover { color: rgba(26,26,20,0.8); }
+  .he-tab.active { color: #1A1A14; background: rgba(255,255,255,0.75); }
+  .he-tab.active::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 1.5px; background: #1A7A5E;
+  }
+  .he-panel { display: none; padding: 24px 28px; }
+  .he-panel.active { display: block; }
+
+  /* Revenue Stack chart */
+  .he-chart-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .he-chart-title { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px; color: rgba(26,26,20,0.45); letter-spacing: 0.12em; }
+  .he-chart-total { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 22px; color: #1A7A5E; letter-spacing: -0.03em; }
+  .he-chart-wrap { position: relative; height: 240px; }
+  .he-marker-line {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: rgba(193,123,46,0.45); pointer-events: none;
+  }
+  .he-marker-line span {
+    position: absolute; top: 4px; left: 3px;
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px;
+    color: #C17B2E; letter-spacing: 0.1em; white-space: nowrap;
+  }
+  .he-chart-legend {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px;
+    border-top: 0.5px solid rgba(26,26,20,0.07); padding-top: 14px;
+  }
+  .he-legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px;
+    color: rgba(26,26,20,0.5); letter-spacing: 0.04em;
+  }
+  .he-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Dispatch plan */
+  .he-dispatch-table { width: 100%; border-collapse: collapse; }
+  .he-dispatch-table thead th {
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; letter-spacing: 0.12em;
+    color: rgba(26,26,20,0.32); text-transform: uppercase; font-weight: 400;
+    padding: 0 16px 10px 0; border-bottom: 0.5px solid rgba(26,26,20,0.1); text-align: left;
+  }
+  .he-dispatch-table tbody tr { border-bottom: 0.5px solid rgba(26,26,20,0.05); transition: background 120ms ease; }
+  .he-dispatch-table tbody tr:hover { background: rgba(26,122,94,0.04); }
+  .he-dispatch-table tbody td {
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px;
+    color: rgba(26,26,20,0.6); padding: 10px 16px 10px 0;
+  }
+  .he-td-asset { font-family: 'Inter',sans-serif !important; font-size: 12px !important; color: #1A1A14 !important; font-weight: 500; }
+  .he-sp {
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; letter-spacing: 0.07em;
+    padding: 2px 7px; border-radius: 3px; display: inline-block; text-transform: uppercase;
+  }
+  .he-sp.queued { background: rgba(26,26,20,0.05); color: rgba(26,26,20,0.4); border: 0.5px solid rgba(26,26,20,0.1); }
+  .he-sp.approved { background: rgba(26,122,94,0.09); color: #1A7A5E; border: 0.5px solid rgba(26,122,94,0.28); }
+  .he-sp.dispatched { background: rgba(26,122,94,0.14); color: #1A7A5E; border: 0.5px solid rgba(26,122,94,0.38); font-weight: 500; }
+  .he-sp.pending { background: rgba(193,123,46,0.09); color: #C17B2E; border: 0.5px solid rgba(193,123,46,0.28); }
+
+  /* Risk controls */
+  .he-risk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: rgba(26,26,20,0.08); border-radius: 6px; overflow: hidden; }
+  .he-risk-col { background: #F8F6F1; }
+  .he-risk-col-head {
+    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; letter-spacing: 0.16em;
+    color: rgba(26,26,20,0.36); text-transform: uppercase;
+    padding: 12px 16px 9px; border-bottom: 0.5px solid rgba(26,26,20,0.08);
+  }
+  .he-risk-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 16px; border-bottom: 0.5px solid rgba(26,26,20,0.05);
+  }
+  .he-risk-row:last-child { border-bottom: none; }
+  .he-risk-k { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.45); letter-spacing: 0.04em; }
+  .he-risk-v { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 10px; color: #1A1A14; }
+  .he-risk-v.ok { color: #1A7A5E; }
+  .he-risk-v.warn { color: #C17B2E; }
+  .he-flag {
+    display: flex; align-items: flex-start; gap: 9px;
+    padding: 10px 16px; border-bottom: 0.5px solid rgba(26,26,20,0.05);
+  }
+  .he-flag:last-child { border-bottom: none; }
+  .he-flag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .he-flag-dot.ok { background: #1A7A5E; }
+  .he-flag-dot.warn { background: #C17B2E; }
+  .he-flag-title { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.45); letter-spacing: 0.06em; margin-bottom: 2px; }
+  .he-flag-val { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 10px; color: #1A1A14; }
+  .he-flag-sub { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.38); margin-top: 2px; }
+
+  /* Asset fleet */
+  .he-fleet-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .he-asset-card {
+    background: #F8F6F1; border: 0.5px solid rgba(26,26,20,0.09);
+    border-radius: 6px; padding: 14px 16px; position: relative;
+  }
+  .he-asset-dot {
+    position: absolute; top: 12px; right: 12px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .he-asset-dot.online { background: #1A7A5E; box-shadow: 0 0 5px rgba(26,122,94,0.55); }
+  .he-asset-dot.dispatched { background: #C17B2E; box-shadow: 0 0 5px rgba(193,123,46,0.55); }
+  .he-asset-dot.standby { background: rgba(26,26,20,0.18); }
+  .he-asset-name { font-family: 'Inter',sans-serif; font-weight: 500; font-size: 12px; color: #1A1A14; margin-bottom: 2px; }
+  .he-asset-type { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; color: rgba(26,26,20,0.38); letter-spacing: 0.08em; margin-bottom: 12px; }
+  .he-asset-soc-track { height: 2px; background: rgba(26,26,20,0.09); border-radius: 1px; margin-bottom: 6px; overflow: hidden; }
+  .he-asset-soc-fill { height: 100%; border-radius: 1px; background: #1A7A5E; }
+  .he-asset-soc-fill.low { background: #C17B2E; }
+  .he-asset-nums { display: flex; justify-content: space-between; }
+  .he-asset-num { text-align: right; }
+  .he-asset-num:first-child { text-align: left; }
+  .he-asset-num-k { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; color: rgba(26,26,20,0.33); letter-spacing: 0.1em; }
+  .he-asset-num-v { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px; color: #1A1A14; }
+
+  /* ============ VIDEO WRAP ============ */
+  .he-video-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 48px;
+    box-shadow: 0 2px 28px rgba(26,26,20,0.07), 0 0 0 0.5px rgba(26,26,20,0.08);
+    opacity: 0;
+    transform: translateY(18px);
+    background: #1A1A18;
+  }
+  .he-video-wrap video {
+    width: 100%;
+    display: block;
+    background: #1A1A18;
+  }
+  .he-report-wrap { padding-bottom: 80px; }
+
+  /* Editorial responsive */
+  @media (max-width: 1024px) {
+    .he-header { grid-template-columns: 1fr; gap: 28px; }
+    .he-metrics { grid-template-columns: repeat(2,1fr); }
+    .he-fleet-grid { grid-template-columns: repeat(2,1fr); }
+    .he-risk-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .he-container { padding: 0 20px; }
+    .he-metrics { grid-template-columns: repeat(2,1fr); }
+    .he-fleet-grid { grid-template-columns: repeat(2,1fr); }
+    .he-panel { padding: 16px 18px; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ── TICKER BAR ──────────────────────────────── -->
-<div id="ticker" aria-hidden="true">
-  <div class="ticker-inner" id="tickerTrack">
-    <!-- populated by JS; static fallback -->
-    <span class="tick-item"><span class="tick-mkt">ERCOT RT</span><span class="tick-val">$184/MWh</span><span class="tick-up">▲2.3%</span></span>
-    <span class="tick-item"><span class="tick-mkt">CAISO DA</span><span class="tick-val">$92/MWh</span><span class="tick-dn">▼0.8%</span></span>
-    <span class="tick-item"><span class="tick-mkt">PJM RT</span><span class="tick-val">$67/MWh</span><span class="tick-up">▲1.1%</span></span>
-    <span class="tick-item"><span class="tick-mkt">NYISO DA</span><span class="tick-val">$78/MWh</span><span class="tick-up">▲3.4%</span></span>
-    <span class="tick-item"><span class="tick-mkt">MISO RT</span><span class="tick-val">$54/MWh</span><span class="tick-dn">▼0.5%</span></span>
-    <span class="tick-item"><span class="tick-label">BESS SOC AVG</span><span class="tick-val">71%</span></span>
-    <span class="tick-item"><span class="tick-label">ACTIVE ASSETS</span><span class="tick-val">24</span></span>
-    <span class="tick-item"><span class="tick-label">NEXT DISPATCH</span><span class="tick-val tick-up">11:55 PDT</span></span>
-    <span class="tick-item"><span class="tick-mkt">ERCOT RT</span><span class="tick-val">$184/MWh</span><span class="tick-up">▲2.3%</span></span>
-    <span class="tick-item"><span class="tick-mkt">CAISO DA</span><span class="tick-val">$92/MWh</span><span class="tick-dn">▼0.8%</span></span>
-    <span class="tick-item"><span class="tick-mkt">PJM RT</span><span class="tick-val">$67/MWh</span><span class="tick-up">▲1.1%</span></span>
-    <span class="tick-item"><span class="tick-mkt">NYISO DA</span><span class="tick-val">$78/MWh</span><span class="tick-up">▲3.4%</span></span>
-    <span class="tick-item"><span class="tick-mkt">MISO RT</span><span class="tick-val">$54/MWh</span><span class="tick-dn">▼0.5%</span></span>
-    <span class="tick-item"><span class="tick-label">BESS SOC AVG</span><span class="tick-val">71%</span></span>
-    <span class="tick-item"><span class="tick-label">ACTIVE ASSETS</span><span class="tick-val">24</span></span>
-    <span class="tick-item"><span class="tick-label">NEXT DISPATCH</span><span class="tick-val tick-up">11:55 PDT</span></span>
+<nav id="mainNav">
+  <div class="nav-inner">
+    <div class="nav-left" onclick="navigate('#home')">
+      <span class="nav-logo">
+        <svg width="18" height="18" viewBox="0 0 100 96" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 90 C4 90 1 83 1 78 C16 54 32 26 50 2 C54 30 50 60 36 90 Z"/>
+          <path d="M36 90 C50 60 56 32 50 2 C66 24 82 54 90 78 C90 83 88 90 36 90 Z"/>
+        </svg>
+        Vela
+      </span>
+      <span class="nav-badge">ORDER 2222</span>
+    </div>
+    <div class="nav-center">
+      <button class="nav-item" data-route="#product">Product</button>
+      <button class="nav-item" data-route="#solutions">Solutions</button>
+      <button class="nav-item" data-route="#resources">Resources</button>
+    </div>
+    <div class="nav-right">
+      <a href="/app.html" class="nav-cta" style="text-decoration:none">Launch app →</a>
+    </div>
   </div>
-</div>
-
-<nav id="nav">
-  <div class="nl">
-    <span class="ndot"></span>
-    <span class="nlogo">Vela</span>
-    <span class="nbadge">ORDER 2222</span>
-  </div>
-  <ul class="nlinks">
-    <li><a href="#showcase">Platform</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#how">How it works</a></li>
-  </ul>
-  <a href="/app.html" target="_blank" class="ncta">
-    <span class="ncta-dot"></span>Launch app
-  </a>
 </nav>
 
-<main style="padding-top:84px">
-
-  <!-- ① HERO -->
-  <section id="hero">
-    <div class="wrap hero-inner">
-      <div class="hero-layout">
-        <!-- Left: copy -->
-        <div class="hero-left">
-          <div class="hero-kicker">
-            <span class="hero-kicker-dot"></span>
-            For mid-market VPP operators &mdash; not trading desks
-          </div>
-          <h1 class="hero-h1">
-            The neutral<br>dispatch layer<br>
-            <em>for any fleet.</em>
-          </h1>
-          <p class="hero-sub">
-            Co-optimization exists &mdash; Tesla, AutoGrid, and PCI all do it.
-            But it's locked inside hardware ecosystems or built for 20-person trading desks.
-            Vela is hardware-agnostic: it couples market revenue, live per-asset degradation,
-            and contractual obligations in one explainable solve, and hands the schedule to
-            whatever EMS you already run.
-          </p>
-          <div class="hero-btns">
-            <a href="/app.html" target="_blank" class="btn-primary">
-              <span class="ncta-dot"></span>Launch the app &rarr;
-            </a>
-            <a href="#showcase" class="btn-ghost">Explore the platform</a>
-          </div>
-        </div>
-        <!-- Right: mini dashboard preview -->
-        <div class="hero-dash">
-          <div class="hd-chrome">
-            <div class="hd-dots">
-              <div class="hd-dot" style="background:#FF5F57"></div>
-              <div class="hd-dot" style="background:#FEBC2E"></div>
-              <div class="hd-dot" style="background:#28C840"></div>
-            </div>
-            <div class="hd-url">localhost:5173 &mdash; Vela Command</div>
-          </div>
-          <div class="hd-app">
-            <div class="hd-sidebar">
-              <div class="hd-brand">VELA</div>
-              <div class="hd-nav-item active"><span class="hd-nav-icon"></span>Command</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Portfolio</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Markets</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Coordination</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Model</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Integrations</div>
-              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Run log</div>
-            </div>
-            <div class="hd-main">
-              <div class="hd-eyebrow">CAISO AGGREGATE PORTFOLIO</div>
-              <div class="hd-page-title">Command</div>
-              <div class="hd-kpis">
-                <div class="hd-kpi">
-                  <div class="hd-kpi-lbl">PORTFOLIO MW</div>
-                  <div class="hd-kpi-val">364 MW</div>
-                  <div class="hd-kpi-sub">5 resource classes</div>
-                </div>
-                <div class="hd-kpi">
-                  <div class="hd-kpi-lbl">AVAILABLE</div>
-                  <div class="hd-kpi-val">284 MW</div>
-                  <div class="hd-kpi-sub">78% dispatchable</div>
-                </div>
-                <div class="hd-kpi">
-                  <div class="hd-kpi-lbl">FORECAST NET</div>
-                  <div class="hd-kpi-val g">$23,147</div>
-                  <div class="hd-kpi-sub">current window</div>
-                </div>
-                <div class="hd-kpi">
-                  <div class="hd-kpi-lbl">READINESS</div>
-                  <div class="hd-kpi-val">88%</div>
-                  <div class="hd-kpi-sub">2 warnings</div>
-                </div>
-              </div>
-              <div class="hd-chart-lbl">LMP PRICE CURVE &middot; DAY-AHEAD VS REAL-TIME &middot; 24H</div>
-              <div class="hd-chart">
-                <svg class="hd-chart-svg" viewBox="0 0 400 90" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#1D9E75" stop-opacity=".25"/>
-                      <stop offset="100%" stop-color="#1D9E75" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <!-- DA fill -->
-                  <path d="M0,70 C30,65 60,35 90,28 C120,22 150,18 180,55 C210,75 240,80 270,52 C300,28 330,18 370,24 L400,22 L400,90 L0,90 Z" fill="url(#lg1)"/>
-                  <!-- DA line -->
-                  <path d="M0,70 C30,65 60,35 90,28 C120,22 150,18 180,55 C210,75 240,80 270,52 C300,28 330,18 370,24 L400,22" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
-                  <!-- RT dashed line -->
-                  <path d="M0,68 C30,62 60,36 90,30 C120,24 150,20 180,57 C210,78 240,82 270,54 C300,30 330,20 370,26 L400,24" fill="none" stroke="#EF9F27" stroke-width="1" stroke-dasharray="4 3" opacity=".7"/>
-                </svg>
-              </div>
-              <div class="hd-status-bar">
-                <div class="hd-status-pill">88% READY</div>
-                <div class="hd-status-pill amber">2 CONSTRAINED</div>
-                <div class="hd-status-pill">96 INTERVALS</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- stat strip -->
-      <div class="hero-stats">
-        <div class="hstat">
-          <div class="hstat-val g" id="s0">+44%</div>
-          <div class="hstat-lbl">SHADOW MODE UPLIFT VS. THRESHOLD DISPATCH</div>
-        </div>
-        <div class="hstat">
-          <div class="hstat-val" id="s1">0</div>
-          <div class="hstat-lbl">CONSTRAINT VIOLATIONS IN PRODUCTION</div>
-        </div>
-        <div class="hstat">
-          <div class="hstat-val" id="s2">5</div>
-          <div class="hstat-lbl">ASSET PROTOCOLS NATIVELY SUPPORTED</div>
-        </div>
-        <div class="hstat">
-          <div class="hstat-val g" id="s3">48h</div>
-          <div class="hstat-lbl">TO FIRST SHADOW-MODE BID</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ② SHOWCASE -->
-  <section id="showcase">
-    <div class="wrap">
-      <div class="sc-header">
-        <div class="eyebrow">Platform</div>
-        <h2 class="sc-title">Three modules.<br>One continuous loop.</h2>
-        <p class="sc-sub">Each panel runs live. Click to open the full interactive experience.</p>
-      </div>
-      <div class="sc-grid">
-
-        <!-- Card 1: Dispatch Queue -->
-        <div class="sc-card">
-          <div class="sc-card-top">
-            <div class="sc-num">01 / BID INTELLIGENCE</div>
-            <div class="sc-card-name">Dispatch Queue</div>
-            <div class="sc-card-desc">Agent-generated bid recommendations with full rationale &mdash; LMP spike probability, degradation cost, constraint audit. Approve or decline in one keystroke.</div>
-          </div>
-          <div class="sc-preview">
-            <iframe src="/landing/panel-1-bid.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
-          </div>
-          <div class="sc-card-bot">
-            <div class="sc-tags">
-              <span class="sc-tag">MILP</span>
-              <span class="sc-tag">SOC FLOOR</span>
-              <span class="sc-tag">AUTO-APPROVE</span>
-            </div>
-            <a href="/landing/panel-1-bid.html" target="_blank" class="sc-open">Open &rarr;</a>
-          </div>
-        </div>
-
-        <!-- Card 2: Shadow Mode -->
-        <div class="sc-card">
-          <div class="sc-card-top">
-            <div class="sc-num">02 / SHADOW MODE</div>
-            <div class="sc-card-name">30-Day P&amp;L Proof</div>
-            <div class="sc-card-desc">Run alongside your existing strategy with no live dispatch. See the exact revenue delta and new stacks the agent finds before you flip the switch.</div>
-          </div>
-          <div class="sc-preview">
-            <iframe src="/landing/panel-2-shadow.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
-          </div>
-          <div class="sc-card-bot">
-            <div class="sc-tags">
-              <span class="sc-tag">+44% UPLIFT</span>
-              <span class="sc-tag">ANCILLARY</span>
-              <span class="sc-tag">NO RISK</span>
-            </div>
-            <a href="/landing/panel-2-shadow.html" target="_blank" class="sc-open">Open &rarr;</a>
-          </div>
-        </div>
-
-        <!-- Card 3: Settlement -->
-        <div class="sc-card">
-          <div class="sc-card-top">
-            <div class="sc-num">03 / SETTLEMENT</div>
-            <div class="sc-card-name">Settlement Layer</div>
-            <div class="sc-card-desc">Committed vs. delivered, verified to the 15-minute interval. Per-asset attribution, automated penalty detection, and root cause on every shortfall.</div>
-          </div>
-          <div class="sc-preview">
-            <iframe src="/landing/panel-3-settlement.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
-          </div>
-          <div class="sc-card-bot">
-            <div class="sc-tags">
-              <span class="sc-tag">AMI METERED</span>
-              <span class="sc-tag">ERCOT</span>
-              <span class="sc-tag">ROOT CAUSE</span>
-            </div>
-            <a href="/landing/panel-3-settlement.html" target="_blank" class="sc-open">Open &rarr;</a>
-          </div>
-        </div>
-
-      </div><!-- /sc-grid -->
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ② b PROOF -->
-  <section id="proof">
-    <div class="wrap">
-      <div class="proof-card">
-        <div class="proof-left">
-          <div class="eyebrow">Shadow Mode &middot; Verified</div>
-          <h2 class="proof-h">
-            <em class="proof-pct">+44%</em> over threshold<br>dispatch. In shadow<br>mode, before going live.
-          </h2>
-          <p class="proof-body">The ancillary services row is the one to look at &mdash; $3,190 found from zero. That's a program the existing strategy wasn't enrolled in. Degradation-aware stack optimization finds the slack that static thresholds can't see. Thirty days, no dispatch risk, no regulatory exposure. The table is what Vela would have earned.</p>
-          <a href="/landing/panel-2-shadow.html" target="_blank" class="btn-ghost" style="display:inline-flex;margin-top:24px">View shadow mode panel &rarr;</a>
-        </div>
-        <div class="proof-right">
-          <div class="proof-table">
-            <div class="pt-header">
-              <div>Revenue Stream</div><div>Agent</div><div>Baseline</div><div>Delta</div>
-            </div>
-            <div class="pt-row">
-              <div class="pt-stream">Energy arbitrage</div>
-              <div class="pt-agent">$12,840</div>
-              <div class="pt-base">$9,210</div>
-              <div class="pt-delta">+39%</div>
-            </div>
-            <div class="pt-row">
-              <div class="pt-stream">Demand response</div>
-              <div class="pt-agent">$5,620</div>
-              <div class="pt-base">$5,100</div>
-              <div class="pt-delta">+10%</div>
-            </div>
-            <div class="pt-row pt-new">
-              <div class="pt-stream">Ancillary services <span class="pt-new-tag">NEW</span></div>
-              <div class="pt-agent">$3,190</div>
-              <div class="pt-base pt-zero">$0</div>
-              <div class="pt-delta">—</div>
-            </div>
-            <div class="pt-row">
-              <div class="pt-stream">Capacity revenue</div>
-              <div class="pt-agent">$2,410</div>
-              <div class="pt-base">$2,410</div>
-              <div class="pt-delta pt-flat">—</div>
-            </div>
-            <div class="pt-row pt-total">
-              <div class="pt-stream">Total (30 days)</div>
-              <div class="pt-agent">$24,060</div>
-              <div class="pt-base">$16,720</div>
-              <div class="pt-delta">+44%</div>
-            </div>
-          </div>
-          <div class="proof-note">Shadow mode &middot; no live dispatch &middot; no regulatory exposure</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ③ DETAILS -->
-  <section id="features">
-    <div class="wrap">
-      <div class="det-split">
-        <div class="det-left">
-          <h2 class="det-title">Each piece exists somewhere.<br>The combination doesn't.</h2>
-          <p class="det-body">Fleet-level co-optimization isn't new. PCI, AutoGrid, and Tesla all do it. But it's either locked inside a hardware vendor's ecosystem or engineered for operators with a dedicated trading desk. Vela's position is the intersection: hardware-agnostic, mid-market, with live degradation state and full transparency baked into the solve.</p>
-          <p class="det-body">Vela never touches your hardware directly. It reads from any asset &mdash; battery, EV depot, HVAC, industrial load &mdash; and hands a recommended schedule to your existing EMS. The lack of hardware is the moat.</p>
-          <div class="det-protocols">
-            <span class="det-proto">SunSpec Modbus</span>
-            <span class="det-proto">DNP3</span>
-            <span class="det-proto">IEEE 2030.5</span>
-            <span class="det-proto">OpenADR 2.0</span>
-            <span class="det-proto">OCPP 2.0.1</span>
-          </div>
-        </div>
-        <div class="det-right">
-          <div class="det-item">
-            <div class="det-num">01</div>
-            <div class="det-content">
-              <div class="det-name">Fleet-relative degradation arbitrage</div>
-              <div class="det-desc">Degradation enters the solve as a per-asset time-varying state &mdash; remaining equivalent full cycles, capacity fade, calendar age &mdash; that couples assets in the joint dispatch. If Battery A is 87% through its warranty life and Battery B is fresh, Vela cycles B harder today even if A is better-placed for the current price signal. That arbitrage compounds across a fleet; incumbents mostly optimize revenue streams, not wear.</div>
-            </div>
-          </div>
-          <div class="det-item">
-            <div class="det-num">02</div>
-            <div class="det-content">
-              <div class="det-name">Neutral execution — no hardware skin in the game</div>
-              <div class="det-desc">Fluence's software exists to sell Fluence boxes. Tesla's optimizer runs inside Tesla's ecosystem. A genuinely neutral decision layer can only come from a company with no hardware to defend. Vela reads from any asset class via a protocol-adapter layer (SunSpec, DNP3, OCPP, OpenADR) and outputs schedules; your EMS executes them. Operators don't rip out working control systems &mdash; they add a brain on top.</div>
-            </div>
-          </div>
-          <div class="det-item">
-            <div class="det-num">03</div>
-            <div class="det-content">
-              <div class="det-name">Explainability via shadow prices</div>
-              <div class="det-desc">After each solve, Vela reads the dual variables of the binding constraints and surfaces the decisive ones in plain language: which constraint drove the decision, what the unconstrained play would have been, and the exact dollar cost of each active limit. An operator who can see the trade-off uses the tool. An operator who can't, overrides it &mdash; which destroys the value.</div>
-            </div>
-          </div>
-          <div class="det-item">
-            <div class="det-num">04</div>
-            <div class="det-content">
-              <div class="det-name">Risk-aware dispatch (CVaR) instead of point forecasts</div>
-              <div class="det-desc">Forecasts are distributions, not numbers. Vela carries a CVaR constraint at a configurable tail percentile &mdash; it maximizes expected revenue subject to a floor on the bad-but-plausible scenario. Point-forecast optimizers are occasionally catastrophic; tail-risk management is standard in finance and underused in DER dispatch, especially at the mid-market.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ③b USE CASES -->
-  <section id="usecases">
-    <div class="wrap">
-      <div class="uc-grid">
-        <div class="uc-card">
-          <div class="uc-num">VPP OPERATORS</div>
-          <div class="uc-name">Your DERMS dispatches. Vela decides what to bid.</div>
-          <div class="uc-desc">Threshold-based dispatch leaves ancillary revenue uncaptured most hours. Vela solves the full revenue stack simultaneously &mdash; energy arbitrage, spinning reserve, DR, and capacity &mdash; at each 15-minute interval, using real-time LMP signals and your constraint set.</div>
-          <div class="uc-bullets">
-            <div class="uc-b">Per-interval stack optimization across all enrolled programs</div>
-            <div class="uc-b">Shadow mode validation before any live dispatch</div>
-            <div class="uc-b">Human approval queue with full bid rationale</div>
-          </div>
-        </div>
-        <div class="uc-card">
-          <div class="uc-num">AGGREGATORS</div>
-          <div class="uc-name">Each customer has different constraints. Vela handles all of them.</div>
-          <div class="uc-desc">Managing per-customer opt-out windows, SOC floors, and ISO-specific enrollment rules across a mixed fleet is an ops problem that doesn't scale with headcount. Vela encodes those constraints and handles the bidding layer so your team stays on the relationship side.</div>
-          <div class="uc-bullets">
-            <div class="uc-b">Per-asset constraint configuration</div>
-            <div class="uc-b">Auditable P&amp;L reporting by customer</div>
-            <div class="uc-b">Works with your existing SCADA or DERMS</div>
-          </div>
-        </div>
-        <div class="uc-card">
-          <div class="uc-num">C&amp;I ASSET OWNERS</div>
-          <div class="uc-name">You bought the battery for demand charge savings. Vela adds a second revenue stream.</div>
-          <div class="uc-desc">Wholesale market participation has been inaccessible to most C&amp;I sites &mdash; too complex, too much risk. Vela runs in shadow mode first, proving the incremental P&amp;L before going live. Works with any behind-the-meter battery regardless of hardware vendor.</div>
-          <div class="uc-bullets">
-            <div class="uc-b">Shadow mode first, no dispatch risk day one</div>
-            <div class="uc-b">Stacks on top of existing demand charge program</div>
-            <div class="uc-b">Hardware-agnostic, any BESS vendor</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ③c MARKETS COVERAGE -->
-  <section id="markets">
-    <div class="wrap">
-      <div class="mkt-layout">
-        <div class="mkt-left">
-          <div class="eyebrow">ISO Coverage</div>
-          <h2 class="mkt-title">Five markets.<br>One agent.</h2>
-          <p class="mkt-body">FERC Order 2222 unlocks wholesale market access for distributed energy aggregations across every U.S. ISO. We're already integrated where it counts.</p>
-          <div class="mkt-note">CAISO GA &middot; Nov 2024 &mdash; NYISO targeting Q4 2026 &mdash; PJM Feb 2028 &mdash; MISO 2027&ndash;29</div>
-        </div>
-        <div class="mkt-right">
-          <div class="mkt-grid">
-            <div class="mkt-item active">
-              <div class="mkt-name">ERCOT</div>
-              <div class="mkt-detail">Real-time &amp; day-ahead &middot; ADER pilot</div>
-              <div class="mkt-badge">LIVE</div>
-            </div>
-            <div class="mkt-item active">
-              <div class="mkt-name">CAISO</div>
-              <div class="mkt-detail">DA + RT + ancillary &middot; Order 2222 GA</div>
-              <div class="mkt-badge">LIVE</div>
-            </div>
-            <div class="mkt-item active">
-              <div class="mkt-name">PJM</div>
-              <div class="mkt-detail">Capacity + regulation &middot; Integration ready</div>
-              <div class="mkt-badge">LIVE</div>
-            </div>
-            <div class="mkt-item soon">
-              <div class="mkt-name">NYISO</div>
-              <div class="mkt-detail">Targeting Q4 2026 rollout</div>
-              <div class="mkt-badge soon">2026</div>
-            </div>
-            <div class="mkt-item soon">
-              <div class="mkt-name">MISO</div>
-              <div class="mkt-detail">Phased rollout 2027&ndash;2029</div>
-              <div class="mkt-badge soon">2027</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ④ HOW IT WORKS -->
-  <section id="how">
-    <div class="wrap">
-      <div class="how-header">
-        <div class="eyebrow">The loop</div>
-        <h2 class="how-title">Observe. Reason. Act. Repeat every 15 minutes.</h2>
-        <p class="how-sub">Six stages. One continuous cycle. Every iteration compounds the advantage.</p>
-      </div>
-      <div class="how-steps">
-        <div class="how-step">
-          <div class="step-num">01</div>
-          <div class="step-name">Observe</div>
-          <div class="step-desc">Ingest asset telemetry, market prices, weather forecasts, and ERCOT grid signals in real time. Every data point feeds the next decision.</div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">02</div>
-          <div class="step-name">Forecast</div>
-          <div class="step-desc">Predict LMP spikes, load curves, and opt-out risk across a 4-hour horizon using ERCOT wind ramp signals and ORDC overlays.</div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">03</div>
-          <div class="step-name">Reason</div>
-          <div class="step-desc">Weigh energy arbitrage, demand response, ancillary services, degradation cost, backup reserve, and customer constraints simultaneously.</div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">04</div>
-          <div class="step-name">Act</div>
-          <div class="step-desc">Generate bids, dispatch assets, auto-approve low-risk decisions, and route high-risk ones to the human review queue with full rationale attached.</div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">05</div>
-          <div class="step-name">Measure</div>
-          <div class="step-desc">Verify delivery against commitments to the 15-minute interval. Attribute revenue per asset. Flag underperformance with root-cause analysis.</div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">06</div>
-          <div class="step-name">Learn</div>
-          <div class="step-desc">Update strategy models based on settlement outcomes. Every cycle makes the next one sharper. The advantage compounds automatically.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ⑤ SOCIAL PROOF STRIP -->
-  <section id="trust">
-    <div class="wrap trust-inner">
-      <div class="trust-label">TRUSTED BY OPERATORS ACROSS</div>
-      <div class="trust-isos">
-        <div class="trust-iso">ERCOT</div>
-        <div class="trust-sep">&middot;</div>
-        <div class="trust-iso">CAISO</div>
-        <div class="trust-sep">&middot;</div>
-        <div class="trust-iso">PJM</div>
-        <div class="trust-sep">&middot;</div>
-        <div class="trust-iso active">NYISO <span class="trust-soon">2026</span></div>
-        <div class="trust-sep">&middot;</div>
-        <div class="trust-iso active">MISO <span class="trust-soon">2027</span></div>
-      </div>
-      <div class="trust-stats">
-        <div class="tstat">
-          <div class="tstat-val">364<span>MW</span></div>
-          <div class="tstat-lbl">Assets under management</div>
-        </div>
-        <div class="tstat">
-          <div class="tstat-val">$2.4<span>M</span></div>
-          <div class="tstat-lbl">Revenue recovered in shadow mode</div>
-        </div>
-        <div class="tstat">
-          <div class="tstat-val">44<span>%</span></div>
-          <div class="tstat-lbl">Average uplift vs. threshold dispatch</div>
-        </div>
-        <div class="tstat">
-          <div class="tstat-val">48<span>hr</span></div>
-          <div class="tstat-lbl">Time to first shadow-mode bid</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="rule-h"/>
-
-  <!-- ⑥ CTA -->
-  <section id="cta">
-    <div class="wrap cta-inner">
-      <div class="cta-tag">SHADOW MODE &middot; NO DISPATCH RISK ON DAY ONE</div>
-      <h2 class="cta-h">The grid clears<br>in <em>15 minutes.</em></h2>
-      <p class="cta-p">Shadow mode onboards in 48 hours. You'll see your first P&amp;L comparison within the week. No dispatch, no exposure &mdash; just the delta.</p>
-      <div class="cta-btns">
-        <a href="/app.html" target="_blank" class="btn-primary"><span class="ncta-dot"></span>Launch the app &rarr;</a>
-        <a href="/landing/panel-1-bid.html" target="_blank" class="btn-ghost">Open dispatch queue &rarr;</a>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<footer id="foot">
-  <div class="wrap foot-inner">
-    <div class="foot-brand">
-      <div class="foot-logo">Vela</div>
-      <div class="foot-tagline">Agentic energy intelligence<br>for FERC Order 2222 markets.</div>
-      <div class="foot-copy">&copy; 2026 Vela Energy Intelligence, Inc.</div>
-    </div>
-    <div class="foot-cols">
-      <div class="foot-col">
-        <div class="foot-col-title">Platform</div>
-        <a href="#showcase">Dispatch Queue</a>
-        <a href="/landing/panel-2-shadow.html" target="_blank">Shadow Mode P&amp;L</a>
-        <a href="/landing/panel-3-settlement.html" target="_blank">Settlement Reconciliation</a>
-        <a href="/app.html" target="_blank">Live Demo</a>
-      </div>
-      <div class="foot-col">
-        <div class="foot-col-title">Markets</div>
-        <a href="#markets">ERCOT</a>
-        <a href="#markets">CAISO</a>
-        <a href="#markets">PJM</a>
-        <a href="#markets">NYISO (2026)</a>
-        <a href="#markets">MISO (2027)</a>
-      </div>
-      <div class="foot-col">
-        <div class="foot-col-title">Use Cases</div>
-        <a href="#usecases">VPP Operators</a>
-        <a href="#usecases">Aggregators</a>
-        <a href="#usecases">C&amp;I Asset Owners</a>
-        <a href="#how">How It Works</a>
-      </div>
-      <div class="foot-col">
-        <div class="foot-col-title">Compliance</div>
-        <a href="#">FERC Order 2222</a>
-        <a href="#">NERC CIP Framework</a>
-        <a href="#">Audit-ready Logs</a>
-        <a href="#">Shadow Mode Policy</a>
-      </div>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <div class="wrap foot-bottom-inner">
-      <span class="foot-markets">ERCOT &middot; CAISO &middot; PJM &middot; NYISO &middot; MISO</span>
-      <span class="foot-legal">Built for FERC Order 2222 market participation &mdash; not financial advice.</span>
-    </div>
-  </div>
-</footer>
+<div id="app"></div>
 
 <script>
-(function(){
-  /* ── NAV SCROLL SHADOW ── */
-  var nav = document.getElementById('nav');
-  window.addEventListener('scroll', function(){
-    nav.style.borderBottomColor = window.scrollY > 20
-      ? 'rgba(29,158,117,0.28)' : 'rgba(29,158,117,0.1)';
-  }, {passive:true});
+(function () {
+  // ============ STATE & CLEANUP ============
+  let _rafId = null;
+  let _intervals = [];
+  let _timeouts = [];
+  let _listeners = [];
+  let _renderer = null;
+  let _observers = [];
+  let _chart = null;
 
-  /* ── TICKER: live price simulation ── */
-  var prices = {
-    'ERCOT RT': {val:42.18, range:8},
-    'ERCOT DA': {val:38.54, range:5},
-    'CAISO SP15': {val:51.22, range:10},
-    'PJM PSEG': {val:44.60, range:7},
-    'NYISO Zone J': {val:68.30, range:12},
-    'MISO Ind Hub': {val:35.80, range:6}
-  };
-  var regStatuses = ['LIVE · ERCOT', 'LIVE · CAISO', 'LIVE · PJM', 'SHADOW · NYISO', 'SHADOW · MISO'];
-  var regIdx = 0;
-
-  function fmtPrice(v){ return '$' + v.toFixed(2) + '/MWh'; }
-  function randFlux(range){ return (Math.random() - 0.5) * range * 0.3; }
-
-  function buildTickerHTML(){
-    var items = [];
-    Object.keys(prices).forEach(function(mkt){
-      var p = prices[mkt];
-      var delta = randFlux(p.range);
-      p.val = Math.max(5, p.val + delta);
-      var cls = delta >= 0 ? 'tick-up' : 'tick-dn';
-      var arrow = delta >= 0 ? '&#9650;' : '&#9660;';
-      items.push('<span class="tick-item"><span class="tick-mkt">'+mkt+'</span><span class="tick-val">'+fmtPrice(p.val)+'</span><span class="'+cls+'">'+arrow+'</span></span>');
-    });
-    var status = regStatuses[regIdx % regStatuses.length];
-    regIdx++;
-    items.push('<span class="tick-item"><span class="tick-label">AGENT STATUS</span><span class="tick-val">'+status+'</span></span>');
-    var html = items.join('');
-    return html + html; // doubled for seamless loop
+  function trackTimeout(t) { _timeouts.push(t); return t; }
+  function trackInterval(i) { _intervals.push(i); return i; }
+  function trackListener(target, event, fn) {
+    target.addEventListener(event, fn);
+    _listeners.push([target, event, fn]);
   }
+  function trackObserver(o) { _observers.push(o); return o; }
 
-  var track = document.getElementById('tickerTrack');
-  if(track){
-    track.innerHTML = buildTickerHTML();
-    setInterval(function(){
-      track.innerHTML = buildTickerHTML();
-    }, 8000);
-  }
-
-  /* ── COUNT-UP ANIMATION ── */
-  function countUp(el, target, prefix, suffix, decimals, duration){
-    duration = duration || 1400;
-    var start = null;
-    function step(ts){
-      if(!start) start = ts;
-      var p = Math.min((ts - start) / duration, 1);
-      var ease = 1 - Math.pow(1 - p, 3);
-      var val = target * ease;
-      el.textContent = prefix + (decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString()) + suffix;
-      if(p < 1) requestAnimationFrame(step);
+  function tearDown() {
+    if (_rafId) cancelAnimationFrame(_rafId);
+    _rafId = null;
+    _intervals.forEach(clearInterval);
+    _timeouts.forEach(clearTimeout);
+    _listeners.forEach(([t, e, f]) => t.removeEventListener(e, f));
+    _observers.forEach((o) => o.disconnect());
+    _intervals = []; _timeouts = []; _listeners = []; _observers = [];
+    if (_renderer) {
+      try { _renderer.dispose(); } catch(e){}
+      _renderer = null;
     }
-    requestAnimationFrame(step);
+    if (_chart) {
+      try { _chart.destroy(); } catch(e){}
+      _chart = null;
+    }
+    document.querySelectorAll('.bid-label').forEach((el) => el.remove());
   }
 
-  /* ── HERO STATS COUNTER ── */
-  var heroStatsObs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting) return;
-      heroStatsObs.unobserve(e.target);
-      var els = e.target.querySelectorAll('.hstat-val');
-      var data = [{t:44,p:'+',s:'%',d:0},{t:15,p:'',s:' min',d:0},{t:5,p:'',s:'',d:0},{t:96.4,p:'',s:'%',d:1}];
-      els.forEach(function(el,i){ countUp(el, data[i].t, data[i].p, data[i].s, data[i].d); });
-    });
-  }, {threshold:0.5});
-  var heroStats = document.querySelector('.hero-stats');
-  if(heroStats) heroStatsObs.observe(heroStats);
+  // ============ ROUTING ============
+  const routes = {
+    '#home': renderHome,
+    '#product': renderProduct,
+    '#solutions': renderSolutions,
+    '#resources': renderResources
+  };
 
-  /* ── TRUST STATS COUNTER ── */
-  var trustObs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting) return;
-      trustObs.unobserve(e.target);
-      var els = e.target.querySelectorAll('.tstat-val');
-      var data = [
-        {el:els[0], t:364, p:'', s:'', d:0},
-        {el:els[1], t:2.4, p:'$', s:'M', d:1},
-        {el:els[2], t:44, p:'', s:'', d:0},
-        {el:els[3], t:48, p:'', s:'', d:0}
-      ];
-      data.forEach(function(item){
-        if(!item.el) return;
-        var spanContent = item.el.querySelector('span') ? item.el.querySelector('span').outerHTML : '';
-        countUp({
-          get textContent(){ return ''; },
-          set textContent(v){
-            item.el.innerHTML = v + spanContent;
+  window.navigate = function (hash) {
+    if (window.location.hash === hash) {
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } else {
+      window.location.hash = hash;
+    }
+  };
+
+  function handleHashChange() {
+    const hash = window.location.hash || '#home';
+    const render = routes[hash] || routes['#home'];
+    const app = document.getElementById('app');
+
+    app.style.opacity = '0';
+    app.style.transition = 'opacity 150ms ease';
+
+    setTimeout(() => {
+      tearDown();
+      app.innerHTML = '';
+      render(app);
+      updateActiveNav();
+      app.style.opacity = '1';
+      window.scrollTo(0, 0);
+      initPageAnimations(hash);
+    }, 150);
+  }
+
+  window.addEventListener('hashchange', handleHashChange);
+
+  function updateActiveNav() {
+    const hash = window.location.hash || '#home';
+    document.querySelectorAll('.nav-item').forEach((el) => {
+      el.classList.toggle('active', el.dataset.route === hash);
+    });
+    document.getElementById('mainNav').classList.toggle('home-active', hash === '#home' || !hash);
+  }
+
+  // nav CTA is now a plain <a href="/app.html"> — no JS needed
+
+  // ============ DROPDOWNS ============
+  function setupNav() {
+    document.querySelectorAll('.nav-item').forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        if (trigger.dataset.route) navigate(trigger.dataset.route);
+      });
+    });
+  }
+
+  setupNav();
+
+  // ============ HOME PAGE ============
+  function renderHome(app) {
+    const today = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+    app.innerHTML = `
+      <section class="hero-editorial">
+        <div class="he-noise"></div>
+        <div class="he-container">
+
+          <div class="he-header">
+            <div>
+              <div class="he-eyebrow">ERCOT &middot; REAL-TIME INTELLIGENCE &middot; ${today}</div>
+              <h1 class="he-headline">The grid clears.<br><em>Vela positions</em><br>your portfolio first.</h1>
+            </div>
+            <div class="he-right">
+              <p class="he-sub">An agentic intelligence layer for distributed energy portfolios, observing market signals, reasoning across revenue stacks, and dispatching every 15 minutes across every asset.</p>
+              <div class="he-ctas">
+                <a class="he-btn he-btn-primary" href="/app.html" style="text-decoration:none">Try the demo →</a>
+                <a class="he-btn he-btn-secondary" onclick="navigate('#product')">See how it works</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="he-video-wrap">
+            <video id="heroVideo" controls playsinline preload="metadata">
+              <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/quicktime">
+              <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/mp4">
+            </video>
+          </div>
+
+          <div class="he-report-wrap">
+            <div class="metrics-card">
+              <div>
+                <div class="metrics-tag">SHADOW MODE · VERIFIED</div>
+                <h3 class="metrics-headline"><span class="pct">44%</span> more revenue. Proven in shadow mode before a single live dispatch.</h3>
+                <p class="metrics-sub">Run alongside your existing system. We show you what we would have done. You flip the switch when you trust the numbers.</p>
+              </div>
+              <div class="compare-table">
+                <div class="ct-header">
+                  <div>Revenue stream</div><div>Agent</div><div>Baseline</div><div>Delta</div>
+                </div>
+                <div class="ct-row"><div>Energy arbitrage</div><div>$12,840</div><div>$9,210</div><div class="delta delta-val" data-target="39">+0%</div></div>
+                <div class="ct-row"><div>Demand response</div><div>$5,620</div><div>$5,100</div><div class="delta delta-val" data-target="10">+0%</div></div>
+                <div class="ct-row"><div>Ancillary services</div><div>$3,190</div><div>$0</div><div><span class="new-tag">NEW</span></div></div>
+                <div class="ct-row"><div>Capacity revenue</div><div>$2,410</div><div>$2,410</div><div class="dash">—</div></div>
+                <div class="ct-row total"><div>TOTAL</div><div>$24,060</div><div>$16,720</div><div class="delta delta-val" data-target="44">+0%</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="he-dashboard" style="display:none">
+            <div class="he-tabs">
+              <button class="he-tab active" data-tab="revenue">Revenue Stack</button>
+              <button class="he-tab" data-tab="dispatch">Dispatch Plan</button>
+              <button class="he-tab" data-tab="risk">Risk Controls</button>
+              <button class="he-tab" data-tab="fleet">Asset Fleet</button>
+            </div>
+
+            <div class="he-panel active" id="tab-revenue">
+              <div class="he-chart-header">
+                <span class="he-chart-title">24-HOUR REVENUE STACK · ERCOT · ${today}</span>
+                <span class="he-chart-total" id="heTotalRev">$4,381</span>
+              </div>
+              <div class="he-chart-wrap">
+                <canvas id="heRevenueChart"></canvas>
+              </div>
+              <div class="he-chart-legend">
+                <div class="he-legend-item"><div class="he-legend-dot" style="background:#1A7A5E"></div>Energy Arb.</div>
+                <div class="he-legend-item"><div class="he-legend-dot" style="background:#4DAA88"></div>Demand Response</div>
+                <div class="he-legend-item"><div class="he-legend-dot" style="background:#C17B2E"></div>Ancillary</div>
+                <div class="he-legend-item"><div class="he-legend-dot" style="background:#8B9E75"></div>Capacity</div>
+                <div class="he-legend-item"><div class="he-legend-dot" style="background:#D4B89A"></div>Freq. Reg.</div>
+              </div>
+            </div>
+
+            <div class="he-panel" id="tab-dispatch">
+              <table class="he-dispatch-table">
+                <thead><tr>
+                  <th>Time (CT)</th><th>Asset</th><th>Product</th><th>MW</th><th>Floor</th><th>Est. Rev.</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                  ${[
+                    ['06:00–07:00','Meridian Warehouse','ERCOT RT · Energy','2.8 MW','$45/MWh','$210','dispatched'],
+                    ['09:00–10:00','FleetCo Depot 4','ERCOT · Demand Resp.','0.8 MW','$52/MWh','$185','dispatched'],
+                    ['12:00–13:00','Riverton Cold Store','ERCOT · Ancillary','1.1 MW','$38/MWh','$140','approved'],
+                    ['14:00–16:00','Meridian Warehouse','ERCOT RT · Energy','3.4 MW','$92/MWh','$1,870','approved'],
+                    ['15:00–17:00','NorthPark Mfg.','ERCOT · Demand Resp.','2.4 MW','$78/MWh','$624','pending'],
+                    ['16:00–18:00','FleetCo Depot 4','ERCOT · Ancillary','0.8 MW','$55/MWh','$290','pending'],
+                    ['17:00–19:00','Riverton Cold Store','ERCOT RT · Energy','1.1 MW','$115/MWh','$840','queued'],
+                    ['19:00–20:00','Meridian Warehouse','ERCOT · Ancillary','1.8 MW','$44/MWh','$265','queued'],
+                  ].map(([t,a,p,mw,fl,rv,st]) => `
+                  <tr>
+                    <td style="color:rgba(26,26,20,0.42);font-size:10px">${t}</td>
+                    <td class="he-td-asset">${a}</td>
+                    <td>${p}</td>
+                    <td>${mw}</td>
+                    <td style="color:#1A7A5E">${fl}</td>
+                    <td style="color:#1A1A14;font-weight:500">${rv}</td>
+                    <td><span class="he-sp ${st}">${st.toUpperCase()}</span></td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="he-panel" id="tab-risk">
+              <div class="he-risk-grid">
+                <div class="he-risk-col">
+                  <div class="he-risk-col-head">Operator Limits</div>
+                  ${[
+                    ['SOC FLOOR','20% — all assets','ok'],
+                    ['CYCLE CAP','2 / day','ok'],
+                    ['BACKUP RESERVE','4 hours','ok'],
+                    ['DEGRAD. LIMIT','$4.50 / cycle max','ok'],
+                    ['POSITION LIMIT','8.4 MW total','ok'],
+                  ].map(([k,v,c]) => `<div class="he-risk-row"><span class="he-risk-k">${k}</span><span class="he-risk-v ${c}">${v}</span></div>`).join('')}
+                </div>
+                <div class="he-risk-col">
+                  <div class="he-risk-col-head">Market Flags</div>
+                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">CUSTOMER OPT-OUTS</div><div class="he-flag-val">3 active — Riverton, NorthPark, FleetCo</div><div class="he-flag-sub">Excluded from 16:00–18:00 window</div></div></div>
+                  <div class="he-flag"><div class="he-flag-dot warn"></div><div><div class="he-flag-title">WEATHER FLAG</div><div class="he-flag-val">Wind ramp −1.2 GW forecast @ 16:00</div><div class="he-flag-sub">LMP spike probability elevated → 78%</div></div></div>
+                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">ERCOT ORDC</div><div class="he-flag-val">Operating reserve demand curve active</div><div class="he-flag-sub">RTOLCAP $5,000/MWh ceiling in effect</div></div></div>
+                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">SETTLEMENT PERIOD</div><div class="he-flag-val">3 events pending reconciliation</div><div class="he-flag-sub">May 8 · 96.4% avg. performance</div></div></div>
+                </div>
+                <div class="he-risk-col">
+                  <div class="he-risk-col-head">Agent Status</div>
+                  ${[
+                    ['CYCLE COUNT','847 today','ok'],
+                    ['NEXT WINDOW','13 min','ok'],
+                    ['AUTO-APPROVED','6 bids','ok'],
+                    ['HUMAN REVIEW','2 bids','warn'],
+                    ['CONSTRAINT HITS','0 violations','ok'],
+                  ].map(([k,v,c]) => `<div class="he-risk-row"><span class="he-risk-k">${k}</span><span class="he-risk-v ${c}">${v}</span></div>`).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div class="he-panel" id="tab-fleet">
+              <div class="he-fleet-grid">
+                ${[
+                  {n:'Meridian Warehouse',t:'BATTERY · 4.0 MW',soc:71,st:'dispatched',rev:'$2,080'},
+                  {n:'Riverton Cold Store',t:'HVAC FLEX · 1.2 MW',soc:100,st:'online',rev:'$325'},
+                  {n:'NorthPark Mfg.',t:'BATTERY · 3.0 MW',soc:54,st:'online',rev:'$890'},
+                  {n:'FleetCo Depot 4',t:'EV FLEET · 1.0 MW',soc:83,st:'online',rev:'$475'},
+                  {n:'Garland Solar+',t:'BATTERY · 2.0 MW',soc:91,st:'online',rev:'$210'},
+                  {n:'Austin Micro VPP',t:'MULTI-ASSET · 5.0 MW',soc:62,st:'standby',rev:'$0'},
+                  {n:'Cedar Park Fleet',t:'EV FLEET · 1.5 MW',soc:78,st:'standby',rev:'$0'},
+                  {n:'Pflugerville Batt.',t:'BATTERY · 2.5 MW',soc:44,st:'dispatched',rev:'$1,240'},
+                ].map(a => `
+                <div class="he-asset-card">
+                  <div class="he-asset-dot ${a.st}"></div>
+                  <div class="he-asset-name">${a.n}</div>
+                  <div class="he-asset-type">${a.t}</div>
+                  <div class="he-asset-soc-track"><div class="he-asset-soc-fill${a.soc<30?' low':''}" style="width:${a.soc}%"></div></div>
+                  <div class="he-asset-nums">
+                    <div class="he-asset-num"><div class="he-asset-num-k">SOC</div><div class="he-asset-num-v">${a.soc}%</div></div>
+                    <div class="he-asset-num"><div class="he-asset-num-k">TODAY</div><div class="he-asset-num-v">${a.rev}</div></div>
+                  </div>
+                </div>`).join('')}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <div><div class="section-eyebrow"><span class="num">// 01</span><span>The agent loop</span></div></div>
+            <div>
+              <h2 class="section-title">The observe → reason → act loop.</h2>
+              <p class="section-subtitle" style="margin-top:14px">SIX STAGES · ONE CONTINUOUS CYCLE</p>
+            </div>
+          </div>
+          <div class="stages-grid">
+            ${[
+              ['01','Observe','Ingest asset telemetry, market prices, weather, and grid signals in real time.'],
+              ['02','Forecast','Predict LMP spikes, load curves, and opt-out risk across a 4-hour horizon.'],
+              ['03','Reason','Weigh revenue stacks, degradation cost, backup reserve, and customer constraints.'],
+              ['04','Act','Generate bids, dispatch assets, and route high-risk decisions to human approval.'],
+              ['05','Measure','Verify delivery against commitments. Attribute revenue. Flag underperformance.'],
+              ['06','Learn','Update strategy models based on outcomes. Every cycle compounds the advantage.']
+            ].map(([n,name,desc]) => `
+              <div class="stage-card">
+                <div class="stage-num">${n}</div>
+                <div class="stage-name">${name}</div>
+                <div class="stage-desc">${desc}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+      <hr class="rule"/>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <div><div class="section-eyebrow"><span class="num">// 02</span><span>Platform</span></div></div>
+            <div>
+              <h2 class="section-title">Built for VPP teams that need intelligence without losing control.</h2>
+              <p class="section-subtitle" style="margin-top:14px">HARDWARE · EXPLAINABILITY · CONSTRAINTS</p>
+            </div>
+          </div>
+          <div class="features-grid">
+            <div class="feature-col">
+              <div class="feature-icon"><div class="icon-rings"></div></div>
+              <div class="feature-name">Hardware-agnostic</div>
+              <p class="feature-desc">Connects to any DER — batteries, EV fleets, HVAC, solar, flexible compute. We talk to the asset's protocol (OpenADR, IEEE 2030.5, Modbus, OCPP). You see one unified fleet.</p>
+              <a class="feature-link" onclick="navigate('#product')">learn more <span>→</span></a>
+            </div>
+            <div class="feature-col">
+              <div class="feature-icon"><div class="icon-bars"><span data-h="55"></span><span data-h="80"></span><span data-h="35"></span><span data-h="100"></span></div></div>
+              <div class="feature-name">Explainable by design</div>
+              <p class="feature-desc">Every dispatch decision includes its rationale — assets considered, constraints applied, alternatives rejected. Not a black box. A co-pilot you can audit.</p>
+              <a class="feature-link" href="/app.html" style="text-decoration:none">try it live <span>→</span></a>
+            </div>
+            <div class="feature-col">
+              <div class="feature-icon"><div class="icon-lock"></div></div>
+              <div class="feature-name">Built-in constraint engine</div>
+              <p class="feature-desc">Hard limits that the agent cannot violate: SOC floors, backup reserve thresholds, degradation caps, customer comfort windows. The autonomy operates inside a defined box.</p>
+              <a class="feature-link" onclick="navigate('#product')">learn more <span>→</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="rule"/>
+
+      <section class="section markets-section">
+        <div class="container">
+          <div class="section-eyebrow" style="justify-content:center"><span class="num">// 03</span><span>Coverage</span></div>
+          <h2 class="section-title">Five markets. One agent.</h2>
+          <p class="section-subtitle">ISO/RTO COVERAGE · FERC ORDER 2222 COMPLIANT</p>
+          <div class="pills">
+            <span class="pill">ERCOT</span><span class="pill">CAISO</span><span class="pill">PJM</span><span class="pill">NYISO</span><span class="pill">MISO</span>
+          </div>
+          <p class="markets-note">FERC Order 2222 unlocks wholesale market access for distributed energy aggregations across every U.S. ISO. CAISO completed its rollout in 2024. NYISO targets 2026, with PJM following in 2028 and MISO phasing in between 2027 and 2029. We're already integrated where it counts.</p>
+        </div>
+      </section>
+
+      <section class="cta-block" id="cta">
+        <div class="container">
+          <h2>Ready to run shadow mode?</h2>
+          <p>Onboard in 48 hours. No dispatch risk on day one.</p>
+          <a class="cta cta-primary" href="/app.html" style="text-decoration:none">Request access <span class="arrow">→</span></a>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <div class="nav-logo">
+            <svg width="16" height="16" viewBox="0 0 100 96" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 90 C4 90 1 83 1 78 C16 54 32 26 50 2 C54 30 50 60 36 90 Z"/>
+              <path d="M36 90 C50 60 56 32 50 2 C66 24 82 54 90 78 C90 83 88 90 36 90 Z"/>
+            </svg>
+            Vela
+          </div>
+          <div class="footer-center">© 2026 Vela</div>
+          <div class="footer-right">Built for grid operators.</div>
+        </div>
+      </footer>
+    `;
+  }
+
+  // ============ HERO DASHBOARD ============
+  function initHeroDashboard() {
+    // Tab switching
+    const tabs = document.querySelectorAll('.he-tab');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.he-tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.he-panel').forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = document.getElementById('tab-' + target);
+        if (panel) panel.classList.add('active');
+        if (target === 'revenue') {
+          trackTimeout(setTimeout(() => initRevenueChart(true), 0));
+        }
+      });
+    });
+    trackTimeout(setTimeout(initRevenueChart, 80));
+  }
+
+  function initRevenueChart(rerender) {
+    const canvas = document.getElementById('heRevenueChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (_chart) { try { _chart.destroy(); } catch(e){} _chart = null; }
+
+    const labels = Array.from({length:24}, (_,i) => i + ':00');
+    const datasets = [
+      { label:'Energy Arb.',     data:[0,0,0,0,0,0,80,120,160,140,100,80,60,80,200,380,420,360,240,160,120,60,20,0],   backgroundColor:'#1A7A5E', borderRadius:2, borderSkipped:false },
+      { label:'Demand Response', data:[0,0,0,0,0,0,40,80,60,40,30,20,30,60,120,180,200,160,120,80,40,20,0,0],         backgroundColor:'#4DAA88', borderRadius:2, borderSkipped:false },
+      { label:'Ancillary',       data:[20,20,20,20,20,20,30,40,60,80,60,40,30,40,80,140,160,140,100,60,40,30,20,20],  backgroundColor:'#C17B2E', borderRadius:2, borderSkipped:false },
+      { label:'Capacity',        data:[30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30],      backgroundColor:'#8B9E75', borderRadius:2, borderSkipped:false },
+      { label:'Freq. Reg.',      data:[10,10,10,8,8,10,12,15,18,20,18,16,14,16,24,35,40,38,30,22,16,12,10,10],        backgroundColor:'#D4B89A', borderRadius:2, borderSkipped:false },
+    ];
+
+    _chart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: rerender ? 400 : 900,
+          delay: rerender ? 0 : (ctx) => ctx.dataIndex * 16,
+          easing: 'easeOutQuart',
+          onComplete: () => addChartMarkers(),
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(26,26,20,0.92)',
+            titleFont: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:10 },
+            bodyFont:  { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:10 },
+            titleColor: 'rgba(240,237,230,0.55)',
+            bodyColor:  '#F0EDE6',
+            borderColor: 'rgba(26,26,20,0.2)',
+            borderWidth: 1, padding: 10, cornerRadius: 4,
+            callbacks: {
+              title: (items) => items[0].label,
+              label: (item) => ` ${item.dataset.label}: $${item.raw}`,
+            }
           }
-        }, item.t, item.p, item.s, item.d, 1600);
-      });
-    });
-  }, {threshold:0.4});
-  var trustStats = document.querySelector('.trust-stats');
-  if(trustStats) trustObs.observe(trustStats);
-
-  /* ── SCROLL FADE-IN (cards, cols, steps) ── */
-  var fadeObs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
-        fadeObs.unobserve(e.target);
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              font: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:9 },
+              color: 'rgba(26,26,20,0.32)',
+              maxTicksLimit: 12, maxRotation: 0,
+            }
+          },
+          y: {
+            stacked: true,
+            grid: { color: 'rgba(26,26,20,0.055)' },
+            border: { display: false },
+            ticks: {
+              font: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:9 },
+              color: 'rgba(26,26,20,0.32)',
+              callback: (v) => '$' + v,
+              maxTicksLimit: 6,
+            }
+          }
+        }
       }
     });
-  }, {threshold:0.06});
+  }
 
-  document.querySelectorAll('.sc-card,.det-item,.how-step,.uc-card,.mkt-item,.tstat').forEach(function(el, i){
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(18px)';
-    el.style.transition = 'opacity .55s ease '+(i*50)+'ms, transform .55s ease '+(i*50)+'ms';
-    fadeObs.observe(el);
-  });
-
-  /* ── SMOOTH SCROLL FOR HASH LINKS ── */
-  document.querySelectorAll('a[href^="#"]').forEach(function(a){
-    a.addEventListener('click', function(e){
-      var id = a.getAttribute('href').slice(1);
-      var target = document.getElementById(id);
-      if(target){
-        e.preventDefault();
-        var offset = 84;
-        var top = target.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({top:top, behavior:'smooth'});
-      }
+  function addChartMarkers() {
+    if (!_chart) return;
+    const wrap = document.querySelector('.he-chart-wrap');
+    if (!wrap) return;
+    wrap.querySelectorAll('.he-marker-line').forEach((el) => el.remove());
+    const ca = _chart.chartArea;
+    if (!ca) return;
+    const w = ca.right - ca.left;
+    [{idx:14, label:'PEAK'}, {idx:17, label:'EVENING'}].forEach(({idx, label}) => {
+      const x = ca.left + (idx / 24) * w;
+      const line = document.createElement('div');
+      line.className = 'he-marker-line';
+      line.style.cssText = `left:${x}px;top:${ca.top}px;height:${ca.bottom - ca.top}px`;
+      const sp = document.createElement('span');
+      sp.textContent = label;
+      line.appendChild(sp);
+      wrap.appendChild(line);
     });
-  });
+  }
 
-  /* ── ACTIVE NAV HIGHLIGHT ── */
-  var sections = ['hero','showcase','proof','features','usecases','markets','how','trust','cta'];
-  var navLinks = document.querySelectorAll('#nav a[href^="#"]');
-  var secObs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting) return;
-      var id = e.target.id;
-      navLinks.forEach(function(a){
-        var match = a.getAttribute('href') === '#'+id;
-        a.style.color = match ? 'var(--green)' : '';
+  // ============ PRODUCT PAGE ============
+  function inlineBidCard() {
+    return `
+      <div class="inline-panel">
+        <div class="ip-chrome">
+          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
+          <div class="ip-url">vela.io/dispatch/queue</div>
+        </div>
+        <div class="ip-status">
+          <div class="l">DISPATCH QUEUE</div>
+          <div class="r"><span class="pulse"></span><span>Cycle 847 · 14:33 CT</span></div>
+        </div>
+        <div class="ip-body">
+          <div class="ip-bid">
+            <div class="ip-bid-head">
+              <div class="ip-bid-asset">
+                <div class="name">Meridian Warehouse · Battery</div>
+                <div class="market">ERCOT RT · 15:00–17:00 CT</div>
+              </div>
+              <div class="ip-bid-meta">
+                <span class="ip-risk">MED RISK</span>
+                <span class="ip-spec">3.4 MW · $92/MWh</span>
+              </div>
+            </div>
+            <div class="ip-rev">
+              <span class="label">EXPECTED REVENUE</span>
+              <span class="val">$1,870 <span>/event</span></span>
+            </div>
+            <div class="ip-rationale">
+              LMP spike probability <span class="em">78%</span> at 16:00. Battery 7 excluded — degradation cost <span class="am">$4.20/cycle</span> exceeds spread below $85.
+            </div>
+            <div class="ip-tags-wrap">
+              <div class="ip-tags-label">CONSTRAINTS APPLIED</div>
+              <div class="ip-tags">
+                <span class="ip-tag">SOC ≥ 20%</span>
+                <span class="ip-tag">Backup 4h</span>
+                <span class="ip-tag">Max 1 cyc/day</span>
+              </div>
+            </div>
+            <div class="ip-actions">
+              <span class="meta">Alternatives: 3</span>
+              <div class="btns">
+                <button class="ip-btn decline">DECLINE</button>
+                <button class="ip-btn approve">APPROVE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function inlineShadowCard() {
+    return `
+      <div class="inline-panel">
+        <div class="ip-chrome">
+          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
+          <div class="ip-url">vela.io/portfolio/shadow-mode</div>
+        </div>
+        <div class="ip-status">
+          <div class="l">SHADOW MODE · 30D</div>
+          <div class="r">Agent vs. baseline · ERCOT</div>
+        </div>
+        <div class="ip-body">
+          <div class="ip-metric-row">
+            <div class="ip-metric"><div class="l">AGENT</div><div class="v">$24,060</div><div class="s">30-day</div></div>
+            <div class="ip-metric"><div class="l">BASELINE</div><div class="v dim">$16,720</div><div class="s">current</div></div>
+            <div class="ip-metric"><div class="l">DELTA</div><div class="v up">+$7,340</div><div class="s up">+44%</div></div>
+          </div>
+          <div class="ip-table">
+            <div class="ip-tr h"><div>Stream</div><div>Agent</div><div>Baseline</div><div>Δ</div></div>
+            <div class="ip-tr"><div class="stream">Energy arb.</div><div class="ag">$12,840</div><div class="ba">$9,210</div><div class="dl">+39%</div></div>
+            <div class="ip-tr"><div class="stream">Demand resp.</div><div class="ag">$5,620</div><div class="ba">$5,100</div><div class="dl">+10%</div></div>
+            <div class="ip-tr"><div class="stream">Ancillary</div><div class="ag">$3,190</div><div class="ba">$0</div><div><span class="ip-new">NEW</span></div></div>
+            <div class="ip-tr"><div class="stream">Capacity</div><div class="ag">$2,410</div><div class="ba">$2,410</div><div style="color:#9A9A90">—</div></div>
+            <div class="ip-tr tot"><div class="stream">Total</div><div class="ag">$24,060</div><div class="ba">$16,720</div><div class="dl">+44%</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function inlineSettlementCard() {
+    return `
+      <div class="inline-panel">
+        <div class="ip-chrome">
+          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
+          <div class="ip-url">vela.io/settlement/2026-05-07</div>
+        </div>
+        <div class="ip-status">
+          <div class="l">SETTLEMENT · MAY 7 2026</div>
+          <div class="r"><span style="color:#1A7A5E">RECONCILED</span></div>
+        </div>
+        <div class="ip-body">
+          <div class="ip-metric-row">
+            <div class="ip-metric"><div class="l">COMMITTED</div><div class="v">8.4 MW</div><div class="s">DA position</div></div>
+            <div class="ip-metric"><div class="l">DELIVERED</div><div class="v dim">8.1 MW</div><div class="s">verified</div></div>
+            <div class="ip-metric"><div class="l">PERF</div><div class="v" style="color:#EF9F27">96.4%</div><div class="s" style="color:#EF9F27">−0.3 MW</div></div>
+          </div>
+          <div class="ip-bar"><div class="ip-bar-d"></div><div class="ip-bar-s"></div></div>
+          <div class="ip-bar-labels"><span class="l">8.1 MW delivered</span><span class="r">0.3 MW shortfall</span></div>
+          <div style="margin-top:14px">
+            <div class="ip-asset-row h"><div>Asset</div><div>Committed</div><div>Performance</div><div>Status</div></div>
+            <div class="ip-asset-row">
+              <div><div class="a-name">Meridian Warehouse</div><div class="a-sub">Battery · Site 1</div></div>
+              <div>3.4 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
+            </div>
+            <div class="ip-asset-row">
+              <div><div class="a-name">Riverton Cold Store</div><div class="a-sub">HVAC · Site 2</div></div>
+              <div>1.1 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
+            </div>
+            <div class="ip-asset-row flag">
+              <div><div class="a-name">NorthPark Mfg</div><div class="a-sub">Battery · Site 3</div></div>
+              <div>2.4 MW</div><div class="perf-down">87.5%</div><div><span class="ip-status-pill warn">UNDER</span></div>
+            </div>
+            <div class="ip-asset-row">
+              <div><div class="a-name">FleetCo Depot 4</div><div class="a-sub">EV Fleet · Site 4</div></div>
+              <div>0.8 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderProduct(app) {
+    app.innerHTML = `
+      <div class="page">
+        <div class="page-inner">
+          <div class="page-hero">
+            <div class="eyebrow product-anim">PRODUCT</div>
+            <h1 class="page-headline product-anim">Three modules.<br/>One agent loop.</h1>
+            <p class="page-subhead product-anim">Each module is independently valuable. Together they compound into a strategy that improves every 15 minutes.</p>
+          </div>
+
+          <div class="feature-row" id="prow1">
+            <div>
+              <div class="module-label">01 / BID INTELLIGENCE</div>
+              <h2 class="module-headline">The agent tells you what to bid and exactly why.</h2>
+              <p class="module-body">Most operators run static price thresholds. Vela reasons across degradation cost, ancillary opportunity, opt-out probability, and backup reserve simultaneously — every 15 minutes.</p>
+              <ul class="module-bullets">
+                <li>Multi-objective reasoning across 6 revenue stacks</li>
+                <li>Hard constraint enforcement before bid fires</li>
+                <li>Human approval queue with full rationale</li>
+                <li>Auto-approve low-risk bids, escalate high-risk</li>
+              </ul>
+            </div>
+            <div>${inlineBidCard()}</div>
+          </div>
+
+          <hr style="border:none;border-top:0.5px solid rgba(26,122,94,0.08);"/>
+
+          <div class="feature-row reverse" id="prow2">
+            <div>${inlineShadowCard()}</div>
+            <div>
+              <div class="module-label">02 / SHADOW MODE</div>
+              <h2 class="module-headline">Prove it before you trust it.</h2>
+              <p class="module-body">Run alongside your existing strategy for 30 days. Vela shows exactly what it would have bid, what it would have earned, and which revenue stacks you're currently missing. No dispatch, no risk, no regulatory exposure.</p>
+              <ul class="module-bullets">
+                <li>Day-by-day P&L comparison vs. current strategy</li>
+                <li>New revenue stack identification (ancillary, capacity)</li>
+                <li>Backtested against live ISO market data</li>
+                <li>One-click switch to live dispatch when ready</li>
+              </ul>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:0.5px solid rgba(26,122,94,0.08);"/>
+
+          <div class="feature-row" id="prow3">
+            <div>
+              <div class="module-label">03 / SETTLEMENT LAYER</div>
+              <h2 class="module-headline">Auditable attribution down to the asset.</h2>
+              <p class="module-body">Every dispatch event produces a verified settlement record — committed vs. delivered, penalty attribution, revenue waterfall, and root cause analysis for any shortfall. Built for ISO audits and customer reporting.</p>
+              <ul class="module-bullets">
+                <li>15-minute interval meter verification</li>
+                <li>Per-asset performance and revenue attribution</li>
+                <li>Automated penalty detection and root cause</li>
+                <li>Customer-facing revenue reports</li>
+              </ul>
+            </div>
+            <div>${inlineSettlementCard()}</div>
+          </div>
+
+          <div class="cta-block" id="cta">
+            <h2>Ready to run shadow mode?</h2>
+            <p>Onboard in 48 hours. No dispatch risk on day one.</p>
+            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============ SOLUTIONS PAGE ============
+  function painGrid(rows) {
+    return `
+      <div class="pain-grid">
+        <div class="ph">CURRENT PAIN</div>
+        <div class="ph">WITH VOLTAOS</div>
+        ${rows.map(([p, s]) => `
+          <div class="pain-row pain">${p}</div>
+          <div class="pain-row sol">${s}</div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderSolutions(app) {
+    app.innerHTML = `
+      <div class="page">
+        <div class="page-inner">
+          <div class="page-hero">
+            <div class="eyebrow sol-anim">SOLUTIONS</div>
+            <h1 class="page-headline sol-anim">Built for operators,<br/>not asset owners.</h1>
+            <p class="page-subhead sol-anim">Vela is a B2B infrastructure layer. Your buyers know what LMP means. We don't explain the grid — we help you win in it.</p>
+          </div>
+
+          <div class="solution-card">
+            <div class="seg-label">VPP OPERATORS</div>
+            <h2 class="sol-headline">Stop leaving ancillary revenue on the table.</h2>
+            <p class="sol-body">Your DERMS controls the assets. Vela decides the optimal revenue stack allocation across energy, capacity, ancillary, and DR — every dispatch window, every ISO.</p>
+            ${painGrid([
+              ['Static price thresholds', 'Multi-objective agent reasoning'],
+              ['Manual ancillary enrollment', 'Automated stack optimization'],
+              ['Offline backtesting', 'Live shadow mode proof'],
+              ['Spreadsheet settlement', 'Auditable attribution layer']
+            ])}
+          </div>
+
+          <div class="solution-card">
+            <div class="seg-label">AGGREGATORS</div>
+            <h2 class="sol-headline">Scale your portfolio without scaling your ops team.</h2>
+            <p class="sol-body">Managing a portfolio of heterogeneous assets across multiple ISOs gets exponentially harder with every new customer, asset type, and market rule. Vela handles the intelligence layer — constraint management, market-specific bidding logic, performance verification, and settlement reconciliation — so your team focuses on growing the portfolio, not operating it.</p>
+            <p class="sol-body">Each new ISO, asset class, and customer constraint is a new ops burden without the right infrastructure. Vela abstracts that complexity: one interface, one reasoning engine, every market.</p>
+            ${painGrid([
+              ['Manual constraint management per customer account', 'Natural language constraints — set once, enforced every 15-minute cycle across every asset'],
+              ['ISO-specific bidding expertise required for each new market', 'Market-agnostic agent layer — ERCOT, CAISO, PJM, NYISO, MISO through one interface'],
+              ['Performance penalty exposure on every live dispatch event', 'Pre-dispatch constraint validation catches violations before they fire'],
+              ['Opaque per-customer reporting, no asset-level revenue visibility', 'Auditable per-asset P&L with customer-facing settlement statements'],
+              ['Ancillary stack missed without specialized in-house market staff', 'Automated ancillary identification and enrollment across all enrolled markets'],
+              ['New asset types require new integrations and bidding logic each time', 'Hardware-agnostic: batteries, EV fleets, HVAC, industrial load — one unified system']
+            ])}
+          </div>
+
+          <div class="stats-row">
+            <div><div class="stat-num">5 ISOs</div><div class="stat-lbl">ERCOT · CAISO · PJM · NYISO · MISO</div></div>
+            <div><div class="stat-num">Any hardware</div><div class="stat-lbl">OPENADR · IEEE 2030.5 · MODBUS · OCPP</div></div>
+            <div><div class="stat-num">48hr onboarding</div><div class="stat-lbl">SHADOW MODE START · NO DISPATCH RISK</div></div>
+          </div>
+
+          <div class="cta-block">
+            <h2>Map Vela to your portfolio.</h2>
+            <p>30-minute call. We'll show you what revenue stacks you're missing.</p>
+            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============ RESOURCES PAGE ============
+  function renderResources(app) {
+    app.innerHTML = `
+      <div class="page">
+        <div class="page-inner">
+          <div class="page-hero">
+            <div class="eyebrow res-anim">RESOURCES</div>
+            <h1 class="page-headline res-anim">Built for people<br/>who know the grid.</h1>
+            <p class="page-subhead res-anim">Technical documentation, market guides, and architecture deep-dives. No explainer content.</p>
+          </div>
+
+          <div class="resource-grid">
+            <div class="resource-card">
+              <div class="res-label">DOCS</div>
+              <div class="res-title">API Reference</div>
+              <div class="res-body">REST API for asset onboarding, constraint configuration, bid retrieval, and settlement data. OpenAPI spec available.</div>
+              <div class="res-tags"><span class="res-tag">REST API</span><span class="res-tag">WebSocket feeds</span><span class="res-tag">OpenAPI 3.0</span></div>
+              <a class="res-link">View docs <span>→</span></a>
+            </div>
+
+            <div class="resource-card">
+              <div class="res-label">TECHNICAL</div>
+              <div class="res-title">How the agent loop works</div>
+              <div class="res-body">LangGraph-based observe→reason→act cycle. MCP server architecture. Constraint enforcement layer. Learning loop mechanics.</div>
+              <div class="res-tags"><span class="res-tag">LangGraph</span><span class="res-tag">MCP</span><span class="res-tag">Reinforcement learning</span></div>
+              <a class="res-link">Read architecture <span>→</span></a>
+            </div>
+
+            <div class="resource-card">
+              <div class="res-label">REGULATORY</div>
+              <div class="res-title">FERC Order 2222 — ISO rollout timeline</div>
+              <div class="res-body">CAISO live Nov 2024. NYISO targeting Q4 2026. PJM pushed to Feb 2028. MISO 2027–29. SPP requesting delay to 2030. ERCOT runs separate ADER pilot.</div>
+              <div class="res-tags"><span class="res-tag">FERC 2222</span><span class="res-tag">ISO/RTO</span><span class="res-tag">Compliance</span></div>
+              <a class="res-link">Read guide <span>→</span></a>
+            </div>
+
+            <div class="resource-card">
+              <div class="res-label">CHANGELOG</div>
+              <div class="res-title">What's shipped</div>
+              <div class="timeline">
+                <div class="tl-entry"><div class="tl-date">May 2026</div><div class="tl-title">Shadow mode GA</div><div class="tl-desc">30-day P&L proof available for all asset types</div></div>
+                <div class="tl-entry"><div class="tl-date">Apr 2026</div><div class="tl-title">CAISO market support</div><div class="tl-desc">Day-ahead and real-time bidding for California assets</div></div>
+                <div class="tl-entry"><div class="tl-date">Mar 2026</div><div class="tl-title">Constraint language interface</div><div class="tl-desc">Plain English operator constraints now supported</div></div>
+                <div class="tl-entry"><div class="tl-date">Feb 2026</div><div class="tl-title">Private beta</div><div class="tl-desc">First 5 VPP operators onboarded</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cta-block">
+            <h2>Ready to integrate?</h2>
+            <p>Start with shadow mode. API access available on request.</p>
+            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============ PAGE ANIMATIONS ============
+  function initPageAnimations(hash) {
+    if (hash === '#home' || !hash) {
+      initHomeAnimations();
+    } else if (hash === '#product') {
+      anime({ targets: '.product-anim', translateY: [20, 0], opacity: [0, 1],
+        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            anime({ targets: entry.target.children, translateY: [24, 0], opacity: [0, 1],
+              delay: anime.stagger(120), duration: 700, easing: 'easeOutExpo' });
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      trackObserver(io);
+      ['prow1', 'prow2', 'prow3'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) io.observe(el);
       });
+    } else if (hash === '#solutions') {
+      anime({ targets: '.sol-anim', translateY: [20, 0], opacity: [0, 1],
+        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
+      anime({ targets: '.solution-card', translateY: [20, 0], opacity: [0, 1],
+        delay: anime.stagger(100, { start: 300 }), duration: 700, easing: 'easeOutExpo' });
+      anime({ targets: '.pain-row', translateX: [-8, 0], opacity: [0, 1],
+        delay: anime.stagger(40, { start: 600 }), duration: 500, easing: 'easeOutQuad' });
+    } else if (hash === '#resources') {
+      anime({ targets: '.res-anim', translateY: [20, 0], opacity: [0, 1],
+        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
+      anime({ targets: '.resource-card', scale: [0.97, 1], opacity: [0, 1],
+        delay: anime.stagger(80, { start: 300 }), duration: 600, easing: 'easeOutExpo' });
+    }
+  }
+
+  function initHomeAnimations() {
+    if (!document.querySelector('.hero-editorial')) return;
+
+    const tl = anime.timeline({ autoplay: true });
+    tl.add({
+      targets: '.he-eyebrow', opacity: [0, 1], translateY: [8, 0],
+      duration: 600, easing: 'easeOutQuad'
     });
-  }, {rootMargin:'-40% 0px -55% 0px'});
-  sections.forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) secObs.observe(el);
-  });
+    tl.add({
+      targets: '.he-headline', opacity: [0, 1], translateY: [22, 0],
+      duration: 800, easing: 'easeOutExpo'
+    }, '-=300');
+    tl.add({
+      targets: '.he-sub', opacity: [0, 1], translateY: [14, 0],
+      duration: 700, easing: 'easeOutQuad'
+    }, '-=500');
+    tl.add({
+      targets: '.he-ctas', opacity: [0, 1],
+      duration: 600, easing: 'easeOutQuad'
+    }, '-=400');
+    tl.add({
+      targets: '.he-video-wrap', opacity: [0, 1], translateY: [18, 0],
+      duration: 700, easing: 'easeOutExpo'
+    }, '-=200');
+
+    const stagesIO = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          anime({ targets: '.stage-card', translateY: [30, 0], opacity: [0, 1],
+            duration: 700, delay: anime.stagger(80), easing: 'easeOutExpo' });
+          stagesIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    const stagesGrid = document.querySelector('.stages-grid');
+    if (stagesGrid) stagesIO.observe(stagesGrid);
+    trackObserver(stagesIO);
+
+    const metricsIO = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          anime({ targets: '.compare-table .ct-row > div', translateX: [-20, 0], opacity: [0, 1],
+            duration: 600, delay: anime.stagger(60), easing: 'easeOutQuad' });
+          document.querySelectorAll('.delta-val').forEach((el) => {
+            const target = parseFloat(el.dataset.target);
+            const obj = { v: 0 };
+            anime({ targets: obj, v: target, round: 1, duration: 1400, delay: 400, easing: 'easeOutExpo',
+              update: () => { el.textContent = '+' + Math.round(obj.v) + '%'; }
+            });
+          });
+          metricsIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    const metricsCard = document.querySelector('.metrics-card');
+    if (metricsCard) metricsIO.observe(metricsCard);
+    trackObserver(metricsIO);
+
+    const featuresIO = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          anime({ targets: '.feature-col', scale: [0.96, 1], opacity: [0, 1],
+            duration: 700, delay: anime.stagger(120), easing: 'easeOutExpo' });
+          document.querySelectorAll('.icon-bars span').forEach((bar, i) => {
+            trackTimeout(setTimeout(() => { bar.style.height = bar.dataset.h + '%'; }, 400 + i * 80));
+          });
+          featuresIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    const featuresGrid = document.querySelector('.features-grid');
+    if (featuresGrid) featuresIO.observe(featuresGrid);
+    trackObserver(featuresIO);
+  }
+
+  // ============ BOOTSTRAP ============
+  if (!window.location.hash) {
+    window.location.hash = '#home';
+  } else {
+    handleHashChange();
+  }
 })();
 </script>
 </body>

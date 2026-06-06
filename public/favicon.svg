@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 96" fill="#1D9E75">
+  <!-- main sail: wide base, sweeps to sharp peak, concave right leech -->
+  <path d="M4 90 C4 90 1 83 1 78 C16 54 32 26 50 2 C54 30 50 60 36 90 Z"/>
+  <!-- jib sail: narrower, behind/right of main, same peak -->
+  <path d="M36 90 C50 60 56 32 50 2 C66 24 82 54 90 78 C90 83 88 90 36 90 Z"/>
+</svg>
