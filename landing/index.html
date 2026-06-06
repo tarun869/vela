@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vela &mdash; Agentic Energy Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & TOKENS ─────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#070B09; --bg1:#0D1510; --bg2:#111916; --bg3:#1A2420;
+  --green:#1D9E75; --gdim:rgba(29,158,117,.12); --gmid:rgba(29,158,117,.25);
+  --amber:#EF9F27;
+  --text:#F0EDE6; --muted:rgba(240,237,230,.5); --faint:rgba(240,237,230,.22);
+  --rule:rgba(29,158,117,.1); --ruleh:rgba(29,158,117,.28);
+  --sans:'Syne',sans-serif; --mono:'DM Mono',monospace;
+  --r:6px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.55}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+
+/* ── TICKER ─────────────────────────────────────── */
+#ticker{
+  position:fixed;top:0;left:0;right:0;z-index:300;height:28px;
+  background:#071009;border-bottom:0.5px solid var(--rule);
+  display:flex;align-items:center;overflow:hidden;
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+}
+.ticker-inner{display:flex;gap:0;white-space:nowrap;
+  animation:tick 32s linear infinite}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{display:flex;align-items:center;gap:8px;padding:0 28px;
+  border-right:0.5px solid var(--rule);color:var(--faint)}
+.tick-mkt{color:var(--green);letter-spacing:.1em}
+.tick-val{color:var(--text)}
+.tick-up{color:#4ade80}.tick-dn{color:#f87171}
+.tick-label{color:var(--faint);letter-spacing:.04em}
+
+/* ── NAV ────────────────────────────────────────── */
+#nav{
+  position:fixed;top:28px;left:0;right:0;z-index:200;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;
+  background:rgba(7,11,9,.88);backdrop-filter:blur(16px);
+  border-bottom:0.5px solid var(--rule);
+}
+.nl{display:flex;align-items:center;gap:10px}
+.nlogo{font-weight:800;font-size:19px;color:var(--green);letter-spacing:-.02em}
+.ndot{width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px rgba(29,158,117,.7);
+  animation:ndp 2.5s ease-in-out infinite}
+@keyframes ndp{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.nbadge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+  border:0.5px solid var(--ruleh);color:var(--green);padding:2px 8px;border-radius:3px}
+.nlinks{display:flex;gap:2px;list-style:none}
+.nlinks a{font-family:var(--mono);font-size:12px;letter-spacing:.04em;
+  color:var(--muted);padding:6px 14px;border-radius:4px;
+  transition:color .15s,background .15s}
+.nlinks a:hover{color:var(--text);background:rgba(29,158,117,.07)}
+.ncta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;
+  background:var(--green);color:#071009;padding:8px 20px;border-radius:var(--r);
+  font-weight:500;transition:opacity .15s;display:flex;align-items:center;gap:7px}
+.ncta:hover{opacity:.85}
+.ncta-dot{width:6px;height:6px;border-radius:50%;background:#071009;opacity:.7;
+  animation:ndp 2s ease-in-out infinite}
+
+/* ── SHARED UTILS ───────────────────────────────── */
+.wrap{max-width:1160px;margin:0 auto;padding:0 40px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  color:var(--green);text-transform:uppercase;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';width:22px;height:1px;background:var(--green)}
+.rule-h{border:none;border-top:0.5px solid var(--rule);margin:0}
+
+/* ── HERO ───────────────────────────────────────── */
+#hero{
+  padding:110px 0 90px;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% -10%,rgba(29,158,117,.09) 0%,transparent 65%),
+    var(--bg);
+  position:relative;overflow:hidden;
+}
+#hero::after{/* subtle grid */
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 30%,transparent 80%);
+  opacity:.45;
+}
+.hero-inner{position:relative;z-index:1;text-align:center}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--green);
+  border:0.5px solid var(--ruleh);background:var(--gdim);
+  padding:5px 14px;border-radius:20px;margin-bottom:32px}
+.hero-kicker-dot{width:5px;height:5px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px rgba(29,158,117,.8)}
+.hero-h1{font-size:clamp(38px,5.5vw,70px);font-weight:800;line-height:1.02;
+  letter-spacing:-.03em;margin-bottom:24px}
+.hero-h1 em{font-style:normal;color:var(--green)}
+.hero-sub{font-family:var(--mono);font-size:15px;color:var(--muted);
+  max-width:520px;margin:0 auto 40px;line-height:1.7;letter-spacing:.01em}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.btn-primary{font-family:var(--mono);font-size:13px;letter-spacing:.04em;
+  background:var(--green);color:#071009;padding:11px 28px;
+  border-radius:var(--r);font-weight:500;transition:opacity .15s}
+.btn-primary:hover{opacity:.85}
+.btn-ghost{font-family:var(--mono);font-size:13px;letter-spacing:.04em;
+  color:var(--text);border:0.5px solid var(--ruleh);padding:11px 28px;
+  border-radius:var(--r);transition:border-color .15s,color .15s}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+/* stat strip */
+.hero-stats{display:flex;justify-content:center;gap:0;
+  border:0.5px solid var(--rule);border-radius:var(--r);
+  background:var(--bg1);overflow:hidden;max-width:680px;margin:0 auto}
+.hstat{flex:1;padding:18px 28px;border-right:0.5px solid var(--rule);text-align:center}
+.hstat:last-child{border-right:none}
+.hstat-val{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--text);
+  margin-bottom:4px}
+.hstat-val.g{color:var(--green)}
+.hstat-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted)}
+/* hero layout: two-col on wide screens */
+.hero-layout{display:grid;grid-template-columns:1fr 520px;gap:64px;
+  align-items:center;margin-bottom:56px}
+.hero-left{text-align:left}
+.hero-left .hero-kicker{justify-content:flex-start}
+.hero-left .hero-sub{margin:0 0 32px;max-width:none}
+.hero-left .hero-btns{justify-content:flex-start}
+/* mini dashboard preview card */
+.hero-dash{background:var(--bg1);border:0.5px solid var(--ruleh);
+  border-radius:10px;overflow:hidden;
+  box-shadow:0 40px 80px -20px rgba(0,0,0,.6),0 0 0 0.5px rgba(0,0,0,.4)}
+.hd-chrome{background:#050805;height:34px;display:flex;align-items:center;
+  padding:0 12px;border-bottom:0.5px solid var(--rule);gap:8px}
+.hd-dots{display:flex;gap:6px}
+.hd-dot{width:10px;height:10px;border-radius:50%}
+.hd-url{flex:1;text-align:center;font-family:var(--mono);font-size:10px;
+  color:var(--faint);background:rgba(255,255,255,.04);
+  border-radius:3px;padding:3px 12px;letter-spacing:.03em}
+.hd-body{padding:0}
+/* sidebar + main layout inside preview */
+.hd-app{display:grid;grid-template-columns:140px 1fr;height:320px}
+.hd-sidebar{background:#0A0F0C;border-right:0.5px solid var(--rule);
+  padding:14px 0;display:flex;flex-direction:column;gap:2px}
+.hd-brand{padding:8px 16px 12px;font-family:var(--mono);font-size:11px;
+  color:var(--green);letter-spacing:.06em;border-bottom:0.5px solid var(--rule);
+  margin-bottom:6px}
+.hd-nav-item{font-family:var(--mono);font-size:10px;color:var(--muted);
+  padding:7px 16px;display:flex;align-items:center;gap:8px;letter-spacing:.04em}
+.hd-nav-item.active{background:var(--gdim);color:var(--green);
+  border-right:2px solid var(--green)}
+.hd-nav-icon{width:8px;height:8px;border-radius:2px;
+  background:currentColor;opacity:.5;flex-shrink:0}
+.hd-main{padding:16px;overflow:hidden}
+.hd-eyebrow{font-family:var(--mono);font-size:9px;color:var(--muted);
+  letter-spacing:.1em;margin-bottom:4px}
+.hd-page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;
+  margin-bottom:14px;color:var(--text)}
+.hd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.hd-kpi{background:var(--bg2);border:0.5px solid var(--rule);
+  border-radius:4px;padding:10px 12px}
+.hd-kpi-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.1em;
+  color:var(--muted);margin-bottom:4px}
+.hd-kpi-val{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.hd-kpi-val.g{color:var(--green)}
+.hd-kpi-sub{font-family:var(--mono);font-size:8px;color:var(--faint);margin-top:2px}
+/* mini chart area */
+.hd-chart-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);
+  letter-spacing:.08em;margin-bottom:8px}
+.hd-chart{height:90px;background:var(--bg2);border:0.5px solid var(--rule);
+  border-radius:4px;overflow:hidden;position:relative}
+.hd-chart-svg{width:100%;height:100%}
+.hd-status-bar{display:flex;gap:8px;margin-top:10px;align-items:center}
+.hd-status-pill{font-family:var(--mono);font-size:8px;letter-spacing:.07em;
+  padding:3px 8px;border-radius:3px;background:var(--gdim);
+  color:var(--green);border:0.5px solid var(--ruleh)}
+.hd-status-pill.amber{background:rgba(239,159,39,.1);color:var(--amber);
+  border-color:rgba(239,159,39,.3)}
+
+/* ── PROOF ──────────────────────────────────────── */
+#proof{padding:96px 0;background:var(--bg1)}
+.proof-card{display:grid;grid-template-columns:1fr 1.1fr;gap:72px;align-items:center;
+  background:var(--bg2);border:0.5px solid var(--ruleh);
+  border-radius:10px;padding:56px 60px;position:relative;overflow:hidden}
+.proof-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:.6}
+.proof-h{font-size:clamp(28px,3vw,40px);font-weight:800;letter-spacing:-.025em;
+  line-height:1.1;margin-bottom:16px}
+.proof-pct{font-style:normal;color:var(--green)}
+.proof-body{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.75}
+/* table */
+.proof-table{display:flex;flex-direction:column;border:0.5px solid var(--rule);
+  border-radius:var(--r);overflow:hidden}
+.pt-header,.pt-row{display:grid;grid-template-columns:1.8fr .9fr .9fr .7fr;gap:0}
+.pt-header>div{font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  color:var(--muted);padding:10px 14px;background:var(--bg);
+  border-bottom:0.5px solid var(--rule)}
+.pt-header>div:not(:first-child){text-align:right}
+.pt-row{border-bottom:0.5px solid var(--rule)}
+.pt-row:last-child{border-bottom:none}
+.pt-stream,.pt-agent,.pt-base,.pt-delta{font-family:var(--mono);font-size:12px;
+  padding:11px 14px;display:flex;align-items:center}
+.pt-stream{color:var(--muted)}
+.pt-agent{color:var(--text);justify-content:flex-end}
+.pt-base{color:var(--faint);justify-content:flex-end}
+.pt-delta{color:var(--green);justify-content:flex-end}
+.pt-flat{color:var(--faint)}
+.pt-zero{color:var(--faint)}
+.pt-new{background:rgba(239,159,39,.04)}
+.pt-new-tag{font-size:8px;letter-spacing:.08em;padding:2px 6px;margin-left:6px;
+  background:rgba(239,159,39,.15);color:var(--amber);
+  border:0.5px solid rgba(239,159,39,.4);border-radius:3px}
+.pt-total{background:rgba(29,158,117,.05);border-top:0.5px solid var(--ruleh)}
+.pt-total .pt-stream{color:var(--text);font-weight:500}
+.pt-total .pt-agent{color:var(--text);font-weight:500}
+.pt-total .pt-delta{color:var(--green);font-weight:500}
+.proof-note{font-family:var(--mono);font-size:10px;color:var(--faint);
+  margin-top:12px;letter-spacing:.06em}
+
+/* ── SHOWCASE ───────────────────────────────────── */
+#showcase{padding:96px 0}
+.sc-header{margin-bottom:56px}
+.sc-title{font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-.03em;
+  line-height:1.08;margin-bottom:14px}
+.sc-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
+  max-width:480px;line-height:1.7}
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--rule);border:0.5px solid var(--rule);border-radius:10px;
+  overflow:hidden}
+.sc-card{background:var(--bg1);display:flex;flex-direction:column;
+  transition:background .2s}
+.sc-card:hover{background:var(--bg2)}
+.sc-card-top{padding:28px 28px 22px;border-bottom:0.5px solid var(--rule)}
+.sc-num{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  color:var(--green);margin-bottom:10px}
+.sc-card-name{font-size:20px;font-weight:700;letter-spacing:-.02em;
+  margin-bottom:8px}
+.sc-card-desc{font-family:var(--mono);font-size:12px;color:var(--muted);
+  line-height:1.65}
+/* embedded mini-preview */
+.sc-preview{position:relative;height:260px;overflow:hidden;
+  border-bottom:0.5px solid var(--rule);background:#070B09}
+.sc-preview iframe{
+  position:absolute;top:0;left:0;
+  width:880px;height:800px;
+  border:none;
+  transform:scale(.46);transform-origin:top left;
+  pointer-events:none}
+.sc-card-bot{padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
+.sc-tags{display:flex;flex-wrap:wrap;gap:6px}
+.sc-tag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;
+  padding:3px 8px;border-radius:3px;
+  background:var(--gdim);color:var(--green);border:0.5px solid var(--ruleh)}
+.sc-open{font-family:var(--mono);font-size:11px;letter-spacing:.05em;
+  color:var(--green);border:0.5px solid var(--ruleh);
+  padding:7px 16px;border-radius:var(--r);
+  display:inline-flex;align-items:center;gap:6px;
+  transition:background .15s,border-color .15s;white-space:nowrap}
+.sc-open:hover{background:var(--gdim);border-color:var(--green)}
+
+/* ── FEATURES ───────────────────────────────────── */
+#features{padding:96px 0;background:var(--bg1)}
+.feat-header{display:grid;grid-template-columns:1fr 1fr;gap:64px;
+  align-items:end;margin-bottom:64px}
+.feat-title{font-size:clamp(26px,3vw,40px);font-weight:800;
+  letter-spacing:-.025em;line-height:1.1}
+.feat-body{font-family:var(--mono);font-size:13px;color:var(--muted);
+  line-height:1.75}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.feat-col{padding:36px 32px 40px;border-right:0.5px solid var(--rule)}
+.feat-col:last-child{border-right:none}
+.feat-icon{width:40px;height:40px;margin-bottom:24px;
+  display:flex;align-items:center;justify-content:center}
+.feat-icon svg{width:28px;height:28px;stroke:var(--green);fill:none;stroke-width:1.5}
+.feat-name{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
+.feat-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
+.feat-list{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.feat-list li{font-family:var(--mono);font-size:11px;color:var(--muted);
+  display:flex;gap:8px;align-items:baseline}
+.feat-list li::before{content:'→';color:var(--green);flex-shrink:0}
+
+/* ── USE CASES ──────────────────────────────────── */
+#usecases{padding:96px 0;background:var(--bg1)}
+.uc-header{margin-bottom:64px}
+.uc-title{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.025em;
+  line-height:1.1;margin-bottom:14px}
+.uc-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
+  max-width:480px;line-height:1.7}
+.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.uc-card{padding:40px 36px;border-right:0.5px solid var(--rule);
+  background:var(--bg2)}
+.uc-card:last-child{border-right:none}
+.uc-num{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  color:var(--green);margin-bottom:16px}
+.uc-name{font-size:17px;font-weight:700;letter-spacing:-.01em;
+  margin-bottom:12px;line-height:1.3}
+.uc-desc{font-family:var(--mono);font-size:12px;color:var(--muted);
+  line-height:1.75;margin-bottom:24px}
+.uc-pains{display:flex;flex-direction:column;gap:12px}
+.uc-row{display:grid;grid-template-columns:1fr 20px 1fr;
+  gap:4px;align-items:center}
+.uc-pain{font-family:var(--mono);font-size:11px;color:var(--muted);
+  background:rgba(240,237,230,.04);padding:5px 8px;border-radius:3px}
+.uc-arrow{font-size:12px;color:var(--green);text-align:center}
+.uc-sol{font-family:var(--mono);font-size:11px;color:var(--text);
+  background:var(--gdim);padding:5px 8px;border-radius:3px;
+  border:0.5px solid rgba(29,158,117,.2)}
+
+/* ── MARKETS ────────────────────────────────────── */
+#markets{padding:96px 0}
+.mkt-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.mkt-title{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.025em;
+  line-height:1.1;margin-bottom:16px}
+.mkt-body{font-family:var(--mono);font-size:13px;color:var(--muted);
+  line-height:1.75;margin-bottom:20px}
+.mkt-note{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.03em}
+.mkt-grid{display:flex;flex-direction:column;gap:2px}
+.mkt-item{display:grid;grid-template-columns:80px 1fr auto;
+  align-items:center;gap:16px;padding:16px 20px;
+  border:0.5px solid var(--rule);border-radius:var(--r);
+  background:var(--bg1);transition:background .2s}
+.mkt-item.active{background:var(--bg2);border-color:rgba(29,158,117,.25)}
+.mkt-item:hover{background:var(--bg3)}
+.mkt-name{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.mkt-detail{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.mkt-badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+  padding:3px 8px;border-radius:3px;
+  background:rgba(29,158,117,.18);color:var(--green);
+  border:0.5px solid rgba(29,158,117,.35)}
+.mkt-badge.soon{background:rgba(239,159,39,.1);color:var(--amber);
+  border-color:rgba(239,159,39,.3)}
+
+/* ── HOW IT WORKS ───────────────────────────────── */
+#how{padding:96px 0}
+.how-header{margin-bottom:64px}
+.how-title{font-size:clamp(26px,3vw,40px);font-weight:800;
+  letter-spacing:-.025em;line-height:1.1;margin-bottom:14px;max-width:560px}
+.how-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
+  max-width:440px;line-height:1.7}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  background:var(--rule);border:0.5px solid var(--rule);
+  border-radius:var(--r);overflow:hidden}
+.how-step{background:var(--bg);padding:36px 32px 40px;
+  border-right:0.5px solid var(--rule);position:relative}
+.how-step:last-child{border-right:none}
+.how-step:nth-child(4),.how-step:nth-child(5),.how-step:nth-child(6){
+  border-top:0.5px solid var(--rule)}
+/* connect steps with a subtle right arrow on hover */
+.step-num{font-family:var(--mono);font-size:38px;color:var(--green);
+  opacity:.2;line-height:1;margin-bottom:20px;font-weight:400}
+.step-name{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+.step-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ── CTA ────────────────────────────────────────── */
+#cta{padding:100px 0;text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(29,158,117,.08) 0%,transparent 65%)}
+#cta::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:60px 60px;opacity:.3}
+.cta-inner{position:relative;z-index:1}
+.cta-tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  color:var(--amber);border:0.5px solid rgba(239,159,39,.35);
+  background:rgba(239,159,39,.08);padding:4px 14px;border-radius:20px;margin-bottom:28px}
+.cta-h{font-size:clamp(30px,4vw,52px);font-weight:800;letter-spacing:-.03em;
+  line-height:1.05;margin-bottom:18px}
+.cta-h em{font-style:normal;color:var(--green)}
+.cta-p{font-family:var(--mono);font-size:14px;color:var(--muted);
+  margin:0 auto 40px;max-width:420px;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ── FOOTER ─────────────────────────────────────── */
+/* ── TRUST STRIP ────────────────────────────────── */
+#trust{padding:64px 0;background:var(--bg2)}
+.trust-inner{display:flex;flex-direction:column;align-items:center;gap:40px}
+.trust-label{font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  color:var(--faint);text-align:center}
+.trust-isos{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+.trust-iso{font-weight:700;font-size:18px;color:var(--muted);letter-spacing:-.01em}
+.trust-iso.active{color:var(--faint)}
+.trust-sep{color:var(--faint)}
+.trust-soon{font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  color:var(--amber);border:0.5px solid rgba(239,159,39,.3);
+  padding:1px 5px;border-radius:2px;vertical-align:middle;margin-left:4px}
+.trust-stats{display:grid;grid-template-columns:repeat(4,1fr);
+  gap:0;width:100%;border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.tstat{padding:28px 32px;border-right:0.5px solid var(--rule);text-align:center}
+.tstat:last-child{border-right:none}
+.tstat-val{font-size:36px;font-weight:800;letter-spacing:-.03em;color:var(--green);line-height:1}
+.tstat-val span{font-size:18px;font-weight:600;opacity:.7}
+.tstat-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);
+  margin-top:8px;line-height:1.5}
+
+/* ── FOOTER ─────────────────────────────────────── */
+#foot{border-top:0.5px solid var(--rule);background:var(--bg1)}
+.foot-inner{display:grid;grid-template-columns:280px 1fr;gap:80px;padding:64px 0 48px}
+.foot-logo{font-weight:800;font-size:20px;color:var(--green);
+  letter-spacing:-.02em;margin-bottom:12px}
+.foot-tagline{font-family:var(--mono);font-size:12px;color:var(--muted);
+  line-height:1.7;margin-bottom:20px}
+.foot-copy{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.foot-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+.foot-col{display:flex;flex-direction:column;gap:10px}
+.foot-col-title{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  color:var(--green);margin-bottom:4px}
+.foot-col a{font-family:var(--mono);font-size:12px;color:var(--muted);transition:color .15s}
+.foot-col a:hover{color:var(--text)}
+.foot-bottom{border-top:0.5px solid var(--rule);padding:20px 0;background:var(--bg)}
+.foot-bottom-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.foot-markets{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em}
+.foot-legal{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:900px){
+  #nav{padding:0 20px}
+  .nlinks{display:none}
+  .wrap{padding:0 20px}
+  .sc-grid{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:1fr}
+  .feat-col{border-right:none;border-bottom:0.5px solid var(--rule)}
+  .feat-col:last-child{border-bottom:none}
+  .feat-header{grid-template-columns:1fr;gap:24px}
+  .how-steps{grid-template-columns:1fr 1fr}
+  .how-step:nth-child(4),.how-step:nth-child(5),.how-step:nth-child(6){border-top:0.5px solid var(--rule)}
+  .uc-grid{grid-template-columns:1fr}
+  .uc-card{border-right:none;border-bottom:0.5px solid var(--rule)}
+  .uc-card:last-child{border-bottom:none}
+  .mkt-layout{grid-template-columns:1fr;gap:48px}
+  .uc-row{grid-template-columns:1fr 16px 1fr}
+  .hero-stats{flex-direction:column;max-width:260px}
+  .hstat{border-right:none;border-bottom:0.5px solid var(--rule)}
+  .hstat:last-child{border-bottom:none}
+  .foot-inner{grid-template-columns:1fr;gap:40px}
+  .foot-cols{grid-template-columns:repeat(2,1fr)}
+  .trust-stats{grid-template-columns:repeat(2,1fr)}
+  .tstat:nth-child(2){border-right:none}
+  .tstat:nth-child(3){border-top:0.5px solid var(--rule)}
+  .tstat:nth-child(4){border-top:0.5px solid var(--rule)}
+}
+@media(max-width:600px){
+  .how-steps{grid-template-columns:1fr}
+  .how-step:nth-child(n){border-top:0.5px solid var(--rule)}
+  .how-step:first-child{border-top:none}
+  .cta-h{font-size:28px}
+  .hero-h1{font-size:34px}
+  .sc-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── TICKER BAR ──────────────────────────────── -->
+<div id="ticker" aria-hidden="true">
+  <div class="ticker-inner" id="tickerTrack">
+    <!-- populated by JS; static fallback -->
+    <span class="tick-item"><span class="tick-mkt">ERCOT RT</span><span class="tick-val">$184/MWh</span><span class="tick-up">▲2.3%</span></span>
+    <span class="tick-item"><span class="tick-mkt">CAISO DA</span><span class="tick-val">$92/MWh</span><span class="tick-dn">▼0.8%</span></span>
+    <span class="tick-item"><span class="tick-mkt">PJM RT</span><span class="tick-val">$67/MWh</span><span class="tick-up">▲1.1%</span></span>
+    <span class="tick-item"><span class="tick-mkt">NYISO DA</span><span class="tick-val">$78/MWh</span><span class="tick-up">▲3.4%</span></span>
+    <span class="tick-item"><span class="tick-mkt">MISO RT</span><span class="tick-val">$54/MWh</span><span class="tick-dn">▼0.5%</span></span>
+    <span class="tick-item"><span class="tick-label">BESS SOC AVG</span><span class="tick-val">71%</span></span>
+    <span class="tick-item"><span class="tick-label">ACTIVE ASSETS</span><span class="tick-val">24</span></span>
+    <span class="tick-item"><span class="tick-label">NEXT DISPATCH</span><span class="tick-val tick-up">11:55 PDT</span></span>
+    <span class="tick-item"><span class="tick-mkt">ERCOT RT</span><span class="tick-val">$184/MWh</span><span class="tick-up">▲2.3%</span></span>
+    <span class="tick-item"><span class="tick-mkt">CAISO DA</span><span class="tick-val">$92/MWh</span><span class="tick-dn">▼0.8%</span></span>
+    <span class="tick-item"><span class="tick-mkt">PJM RT</span><span class="tick-val">$67/MWh</span><span class="tick-up">▲1.1%</span></span>
+    <span class="tick-item"><span class="tick-mkt">NYISO DA</span><span class="tick-val">$78/MWh</span><span class="tick-up">▲3.4%</span></span>
+    <span class="tick-item"><span class="tick-mkt">MISO RT</span><span class="tick-val">$54/MWh</span><span class="tick-dn">▼0.5%</span></span>
+    <span class="tick-item"><span class="tick-label">BESS SOC AVG</span><span class="tick-val">71%</span></span>
+    <span class="tick-item"><span class="tick-label">ACTIVE ASSETS</span><span class="tick-val">24</span></span>
+    <span class="tick-item"><span class="tick-label">NEXT DISPATCH</span><span class="tick-val tick-up">11:55 PDT</span></span>
+  </div>
+</div>
+
+<nav id="nav">
+  <div class="nl">
+    <span class="ndot"></span>
+    <span class="nlogo">Vela</span>
+    <span class="nbadge">AGENTIC DERMS</span>
+  </div>
+  <ul class="nlinks">
+    <li><a href="#showcase">Platform</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+  </ul>
+  <a href="http://localhost:5173" target="_blank" class="ncta">
+    <span class="ncta-dot"></span>Launch app
+  </a>
+</nav>
+
+<main style="padding-top:84px">
+
+  <!-- ① HERO -->
+  <section id="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-layout">
+        <!-- Left: copy -->
+        <div class="hero-left">
+          <div class="hero-kicker">
+            <span class="hero-kicker-dot"></span>
+            ERCOT &middot; CAISO &middot; PJM &middot; NYISO &middot; MISO
+          </div>
+          <h1 class="hero-h1">
+            The grid clears<br>every 15 minutes.<br>
+            <em>Vela never<br>misses one.</em>
+          </h1>
+          <p class="hero-sub">
+            An agentic intelligence layer for distributed energy portfolios &mdash;
+            observing market signals, reasoning across revenue stacks, and dispatching
+            every interval across every asset.
+          </p>
+          <div class="hero-btns">
+            <a href="http://localhost:5173" target="_blank" class="btn-primary">
+              <span class="ncta-dot"></span>Launch the app &rarr;
+            </a>
+            <a href="#showcase" class="btn-ghost">Explore the platform</a>
+          </div>
+        </div>
+        <!-- Right: mini dashboard preview -->
+        <div class="hero-dash">
+          <div class="hd-chrome">
+            <div class="hd-dots">
+              <div class="hd-dot" style="background:#FF5F57"></div>
+              <div class="hd-dot" style="background:#FEBC2E"></div>
+              <div class="hd-dot" style="background:#28C840"></div>
+            </div>
+            <div class="hd-url">localhost:5173 &mdash; Vela Command</div>
+          </div>
+          <div class="hd-app">
+            <div class="hd-sidebar">
+              <div class="hd-brand">VELA</div>
+              <div class="hd-nav-item active"><span class="hd-nav-icon"></span>Command</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Portfolio</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Markets</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Coordination</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Model</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Integrations</div>
+              <div class="hd-nav-item"><span class="hd-nav-icon"></span>Run log</div>
+            </div>
+            <div class="hd-main">
+              <div class="hd-eyebrow">CAISO AGGREGATE PORTFOLIO</div>
+              <div class="hd-page-title">Command</div>
+              <div class="hd-kpis">
+                <div class="hd-kpi">
+                  <div class="hd-kpi-lbl">PORTFOLIO MW</div>
+                  <div class="hd-kpi-val">364 MW</div>
+                  <div class="hd-kpi-sub">5 resource classes</div>
+                </div>
+                <div class="hd-kpi">
+                  <div class="hd-kpi-lbl">AVAILABLE</div>
+                  <div class="hd-kpi-val">284 MW</div>
+                  <div class="hd-kpi-sub">78% dispatchable</div>
+                </div>
+                <div class="hd-kpi">
+                  <div class="hd-kpi-lbl">FORECAST NET</div>
+                  <div class="hd-kpi-val g">$23,147</div>
+                  <div class="hd-kpi-sub">current window</div>
+                </div>
+                <div class="hd-kpi">
+                  <div class="hd-kpi-lbl">READINESS</div>
+                  <div class="hd-kpi-val">88%</div>
+                  <div class="hd-kpi-sub">2 warnings</div>
+                </div>
+              </div>
+              <div class="hd-chart-lbl">LMP PRICE CURVE &middot; DAY-AHEAD VS REAL-TIME &middot; 24H</div>
+              <div class="hd-chart">
+                <svg class="hd-chart-svg" viewBox="0 0 400 90" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#1D9E75" stop-opacity=".25"/>
+                      <stop offset="100%" stop-color="#1D9E75" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- DA fill -->
+                  <path d="M0,70 C30,65 60,35 90,28 C120,22 150,18 180,55 C210,75 240,80 270,52 C300,28 330,18 370,24 L400,22 L400,90 L0,90 Z" fill="url(#lg1)"/>
+                  <!-- DA line -->
+                  <path d="M0,70 C30,65 60,35 90,28 C120,22 150,18 180,55 C210,75 240,80 270,52 C300,28 330,18 370,24 L400,22" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
+                  <!-- RT dashed line -->
+                  <path d="M0,68 C30,62 60,36 90,30 C120,24 150,20 180,57 C210,78 240,82 270,54 C300,30 330,20 370,26 L400,24" fill="none" stroke="#EF9F27" stroke-width="1" stroke-dasharray="4 3" opacity=".7"/>
+                </svg>
+              </div>
+              <div class="hd-status-bar">
+                <div class="hd-status-pill">88% READY</div>
+                <div class="hd-status-pill amber">2 CONSTRAINED</div>
+                <div class="hd-status-pill">96 INTERVALS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- stat strip -->
+      <div class="hero-stats">
+        <div class="hstat">
+          <div class="hstat-val g" id="s0">+44%</div>
+          <div class="hstat-lbl">AVG. REVENUE UPLIFT</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val" id="s1">364 MW</div>
+          <div class="hstat-lbl">PORTFOLIO UNDER MANAGEMENT</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val" id="s2">96</div>
+          <div class="hstat-lbl">DISPATCH INTERVALS / DAY</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val g" id="s3">$23,147</div>
+          <div class="hstat-lbl">FORECAST NET THIS WINDOW</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ② SHOWCASE -->
+  <section id="showcase">
+    <div class="wrap">
+      <div class="sc-header">
+        <div class="eyebrow">Platform</div>
+        <h2 class="sc-title">Three modules.<br>One continuous loop.</h2>
+        <p class="sc-sub">Each panel runs live. Click to open the full interactive experience.</p>
+      </div>
+      <div class="sc-grid">
+
+        <!-- Card 1: Dispatch Queue -->
+        <div class="sc-card">
+          <div class="sc-card-top">
+            <div class="sc-num">01 / BID INTELLIGENCE</div>
+            <div class="sc-card-name">Dispatch Queue</div>
+            <div class="sc-card-desc">Agent-generated bid recommendations with full rationale &mdash; LMP spike probability, degradation cost, constraint audit. Approve or decline in one keystroke.</div>
+          </div>
+          <div class="sc-preview">
+            <iframe src="panel-1-bid.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+          </div>
+          <div class="sc-card-bot">
+            <div class="sc-tags">
+              <span class="sc-tag">MILP</span>
+              <span class="sc-tag">SOC FLOOR</span>
+              <span class="sc-tag">AUTO-APPROVE</span>
+            </div>
+            <a href="panel-1-bid.html" target="_blank" class="sc-open">Open &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Card 2: Shadow Mode -->
+        <div class="sc-card">
+          <div class="sc-card-top">
+            <div class="sc-num">02 / SHADOW MODE</div>
+            <div class="sc-card-name">30-Day P&amp;L Proof</div>
+            <div class="sc-card-desc">Run alongside your existing strategy with no live dispatch. See the exact revenue delta and new stacks the agent finds before you flip the switch.</div>
+          </div>
+          <div class="sc-preview">
+            <iframe src="panel-2-shadow.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+          </div>
+          <div class="sc-card-bot">
+            <div class="sc-tags">
+              <span class="sc-tag">+44% UPLIFT</span>
+              <span class="sc-tag">ANCILLARY</span>
+              <span class="sc-tag">NO RISK</span>
+            </div>
+            <a href="panel-2-shadow.html" target="_blank" class="sc-open">Open &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Card 3: Settlement -->
+        <div class="sc-card">
+          <div class="sc-card-top">
+            <div class="sc-num">03 / SETTLEMENT</div>
+            <div class="sc-card-name">Settlement Layer</div>
+            <div class="sc-card-desc">Committed vs. delivered, verified to the 15-minute interval. Per-asset attribution, automated penalty detection, and root cause on every shortfall.</div>
+          </div>
+          <div class="sc-preview">
+            <iframe src="panel-3-settlement.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+          </div>
+          <div class="sc-card-bot">
+            <div class="sc-tags">
+              <span class="sc-tag">AMI METERED</span>
+              <span class="sc-tag">ERCOT</span>
+              <span class="sc-tag">ROOT CAUSE</span>
+            </div>
+            <a href="panel-3-settlement.html" target="_blank" class="sc-open">Open &rarr;</a>
+          </div>
+        </div>
+
+      </div><!-- /sc-grid -->
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ② b PROOF -->
+  <section id="proof">
+    <div class="wrap">
+      <div class="proof-card">
+        <div class="proof-left">
+          <div class="eyebrow">Shadow Mode &middot; Verified</div>
+          <h2 class="proof-h">
+            <em class="proof-pct">44%</em> more revenue.<br>Proven before<br>a single live dispatch.
+          </h2>
+          <p class="proof-body">Run alongside your existing strategy for 30 days. No dispatch risk, no regulatory exposure. We show what we would have bid and what you would have earned. Flip the switch when you trust the numbers.</p>
+          <a href="panel-2-shadow.html" target="_blank" class="btn-ghost" style="display:inline-flex;margin-top:24px">View shadow mode panel &rarr;</a>
+        </div>
+        <div class="proof-right">
+          <div class="proof-table">
+            <div class="pt-header">
+              <div>Revenue Stream</div><div>Agent</div><div>Baseline</div><div>Delta</div>
+            </div>
+            <div class="pt-row">
+              <div class="pt-stream">Energy arbitrage</div>
+              <div class="pt-agent">$12,840</div>
+              <div class="pt-base">$9,210</div>
+              <div class="pt-delta">+39%</div>
+            </div>
+            <div class="pt-row">
+              <div class="pt-stream">Demand response</div>
+              <div class="pt-agent">$5,620</div>
+              <div class="pt-base">$5,100</div>
+              <div class="pt-delta">+10%</div>
+            </div>
+            <div class="pt-row pt-new">
+              <div class="pt-stream">Ancillary services <span class="pt-new-tag">NEW</span></div>
+              <div class="pt-agent">$3,190</div>
+              <div class="pt-base pt-zero">$0</div>
+              <div class="pt-delta">—</div>
+            </div>
+            <div class="pt-row">
+              <div class="pt-stream">Capacity revenue</div>
+              <div class="pt-agent">$2,410</div>
+              <div class="pt-base">$2,410</div>
+              <div class="pt-delta pt-flat">—</div>
+            </div>
+            <div class="pt-row pt-total">
+              <div class="pt-stream">Total (30 days)</div>
+              <div class="pt-agent">$24,060</div>
+              <div class="pt-base">$16,720</div>
+              <div class="pt-delta">+44%</div>
+            </div>
+          </div>
+          <div class="proof-note">Shadow mode &middot; no live dispatch &middot; no regulatory exposure</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ③ FEATURES -->
+    <div class="wrap">
+      <div class="feat-header">
+        <div>
+          <div class="eyebrow">Why Vela</div>
+          <h2 class="feat-title">Built for operators who can't afford a black box.</h2>
+        </div>
+        <p class="feat-body">
+          Every dispatch decision surfaces its full reasoning &mdash; assets considered, constraints applied, alternatives rejected. You own the controls. Vela operates within them.
+        </p>
+      </div>
+      <div class="feat-grid">
+        <div class="feat-col">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/></svg>
+          </div>
+          <div class="feat-name">Explainable by design</div>
+          <div class="feat-desc">Every bid includes LMP forecast, degradation cost, constraint list, and alternatives rejected. Not a black box &mdash; a co-pilot you can audit.</div>
+          <ul class="feat-list">
+            <li>Full rationale on every recommendation</li>
+            <li>Constraint audit trail per dispatch</li>
+            <li>Human approval queue for high-risk bids</li>
+          </ul>
+        </div>
+        <div class="feat-col">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="7 8 10 11 14 7 17 10"/></svg>
+          </div>
+          <div class="feat-name">Hardware-agnostic</div>
+          <div class="feat-desc">Connects to any DER &mdash; batteries, EV fleets, HVAC, solar, flexible loads. OpenADR, IEEE 2030.5, Modbus, OCPP. One unified fleet view.</div>
+          <ul class="feat-list">
+            <li>Battery, EV, HVAC, solar integrations</li>
+            <li>Any SCADA or DERMS back-end</li>
+            <li>Onboard new assets in &lt;48 hours</li>
+          </ul>
+        </div>
+        <div class="feat-col">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="feat-name">Constraint-first engine</div>
+          <div class="feat-desc">Hard limits the agent cannot violate: SOC floors, backup reserve thresholds, degradation caps, customer opt-out windows. Autonomy inside a defined box.</div>
+          <ul class="feat-list">
+            <li>SOC floor &amp; cycle cap enforcement</li>
+            <li>Customer comfort window exclusions</li>
+            <li>Zero constraint violations in production</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ③b USE CASES -->
+  <section id="usecases">
+    <div class="wrap">
+      <div class="uc-header">
+        <div class="eyebrow">Who it's for</div>
+        <h2 class="uc-title">Built for operators,<br>not asset owners.</h2>
+        <p class="uc-sub">Vela is B2B infrastructure. Your buyers know what LMP means. We don't explain the grid &mdash; we help you win in it.</p>
+      </div>
+      <div class="uc-grid">
+        <div class="uc-card">
+          <div class="uc-num">VPP OPERATORS</div>
+          <div class="uc-name">Stop leaving ancillary revenue on the table.</div>
+          <div class="uc-desc">Your DERMS controls the assets. Vela decides the optimal revenue stack allocation across energy, capacity, ancillary, and DR &mdash; every dispatch window, every ISO.</div>
+          <div class="uc-pains">
+            <div class="uc-row">
+              <span class="uc-pain">Static price thresholds</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Multi-objective agent reasoning</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">Manual ancillary enrollment</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Automated stack optimization</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">Offline backtesting</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Live shadow mode proof</span>
+            </div>
+          </div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-num">AGGREGATORS</div>
+          <div class="uc-name">Scale without scaling your ops team.</div>
+          <div class="uc-desc">Each new asset type, each new ISO, each new customer constraint &mdash; Vela handles the reasoning layer so your team handles the relationships.</div>
+          <div class="uc-pains">
+            <div class="uc-row">
+              <span class="uc-pain">Manual constraints per customer</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Natural language constraint engine</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">ISO-specific bidding expertise required</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Market-agnostic agent layer</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">Opaque customer reporting</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Auditable per-asset P&amp;L</span>
+            </div>
+          </div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-num">C&amp;I ASSET OWNERS</div>
+          <div class="uc-name">Your battery should be earning.</div>
+          <div class="uc-desc">Schools, warehouses, manufacturers &mdash; you bought a battery for bill savings. Vela adds wholesale market participation on top, fully managed, shadow mode first.</div>
+          <div class="uc-pains">
+            <div class="uc-row">
+              <span class="uc-pain">No wholesale market expertise</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Agent handles bidding automatically</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">Single revenue stream (bill savings)</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Stacked: arb + DR + ancillary</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-pain">Hardware vendor lock-in</span>
+              <span class="uc-arrow">&rarr;</span>
+              <span class="uc-sol">Hardware-agnostic, any battery</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ③c MARKETS COVERAGE -->
+  <section id="markets">
+    <div class="wrap">
+      <div class="mkt-layout">
+        <div class="mkt-left">
+          <div class="eyebrow">ISO Coverage</div>
+          <h2 class="mkt-title">Five markets.<br>One agent.</h2>
+          <p class="mkt-body">FERC Order 2222 unlocks wholesale market access for distributed energy aggregations across every U.S. ISO. We're already integrated where it counts.</p>
+          <div class="mkt-note">CAISO GA &middot; Nov 2024 &mdash; NYISO targeting Q4 2026 &mdash; PJM Feb 2028 &mdash; MISO 2027&ndash;29</div>
+        </div>
+        <div class="mkt-right">
+          <div class="mkt-grid">
+            <div class="mkt-item active">
+              <div class="mkt-name">ERCOT</div>
+              <div class="mkt-detail">Real-time &amp; day-ahead &middot; ADER pilot</div>
+              <div class="mkt-badge">LIVE</div>
+            </div>
+            <div class="mkt-item active">
+              <div class="mkt-name">CAISO</div>
+              <div class="mkt-detail">DA + RT + ancillary &middot; Order 2222 GA</div>
+              <div class="mkt-badge">LIVE</div>
+            </div>
+            <div class="mkt-item active">
+              <div class="mkt-name">PJM</div>
+              <div class="mkt-detail">Capacity + regulation &middot; Integration ready</div>
+              <div class="mkt-badge">LIVE</div>
+            </div>
+            <div class="mkt-item soon">
+              <div class="mkt-name">NYISO</div>
+              <div class="mkt-detail">Targeting Q4 2026 rollout</div>
+              <div class="mkt-badge soon">2026</div>
+            </div>
+            <div class="mkt-item soon">
+              <div class="mkt-name">MISO</div>
+              <div class="mkt-detail">Phased rollout 2027&ndash;2029</div>
+              <div class="mkt-badge soon">2027</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ④ HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="how-header">
+        <div class="eyebrow">The loop</div>
+        <h2 class="how-title">Observe. Reason. Act. Repeat every 15 minutes.</h2>
+        <p class="how-sub">Six stages. One continuous cycle. Every iteration compounds the advantage.</p>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">01</div>
+          <div class="step-name">Observe</div>
+          <div class="step-desc">Ingest asset telemetry, market prices, weather forecasts, and ERCOT grid signals in real time. Every data point feeds the next decision.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">02</div>
+          <div class="step-name">Forecast</div>
+          <div class="step-desc">Predict LMP spikes, load curves, and opt-out risk across a 4-hour horizon using ERCOT wind ramp signals and ORDC overlays.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">03</div>
+          <div class="step-name">Reason</div>
+          <div class="step-desc">Weigh energy arbitrage, demand response, ancillary services, degradation cost, backup reserve, and customer constraints simultaneously.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">04</div>
+          <div class="step-name">Act</div>
+          <div class="step-desc">Generate bids, dispatch assets, auto-approve low-risk decisions, and route high-risk ones to the human review queue with full rationale attached.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">05</div>
+          <div class="step-name">Measure</div>
+          <div class="step-desc">Verify delivery against commitments to the 15-minute interval. Attribute revenue per asset. Flag underperformance with root-cause analysis.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">06</div>
+          <div class="step-name">Learn</div>
+          <div class="step-desc">Update strategy models based on settlement outcomes. Every cycle makes the next one sharper. The advantage compounds automatically.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ⑤ SOCIAL PROOF STRIP -->
+  <section id="trust">
+    <div class="wrap trust-inner">
+      <div class="trust-label">TRUSTED BY OPERATORS ACROSS</div>
+      <div class="trust-isos">
+        <div class="trust-iso">ERCOT</div>
+        <div class="trust-sep">&middot;</div>
+        <div class="trust-iso">CAISO</div>
+        <div class="trust-sep">&middot;</div>
+        <div class="trust-iso">PJM</div>
+        <div class="trust-sep">&middot;</div>
+        <div class="trust-iso active">NYISO <span class="trust-soon">2026</span></div>
+        <div class="trust-sep">&middot;</div>
+        <div class="trust-iso active">MISO <span class="trust-soon">2027</span></div>
+      </div>
+      <div class="trust-stats">
+        <div class="tstat">
+          <div class="tstat-val">364<span>MW</span></div>
+          <div class="tstat-lbl">Assets under management</div>
+        </div>
+        <div class="tstat">
+          <div class="tstat-val">$2.4<span>M</span></div>
+          <div class="tstat-lbl">Revenue recovered in shadow mode</div>
+        </div>
+        <div class="tstat">
+          <div class="tstat-val">44<span>%</span></div>
+          <div class="tstat-lbl">Average uplift vs. threshold dispatch</div>
+        </div>
+        <div class="tstat">
+          <div class="tstat-val">48<span>hr</span></div>
+          <div class="tstat-lbl">Time to first shadow-mode bid</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule-h"/>
+
+  <!-- ⑥ CTA -->
+  <section id="cta">
+    <div class="wrap cta-inner">
+      <div class="cta-tag">SHADOW MODE &middot; NO DISPATCH RISK ON DAY ONE</div>
+      <h2 class="cta-h">Ready to see what you're<br><em>leaving on the table?</em></h2>
+      <p class="cta-p">Onboard in 48 hours. Run shadow mode for 30 days. Flip the switch when you trust the numbers.</p>
+      <div class="cta-btns">
+        <a href="http://localhost:5173" target="_blank" class="btn-primary"><span class="ncta-dot"></span>Launch the app &rarr;</a>
+        <a href="panel-1-bid.html" target="_blank" class="btn-ghost">Open dispatch queue &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="foot">
+  <div class="wrap foot-inner">
+    <div class="foot-brand">
+      <div class="foot-logo">Vela</div>
+      <div class="foot-tagline">Agentic energy intelligence<br>for FERC Order 2222 markets.</div>
+      <div class="foot-copy">&copy; 2026 Vela Energy Intelligence, Inc.</div>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <div class="foot-col-title">Platform</div>
+        <a href="#showcase">Dispatch Queue</a>
+        <a href="panel-2-shadow.html" target="_blank">Shadow Mode P&amp;L</a>
+        <a href="panel-3-settlement.html" target="_blank">Settlement Reconciliation</a>
+        <a href="http://localhost:5173" target="_blank">Live Demo</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Markets</div>
+        <a href="#markets">ERCOT</a>
+        <a href="#markets">CAISO</a>
+        <a href="#markets">PJM</a>
+        <a href="#markets">NYISO (2026)</a>
+        <a href="#markets">MISO (2027)</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Use Cases</div>
+        <a href="#usecases">VPP Operators</a>
+        <a href="#usecases">Aggregators</a>
+        <a href="#usecases">C&amp;I Asset Owners</a>
+        <a href="#how">How It Works</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Compliance</div>
+        <a href="#">FERC Order 2222</a>
+        <a href="#">NERC CIP Framework</a>
+        <a href="#">Audit-ready Logs</a>
+        <a href="#">Shadow Mode Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <div class="wrap foot-bottom-inner">
+      <span class="foot-markets">ERCOT &middot; CAISO &middot; PJM &middot; NYISO &middot; MISO</span>
+      <span class="foot-legal">Built for FERC Order 2222 market participation &mdash; not financial advice.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ── NAV SCROLL SHADOW ── */
+  var nav = document.getElementById('nav');
+  window.addEventListener('scroll', function(){
+    nav.style.borderBottomColor = window.scrollY > 20
+      ? 'rgba(29,158,117,0.28)' : 'rgba(29,158,117,0.1)';
+  }, {passive:true});
+
+  /* ── TICKER: live price simulation ── */
+  var prices = {
+    'ERCOT RT': {val:42.18, range:8},
+    'ERCOT DA': {val:38.54, range:5},
+    'CAISO SP15': {val:51.22, range:10},
+    'PJM PSEG': {val:44.60, range:7},
+    'NYISO Zone J': {val:68.30, range:12},
+    'MISO Ind Hub': {val:35.80, range:6}
+  };
+  var regStatuses = ['LIVE · ERCOT', 'LIVE · CAISO', 'LIVE · PJM', 'SHADOW · NYISO', 'SHADOW · MISO'];
+  var regIdx = 0;
+
+  function fmtPrice(v){ return '$' + v.toFixed(2) + '/MWh'; }
+  function randFlux(range){ return (Math.random() - 0.5) * range * 0.3; }
+
+  function buildTickerHTML(){
+    var items = [];
+    Object.keys(prices).forEach(function(mkt){
+      var p = prices[mkt];
+      var delta = randFlux(p.range);
+      p.val = Math.max(5, p.val + delta);
+      var cls = delta >= 0 ? 'tick-up' : 'tick-dn';
+      var arrow = delta >= 0 ? '&#9650;' : '&#9660;';
+      items.push('<span class="tick-item"><span class="tick-mkt">'+mkt+'</span><span class="tick-val">'+fmtPrice(p.val)+'</span><span class="'+cls+'">'+arrow+'</span></span>');
+    });
+    var status = regStatuses[regIdx % regStatuses.length];
+    regIdx++;
+    items.push('<span class="tick-item"><span class="tick-label">AGENT STATUS</span><span class="tick-val">'+status+'</span></span>');
+    var html = items.join('');
+    return html + html; // doubled for seamless loop
+  }
+
+  var track = document.getElementById('tickerTrack');
+  if(track){
+    track.innerHTML = buildTickerHTML();
+    setInterval(function(){
+      track.innerHTML = buildTickerHTML();
+    }, 8000);
+  }
+
+  /* ── COUNT-UP ANIMATION ── */
+  function countUp(el, target, prefix, suffix, decimals, duration){
+    duration = duration || 1400;
+    var start = null;
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var ease = 1 - Math.pow(1 - p, 3);
+      var val = target * ease;
+      el.textContent = prefix + (decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString()) + suffix;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ── HERO STATS COUNTER ── */
+  var heroStatsObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      heroStatsObs.unobserve(e.target);
+      var els = e.target.querySelectorAll('.hstat-val');
+      var data = [{t:44,p:'+',s:'%',d:0},{t:15,p:'',s:' min',d:0},{t:5,p:'',s:'',d:0},{t:96.4,p:'',s:'%',d:1}];
+      els.forEach(function(el,i){ countUp(el, data[i].t, data[i].p, data[i].s, data[i].d); });
+    });
+  }, {threshold:0.5});
+  var heroStats = document.querySelector('.hero-stats');
+  if(heroStats) heroStatsObs.observe(heroStats);
+
+  /* ── TRUST STATS COUNTER ── */
+  var trustObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      trustObs.unobserve(e.target);
+      var els = e.target.querySelectorAll('.tstat-val');
+      var data = [
+        {el:els[0], t:364, p:'', s:'', d:0},
+        {el:els[1], t:2.4, p:'$', s:'M', d:1},
+        {el:els[2], t:44, p:'', s:'', d:0},
+        {el:els[3], t:48, p:'', s:'', d:0}
+      ];
+      data.forEach(function(item){
+        if(!item.el) return;
+        var spanContent = item.el.querySelector('span') ? item.el.querySelector('span').outerHTML : '';
+        countUp({
+          get textContent(){ return ''; },
+          set textContent(v){
+            item.el.innerHTML = v + spanContent;
+          }
+        }, item.t, item.p, item.s, item.d, 1600);
+      });
+    });
+  }, {threshold:0.4});
+  var trustStats = document.querySelector('.trust-stats');
+  if(trustStats) trustObs.observe(trustStats);
+
+  /* ── SCROLL FADE-IN (cards, cols, steps) ── */
+  var fadeObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        fadeObs.unobserve(e.target);
+      }
+    });
+  }, {threshold:0.06});
+
+  document.querySelectorAll('.sc-card,.feat-col,.how-step,.uc-card,.mkt-item,.tstat').forEach(function(el, i){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(18px)';
+    el.style.transition = 'opacity .55s ease '+(i*50)+'ms, transform .55s ease '+(i*50)+'ms';
+    fadeObs.observe(el);
+  });
+
+  /* ── SMOOTH SCROLL FOR HASH LINKS ── */
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      var id = a.getAttribute('href').slice(1);
+      var target = document.getElementById(id);
+      if(target){
+        e.preventDefault();
+        var offset = 84;
+        var top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({top:top, behavior:'smooth'});
+      }
+    });
+  });
+
+  /* ── ACTIVE NAV HIGHLIGHT ── */
+  var sections = ['hero','showcase','proof','features','usecases','markets','how','trust','cta'];
+  var navLinks = document.querySelectorAll('#nav a[href^="#"]');
+  var secObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var id = e.target.id;
+      navLinks.forEach(function(a){
+        var match = a.getAttribute('href') === '#'+id;
+        a.style.color = match ? 'var(--green)' : '';
+      });
+    });
+  }, {rootMargin:'-40% 0px -55% 0px'});
+  sections.forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) secObs.observe(el);
+  });
+})();
+</script>
+</body>
+</html>

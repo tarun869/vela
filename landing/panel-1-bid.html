@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VoltaOS &mdash; Dispatch Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page: #060A08;
+    --bg-panel: #0D1510;
+    --bg-card: #111916;
+    --bg-bid: #1A2420;
+    --bg-chrome: #080C0A;
+    --accent: #1D9E75;
+    --accent-dark: #0F6E56;
+    --amber: #EF9F27;
+    --text: #F5F2E8;
+    --text-muted: rgba(245,242,232,0.45);
+    --text-faint: rgba(245,242,232,0.25);
+    --rule: rgba(29,158,117,0.1);
+    --rule-mid: rgba(29,158,117,0.2);
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-page);
+    color: var(--text);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(29,158,117,0.06) 0%, transparent 55%),
+      var(--bg-page);
+    padding: 48px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .mockup {
+    width: 100%;
+    max-width: 880px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 0.5px solid rgba(29,158,117,0.18);
+    box-shadow:
+      0 30px 80px -20px rgba(0,0,0,0.7),
+      0 12px 30px -10px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(0,0,0,0.4);
+  }
+
+  .chrome {
+    background: var(--bg-chrome);
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-bottom: 0.5px solid rgba(29,158,117,0.15);
+    position: relative;
+  }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .url {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgba(245,242,232,0.25);
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    padding: 4px 16px;
+    width: 260px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .panel { background: var(--bg-panel); }
+
+  .panel-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 0.5px solid var(--rule);
+  }
+  .panel-status .left {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(29,158,117,0.6);
+    letter-spacing: 0.12em;
+  }
+  .panel-status .right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(245,242,232,0.35);
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #28C840;
+    box-shadow: 0 0 8px rgba(40,200,64,0.7);
+    animation: pulse 2s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .queue-header .right { color: rgba(29,158,117,0.6); }
+
+  .cards-wrap {
+    padding: 4px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bid-card {
+    background: var(--bg-bid);
+    border: 0.5px solid rgba(29,158,117,0.35);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .bid-card.collapsed { border-left-color: rgba(29,158,117,0.5); }
+
+  .bid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 18px 14px;
+    gap: 16px;
+  }
+
+  .bid-asset .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    margin-bottom: 4px;
+  }
+  .bid-asset .market {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(245,242,232,0.4);
+    letter-spacing: 0.02em;
+  }
+
+  .bid-meta {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .risk-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+  }
+  .risk-badge.med {
+    background: rgba(186,117,23,0.15);
+    color: var(--amber);
+    border: 0.5px solid rgba(239,159,39,0.3);
+  }
+  .risk-badge.low {
+    background: rgba(29,158,117,0.12);
+    color: var(--accent);
+    border: 0.5px solid rgba(29,158,117,0.35);
+  }
+
+  .bid-spec {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .revenue-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 18px;
+    border-top: 0.5px solid var(--rule);
+    border-bottom: 0.5px solid var(--rule);
+  }
+  .revenue-row .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+  .revenue-row .value { display: flex; align-items: baseline; gap: 6px; }
+  .revenue-row .value .num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .revenue-row .value .unit {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .bid-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(29,158,117,0.6);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .field-label.muted { color: var(--text-muted); }
+
+  .rationale {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgba(245,242,232,0.65);
+    line-height: 1.7;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .rationale .em { color: var(--accent); }
+  .rationale .amber { color: var(--amber); }
+
+  .tags { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: rgba(29,158,117,0.08);
+    border: 0.5px solid rgba(29,158,117,0.25);
+    color: rgba(29,158,117,0.8);
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+  }
+
+  .alternatives { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  .alt-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(245,242,232,0.35);
+    text-decoration: line-through;
+    text-decoration-color: rgba(245,242,232,0.25);
+  }
+  .alt-sep {
+    color: rgba(245,242,232,0.18);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.5px solid var(--rule);
+    padding: 14px 18px;
+    gap: 16px;
+  }
+  .action-row .meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .actions { display: flex; gap: 8px; }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 7px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 150ms ease;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-decline {
+    border: 0.5px solid rgba(245,242,232,0.15);
+    color: rgba(245,242,232,0.35);
+    background: transparent;
+  }
+  .btn-decline:hover { color: rgba(245,242,232,0.6); border-color: rgba(245,242,232,0.3); }
+  .btn-approve {
+    border: 0.5px solid var(--accent);
+    background: var(--accent);
+    color: #0A1410;
+    font-weight: 700;
+  }
+  .btn-approve:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn-approve .kbd {
+    font-size: 10px;
+    opacity: 0.6;
+    border: 0.5px solid rgba(10,20,16,0.4);
+    padding: 0 4px;
+    border-radius: 2px;
+    margin-left: 2px;
+  }
+
+  .bid-card.collapsed .bid-header {
+    align-items: center;
+    padding: 14px 18px;
+  }
+  .collapse-right { display: flex; align-items: center; gap: 18px; }
+  .collapse-eta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  .collapse-eta .value {
+    color: var(--accent);
+    display: block;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .auto-flag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(29,158,117,0.7);
+    letter-spacing: 0.06em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .auto-flag::before {
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(29,158,117,0.7);
+  }
+  .chevron {
+    color: rgba(245,242,232,0.25);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .panel-footer {
+    border-top: 0.5px solid var(--rule);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+  }
+  .panel-footer .left {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+  }
+  .panel-footer .right {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.04em;
+  }
+  .panel-footer .right .key {
+    color: rgba(245,242,232,0.5);
+    border: 0.5px solid rgba(245,242,232,0.15);
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin: 0 3px;
+  }
+</style>
+</head>
+<body>
+<div class="mockup">
+  <div class="chrome">
+    <div class="dots">
+      <span class="dot r"></span>
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+    </div>
+    <div class="url">voltaos.io/dispatch/queue</div>
+  </div>
+  <div class="panel">
+    <div class="panel-status">
+      <div class="left">DISPATCH QUEUE</div>
+      <div class="right">
+        <span class="pulse-dot"></span>
+        <span>Agent cycle 847 &middot; 14:33 CT</span>
+      </div>
+    </div>
+    <div class="queue-header">
+      <div class="left">3 recommendations pending</div>
+      <div class="right">2 auto-approvable</div>
+    </div>
+    <div class="cards-wrap">
+      <div class="bid-card">
+        <div class="bid-header">
+          <div class="bid-asset">
+            <div class="name">Meridian Warehouse &middot; Battery</div>
+            <div class="market">ERCOT Real-Time &middot; 15:00&ndash;17:00 CT</div>
+          </div>
+          <div class="bid-meta">
+            <span class="risk-badge med">MED RISK</span>
+            <span class="bid-spec">3.4 MW &middot; $92/MWh floor</span>
+          </div>
+        </div>
+        <div class="revenue-row">
+          <span class="label">EXPECTED REVENUE</span>
+          <span class="value">
+            <span class="num">$1,870</span>
+            <span class="unit">/event</span>
+          </span>
+        </div>
+        <div class="bid-body">
+          <div>
+            <span class="field-label">AGENT RATIONALE</span>
+            <div class="rationale">
+              LMP spike probability <span class="em">78%</span> at 16:00 based on ERCOT wind ramp-down signal. Battery 7 excluded &mdash; degradation cost (<span class="amber">$4.20/cycle</span>) exceeds spread below $85. Ancillary RegUp rejected &mdash; commitment conflicts with 4h backup reserve on Site 3.
+            </div>
+          </div>
+          <div>
+            <span class="field-label muted">CONSTRAINTS APPLIED</span>
+            <div class="tags">
+              <span class="tag">SOC floor &ge; 20%</span>
+              <span class="tag">Backup reserve 4h</span>
+              <span class="tag">Max 1 cycle/day &middot; Batt 7</span>
+              <span class="tag">No residential dispatch</span>
+            </div>
+          </div>
+          <div>
+            <span class="field-label muted">ALTERNATIVES REJECTED</span>
+            <div class="alternatives">
+              <span class="alt-item">RegUp ancillary &mdash; backup conflict</span>
+              <span class="alt-sep">&middot;</span>
+              <span class="alt-item">Day-ahead &mdash; $14/MWh below RT forecast</span>
+            </div>
+          </div>
+        </div>
+        <div class="action-row">
+          <div class="meta">Alternatives considered: 3</div>
+          <div class="actions">
+            <button class="btn btn-decline">DECLINE</button>
+            <button class="btn btn-approve">APPROVE <span class="kbd">&#8617;</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bid-card collapsed">
+        <div class="bid-header">
+          <div class="bid-asset">
+            <div class="name">Riverside DC &middot; Battery + Solar</div>
+            <div class="market">ERCOT Real-Time &middot; 17:00&ndash;18:00 CT</div>
+          </div>
+          <div class="collapse-right">
+            <span class="auto-flag">AUTO-APPROVE IN 0:42</span>
+            <div class="collapse-eta">
+              <span class="risk-badge low">LOW RISK</span>
+              <span class="value">1.2 MW &middot; $640 /event</span>
+            </div>
+            <span class="chevron">&#9660;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <div class="left">SHADOW MODE &middot; LIVE DISPATCH OFF</div>
+      <div class="right">
+        <span class="key">J</span><span class="key">K</span> navigate &middot; <span class="key">&#8617;</span> approve &middot; <span class="key">D</span> decline
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
