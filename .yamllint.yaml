@@ -1,0 +1,36 @@
+---
+extends: default
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+
+  truthy:
+    allowed-values: ["true", "false", "yes", "no"]
+    check-keys: false
+
+  comments:
+    require-starting-space: true
+    min-spaces-before: 1
+
+  comments-indentation: disable
+
+  document-start: disable
+
+  braces:
+    max-spaces-inside: 1
+
+  brackets:
+    max-spaces-inside: 1
+
+  indentation:
+    spaces: 2
+    indent-sequences: best-effort
+
+ignore: |
+  node_modules/
+  .git/
+  dist/
+  build/
+  *.min.yaml
