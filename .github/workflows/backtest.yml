@@ -1,0 +1,84 @@
+name: Backtesting
+
+on:
+  schedule:
+    # Run Monday at 04:00 UTC (weekly backtest with prior week data)
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Backtest start date (YYYY-MM-DD)"
+        required: true
+      end_date:
+        description: "Backtest end date (YYYY-MM-DD)"
+        required: true
+      markets:
+        description: "Comma-separated markets to backtest"
+        required: false
+        default: "caiso,ercot"
+      strategy:
+        description: "Dispatch strategy to backtest"
+        required: false
+        default: "milp_optimal"
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run backtests
+        env:
+          VELA_ENV: test
+          VELA_BACKTEST_DATA_PATH: data/sample
+        run: |
+          python -m vela.backtesting.run \
+            --start-date "${{ inputs.start_date || '$(date -d "7 days ago" +%Y-%m-%d)' }}" \
+            --end-date "${{ inputs.end_date || '$(date -d "1 day ago" +%Y-%m-%d)' }}" \
+            --markets "${{ inputs.markets || 'caiso,ercot' }}" \
+            --strategy "${{ inputs.strategy || 'milp_optimal' }}" \
+            --output-dir backtest_results/ \
+            --format json,html
+
+      - name: Upload backtest results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-results-${{ github.run_id }}
+          path: backtest_results/
+          retention-days: 90
+
+      - name: Comment results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = JSON.parse(fs.readFileSync('backtest_results/summary.json', 'utf8'));
+            const body = `## Backtest Results\n\n| Market | Revenue | Sharpe | Win Rate |\n|--------|---------|--------|----------|\n${
+              Object.entries(summary.markets).map(([m, d]) =>
+                `| ${m} | $${d.revenue.toFixed(0)} | ${d.sharpe.toFixed(2)} | ${(d.win_rate*100).toFixed(1)}% |`
+              ).join('\n')
+            }\n\n**Total Revenue:** $${summary.total_revenue.toFixed(0)}\n**Portfolio Sharpe:** ${summary.portfolio_sharpe.toFixed(2)}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Assert minimum performance thresholds
+        run: |
+          python -c "
+          import json, sys
+          summary = json.load(open('backtest_results/summary.json'))
+          assert summary['portfolio_sharpe'] > 0.5, f'Sharpe ratio {summary[\"portfolio_sharpe\"]} below threshold 0.5'
+          print('Backtest thresholds passed')
+          "

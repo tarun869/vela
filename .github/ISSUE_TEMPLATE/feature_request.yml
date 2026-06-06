@@ -1,0 +1,94 @@
+name: Feature Request
+description: Propose a new feature or enhancement for Vela
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Vela! Describe your feature request in detail.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - New Asset Type Support
+        - Optimizer Enhancement
+        - New Market / ISO Integration
+        - Forecasting / ML Improvement
+        - Settlement / Accounting
+        - API / Integration
+        - Dashboard / Observability
+        - Infrastructure / Performance
+        - Developer Experience
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What is the current limitation?
+      placeholder: "Currently, Vela does not support co-optimizing battery storage with demand response programs, which means..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed feature. Be as specific as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches did you consider?
+
+  - type: textarea
+    id: market_impact
+    attributes:
+      label: Market / Revenue Impact
+      description: |
+        If this feature relates to market participation or dispatch optimization,
+        estimate the revenue impact or efficiency gain.
+      placeholder: "Estimated 5-8% revenue uplift from CAISO AS market participation for 100 MW fleet"
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical (blocking revenue)
+        - High (significant uplift)
+        - Medium (nice to have)
+        - Low (future consideration)
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this feature is complete?
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: I am willing to contribute to this feature
+          required: false
