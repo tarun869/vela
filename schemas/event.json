@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/event.json",
+  "title": "Event",
+  "description": "Domain event for event sourcing",
+  "type": "object",
+  "required": ["event_id", "event_type", "aggregate_id", "aggregate_type", "occurred_at"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": {
+      "type": "string",
+      "description": "Dot-separated event type (e.g. asset.status_changed, dispatch.plan_created)"
+    },
+    "aggregate_id": { "type": "string" },
+    "aggregate_type": {
+      "type": "string",
+      "enum": ["asset", "dispatch_plan", "settlement", "bid", "portfolio", "system"]
+    },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "caused_by": { "type": "string" },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload (varies by event_type)"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

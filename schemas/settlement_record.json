@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/settlement_record.json",
+  "title": "SettlementRecord",
+  "description": "Financial settlement record for a VPP portfolio in a given market/period",
+  "type": "object",
+  "required": ["record_id", "market", "settlement_date", "intervals"],
+  "properties": {
+    "record_id": { "type": "string", "format": "uuid" },
+    "portfolio_id": { "type": "string" },
+    "market": { "type": "string", "enum": ["caiso", "ercot", "pjm", "miso"] },
+    "settlement_date": { "type": "string", "format": "date" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["preliminary", "final", "revised"],
+      "default": "preliminary"
+    },
+    "statement_id": { "type": "string" },
+    "intervals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "product", "interval_start", "actual_mwh", "settlement_price_usd_per_mwh"],
+        "properties": {
+          "asset_id": { "type": "string" },
+          "product": { "type": "string" },
+          "interval_start": { "type": "string", "format": "date-time" },
+          "interval_end": { "type": "string", "format": "date-time" },
+          "scheduled_mwh": { "type": "number" },
+          "actual_mwh": { "type": "number" },
+          "settlement_price_usd_per_mwh": { "type": "number" },
+          "gross_revenue_usd": { "type": "number" },
+          "imbalance_mwh": { "type": "number" },
+          "imbalance_charge_usd": { "type": "number" },
+          "net_revenue_usd": { "type": "number" }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "total_gross_revenue_usd": { "type": "number" },
+        "total_imbalance_charges_usd": { "type": "number" },
+        "total_net_revenue_usd": { "type": "number" },
+        "revenue_by_product": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        }
+      }
+    }
+  }
+}

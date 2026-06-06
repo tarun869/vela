@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/asset.json",
+  "title": "Asset",
+  "description": "Configuration schema for a Vela VPP asset",
+  "type": "object",
+  "required": ["id", "type", "capacity_mwh", "power_mw", "location"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]+-[0-9]+$",
+      "description": "Unique asset identifier (e.g. BAT-001)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["battery", "flywheel", "compressed_air", "pumped_hydro"],
+      "description": "Asset technology type"
+    },
+    "name": { "type": "string", "maxLength": 200 },
+    "capacity_mwh": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Usable energy capacity in MWh"
+    },
+    "power_mw": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Maximum charge/discharge power in MW"
+    },
+    "soc_min": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.05
+    },
+    "soc_max": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.95
+    },
+    "soc_initial": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "round_trip_efficiency": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "default": 0.88
+    },
+    "ramp_rate_mw_per_min": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "location": {
+      "type": "object",
+      "required": ["market", "node"],
+      "properties": {
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "market": { "type": "string", "enum": ["caiso", "ercot", "pjm", "miso", "nyiso"] },
+        "node": { "type": "string" }
+      }
+    },
+    "ancillary": {
+      "type": "object",
+      "properties": {
+        "regup_capable": { "type": "boolean", "default": false },
+        "regdn_capable": { "type": "boolean", "default": false },
+        "rrs_capable": { "type": "boolean", "default": false },
+        "nsrs_capable": { "type": "boolean", "default": false },
+        "min_reg_mw": { "type": "number", "minimum": 0 }
+      }
+    },
+    "degradation_model": {
+      "type": "string",
+      "enum": ["rainflow", "throughput", "none"],
+      "default": "rainflow"
+    },
+    "cycle_cost_usd_per_kwh": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0.05
+    },
+    "max_daily_cycles": {
+      "type": "number",
+      "minimum": 0,
+      "default": 2.0
+    },
+    "installed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}
