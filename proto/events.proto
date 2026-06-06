@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// Event types for event sourcing
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  // Asset events
+  EVENT_ASSET_REGISTERED = 1;
+  EVENT_ASSET_UPDATED = 2;
+  EVENT_ASSET_ONLINE = 3;
+  EVENT_ASSET_OFFLINE = 4;
+  EVENT_ASSET_FAULT = 5;
+  // Dispatch events
+  EVENT_DISPATCH_PLAN_CREATED = 10;
+  EVENT_DISPATCH_COMMAND_SENT = 11;
+  EVENT_DISPATCH_COMMAND_ACKED = 12;
+  EVENT_DISPATCH_COMPLETED = 13;
+  EVENT_DISPATCH_FAILED = 14;
+  // Market events
+  EVENT_BID_SUBMITTED = 20;
+  EVENT_BID_ACCEPTED = 21;
+  EVENT_BID_REJECTED = 22;
+  EVENT_MARKET_CLEARED = 23;
+  // Settlement events
+  EVENT_SETTLEMENT_CALCULATED = 30;
+  EVENT_SETTLEMENT_FINALIZED = 31;
+  EVENT_SETTLEMENT_REVISED = 32;
+  // System events
+  EVENT_SYSTEM_STARTED = 100;
+  EVENT_SYSTEM_STOPPED = 101;
+  EVENT_CONFIG_UPDATED = 102;
+  EVENT_ALERT_FIRED = 103;
+}
+
+message Event {
+  string event_id = 1;
+  EventType event_type = 2;
+  string aggregate_id = 3;       // Asset ID, plan ID, settlement ID, etc.
+  string aggregate_type = 4;     // asset, dispatch_plan, settlement, etc.
+  google.protobuf.Timestamp occurred_at = 5;
+  string caused_by = 6;          // User, service, or event that caused this
+  string correlation_id = 7;     // For tracing event chains
+  int64 version = 8;             // Aggregate version number
+  google.protobuf.Any payload = 9;
+  map<string, string> metadata = 10;
+}
+
+message EventEnvelope {
+  Event event = 1;
+  string topic = 2;
+  int64 kafka_offset = 3;
+  int32 kafka_partition = 4;
+  google.protobuf.Timestamp ingested_at = 5;
+}

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+option java_package = "energy.vela.proto.v1";
+
+import "google/protobuf/timestamp.proto";
+
+enum AssetType {
+  ASSET_TYPE_UNSPECIFIED = 0;
+  ASSET_TYPE_BATTERY = 1;
+  ASSET_TYPE_FLYWHEEL = 2;
+  ASSET_TYPE_COMPRESSED_AIR = 3;
+  ASSET_TYPE_PUMPED_HYDRO = 4;
+}
+
+enum AssetStatus {
+  ASSET_STATUS_UNSPECIFIED = 0;
+  ASSET_STATUS_ONLINE = 1;
+  ASSET_STATUS_OFFLINE = 2;
+  ASSET_STATUS_FAULT = 3;
+  ASSET_STATUS_MAINTENANCE = 4;
+  ASSET_STATUS_COMMISSIONING = 5;
+}
+
+message AssetConfig {
+  string asset_id = 1;
+  AssetType asset_type = 2;
+  string name = 3;
+  double capacity_mwh = 4;
+  double power_mw = 5;
+  double soc_min = 6;
+  double soc_max = 7;
+  double round_trip_efficiency = 8;
+  double ramp_rate_mw_per_min = 9;
+  string market = 10;
+  string node_id = 11;
+  string timezone = 12;
+  map<string, string> metadata = 13;
+}
+
+message AssetState {
+  string asset_id = 1;
+  AssetStatus status = 2;
+  double soc_pct = 3;            // State of charge [0, 100]
+  double power_mw = 4;           // Positive = discharging, negative = charging
+  double temperature_celsius = 5;
+  double voltage_v = 6;
+  double current_a = 7;
+  double available_charge_mw = 8;
+  double available_discharge_mw = 9;
+  google.protobuf.Timestamp timestamp = 10;
+  map<string, double> aux_measurements = 11;
+}
