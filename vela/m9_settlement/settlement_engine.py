@@ -50,17 +50,47 @@ class SettlementEngine:
     def calculate(
         self,
         asset_id: str,
-        scheduled: list[float],
-        metered: list[float],
-        lmp: list[float],
-        timestamps: list[datetime],
+        scheduled_mwh: list[float] | None = None,
+        metered_mwh: list[float] | None = None,
+        lmp: list[float] | None = None,
+        timestamps: list[datetime] | None = None,
+        settlement_date: datetime | None = None,
+        # Legacy positional-arg aliases kept for backwards compat
+        scheduled: list[float] | None = None,
+        metered: list[float] | None = None,
     ) -> SettlementStatement:
-        assert len(scheduled) == len(metered) == len(lmp) == len(timestamps)
+        """Calculate settlement for an asset.
+
+        Accepts two calling conventions:
+          1. engine.calculate(asset_id, scheduled_mwh=..., metered_mwh=..., lmp=..., settlement_date=...)
+          2. engine.calculate(asset_id, scheduled, metered, lmp, timestamps)
+        """
+        # Resolve aliases
+        _scheduled = scheduled_mwh if scheduled_mwh is not None else scheduled
+        _metered   = metered_mwh   if metered_mwh   is not None else metered
+        if _scheduled is None or _metered is None or lmp is None:
+            raise ValueError("scheduled_mwh, metered_mwh, and lmp are required")
+
+        n = len(_scheduled)
+        if timestamps is None:
+            # Build synthetic hourly timestamps from settlement_date
+            if settlement_date is None:
+                settlement_date = datetime.utcnow().replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+            from datetime import timedelta
+            timestamps = [settlement_date + timedelta(hours=i) for i in range(n)]
+
+        assert len(_scheduled) == len(_metered) == len(lmp) == len(timestamps), (
+            f"Length mismatch: scheduled={len(_scheduled)}, metered={len(_metered)}, "
+            f"lmp={len(lmp)}, timestamps={len(timestamps)}"
+        )
         intervals = [
             SettlementInterval(ts, s, m, p)
-            for ts, s, m, p in zip(timestamps, scheduled, metered, lmp)
+            for ts, s, m, p in zip(timestamps, _scheduled, _metered, lmp)
         ]
-        stmt = SettlementStatement(asset_id, self.market, timestamps[0], intervals)
+        _date = settlement_date or timestamps[0]
+        stmt = SettlementStatement(asset_id, self.market, _date, intervals)
         logger.info(
             "Settlement for %s on %s: revenue=$%.2f, imbalance=$%.2f",
             asset_id, self.market, stmt.total_revenue, stmt.total_imbalance_charge,
