@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/bid.json",
+  "title": "MarketBid",
+  "description": "Market bid/offer schema for VPP energy and ancillary markets",
+  "type": "object",
+  "required": ["asset_id", "market", "product", "bid_type", "interval_start", "interval_end", "offer_curve"],
+  "additionalProperties": false,
+  "properties": {
+    "bid_id": { "type": "string", "format": "uuid" },
+    "asset_id": { "type": "string" },
+    "market": { "type": "string", "enum": ["caiso", "ercot", "pjm", "miso", "nyiso"] },
+    "product": {
+      "type": "string",
+      "enum": ["DAM", "RTM", "HASP", "RegUp", "RegDn", "RRS", "NSRS", "RegA", "RegD", "SR", "NSR", "capacity"]
+    },
+    "bid_type": {
+      "type": "string",
+      "enum": ["energy_sell", "energy_buy", "regulation_up", "regulation_down", "spinning_reserve", "non_spinning_reserve", "capacity"]
+    },
+    "node_id": { "type": "string" },
+    "interval_start": { "type": "string", "format": "date-time" },
+    "interval_end": { "type": "string", "format": "date-time" },
+    "offer_curve": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["price_usd_per_mwh", "quantity_mw"],
+        "properties": {
+          "price_usd_per_mwh": { "type": "number", "minimum": -500 },
+          "quantity_mw": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      },
+      "description": "Price-quantity step curve (sorted ascending by price)"
+    },
+    "min_quantity_mw": { "type": "number", "minimum": 0 },
+    "max_quantity_mw": { "type": "number", "exclusiveMinimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "accepted", "partially_accepted", "rejected", "withdrawn", "expired"],
+      "default": "pending"
+    },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "external_bid_id": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

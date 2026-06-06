@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+enum DispatchMode {
+  DISPATCH_MODE_UNSPECIFIED = 0;
+  DISPATCH_MODE_CHARGE = 1;
+  DISPATCH_MODE_DISCHARGE = 2;
+  DISPATCH_MODE_STANDBY = 3;
+  DISPATCH_MODE_REGULATION = 4;
+  DISPATCH_MODE_DROOP = 5;
+}
+
+message DispatchInterval {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Duration duration = 2;
+  string asset_id = 3;
+  DispatchMode mode = 4;
+  double power_mw = 5;           // Target power setpoint
+  double soc_target_pct = 6;     // Optional SOC target
+  string product = 7;            // Energy, RegUp, RegDn, RRS, etc.
+  double expected_revenue_usd = 8;
+  map<string, double> aux_setpoints = 9;
+}
+
+message DispatchPlan {
+  string plan_id = 1;
+  string portfolio_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp horizon_start = 4;
+  google.protobuf.Timestamp horizon_end = 5;
+  repeated DispatchInterval intervals = 6;
+  double objective_value_usd = 7;
+  double mip_gap_pct = 8;
+  double solve_time_seconds = 9;
+  string solver_status = 10;     // OPTIMAL, FEASIBLE, INFEASIBLE, etc.
+  map<string, string> metadata = 11;
+}
+
+message DispatchCommand {
+  string command_id = 1;
+  string asset_id = 2;
+  DispatchMode mode = 3;
+  double power_mw = 4;
+  google.protobuf.Timestamp effective_at = 5;
+  google.protobuf.Duration valid_for = 6;
+  string issued_by = 7;          // orchestrator, manual, emergency
+  string plan_id = 8;
+  bool is_emergency = 9;
+}
+
+message DispatchAck {
+  string command_id = 1;
+  string asset_id = 2;
+  bool accepted = 3;
+  string reason = 4;
+  double actual_power_mw = 5;   // Actual setpoint achieved
+  google.protobuf.Timestamp acknowledged_at = 6;
+}

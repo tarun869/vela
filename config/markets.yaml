@@ -1,0 +1,136 @@
+# Market configuration for CAISO, ERCOT, PJM and others
+
+caiso:
+  name: "California ISO"
+  timezone: "America/Los_Angeles"
+  currency: USD
+  intervals_per_hour: 12  # 5-minute real-time intervals
+  day_ahead_gate_closure_hours: 10  # 10am day-ahead
+  real_time_gate_closure_minutes: 75
+  nodes:
+    - id: PGAE_APND
+      name: "PG&E Aggregation Point"
+      region: NP15
+    - id: SCE_APND
+      name: "SCE Aggregation Point"
+      region: SP15
+    - id: SDG_APND
+      name: "SDG&E Aggregation Point"
+      region: SP15
+  products:
+    - name: DAM  # Day-ahead market
+      gate_closure: "10:00"  # Local time
+    - name: RTM  # Real-time market
+      interval_minutes: 5
+    - name: HASP  # Hour-ahead scheduling process
+    - name: RRS   # Regulation reserve service (regulation up/down)
+    - name: NSR   # Non-spinning reserve
+    - name: SR    # Spinning reserve
+  api:
+    base_url: "https://oasis.caiso.com/oasisapi"
+    timeout_seconds: 30
+    rate_limit_per_minute: 20
+
+ercot:
+  name: "Electric Reliability Council of Texas"
+  timezone: "America/Chicago"
+  currency: USD
+  intervals_per_hour: 12  # 5-minute real-time
+  day_ahead_gate_closure_hours: 16  # 4pm day-ahead
+  real_time_gate_closure_minutes: 30
+  nodes:
+    - id: HB_NORTH
+      name: "Hub North"
+      zone: NORTH
+    - id: HB_SOUTH
+      name: "Hub South"
+      zone: SOUTH
+    - id: HB_WEST
+      name: "Hub West"
+      zone: WEST
+    - id: HB_HOUSTON
+      name: "Hub Houston"
+      zone: HOUSTON
+  products:
+    - name: DAM
+      gate_closure: "10:00"
+    - name: RTM
+      interval_minutes: 5
+    - name: REGUP    # Regulation up
+    - name: REGDN    # Regulation down
+    - name: RRS      # Responsive reserve service
+    - name: NSRS     # Non-spinning reserve service
+    - name: ERCOT_60 # 60-minute reserve
+  api:
+    base_url: "https://api.ercot.com/api/public-reports"
+    timeout_seconds: 30
+    rate_limit_per_minute: 30
+
+pjm:
+  name: "PJM Interconnection"
+  timezone: "America/New_York"
+  currency: USD
+  intervals_per_hour: 12
+  day_ahead_gate_closure_hours: 12
+  real_time_gate_closure_minutes: 65
+  nodes:
+    - id: "33092371"
+      name: "Western Hub"
+      zone: WEST
+    - id: "51217680"
+      name: "Eastern Hub"
+      zone: EAST
+    - id: "116013753"
+      name: "AEP-Dayton Hub"
+      zone: AEP
+  products:
+    - name: DAM
+    - name: RTM
+    - name: RegA    # Regulation A (traditional)
+    - name: RegD    # Regulation D (dynamic, faster response)
+    - name: SReg    # Synchronized reserve
+    - name: PR      # Primary reserve
+  api:
+    base_url: "https://api.pjm.com/api/v1"
+    timeout_seconds: 30
+    rate_limit_per_minute: 60
+
+miso:
+  name: "Midcontinent ISO"
+  timezone: "America/Chicago"
+  currency: USD
+  enabled: false  # Future market
+  nodes:
+    - id: ILLINOIS.HUB
+      name: "Illinois Hub"
+
+# Frequency regulation performance factors by asset type
+regulation_performance:
+  battery:
+    caiso:
+      rrs_min_mw: 0.1
+      reg_capability_fraction_of_capacity: 0.5
+      performance_score_target: 0.95
+    ercot:
+      regup_min_mw: 1.0
+      regdn_min_mw: 1.0
+      rrs_min_mw: 1.0
+  flywheel:
+    ercot:
+      regup_min_mw: 0.5
+      regdn_min_mw: 0.5
+      performance_score_target: 0.99  # Flywheels excel at regulation
+  pumped_hydro:
+    caiso:
+      reg_capability_fraction_of_capacity: 0.3
+
+# Price caps
+price_caps:
+  energy_usd_per_mwh:
+    caiso: 2000
+    ercot: 9000  # ERCOT price cap
+    pjm: 2000
+  regulation_usd_per_mwh:
+    caiso: 1000
+    ercot: 2500
+    pjm: 1000

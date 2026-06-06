@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+
+message SettlementInterval {
+  string asset_id = 1;
+  string market = 2;
+  string product = 3;
+  google.protobuf.Timestamp interval_start = 4;
+  google.protobuf.Timestamp interval_end = 5;
+  double scheduled_mwh = 6;
+  double actual_mwh = 7;
+  double settlement_price_usd_per_mwh = 8;
+  double gross_revenue_usd = 9;
+  double imbalance_mwh = 10;
+  double imbalance_charge_usd = 11;
+  double net_revenue_usd = 12;
+}
+
+message SettlementRecord {
+  string record_id = 1;
+  string portfolio_id = 2;
+  string market = 3;
+  google.protobuf.Timestamp settlement_date = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated SettlementInterval intervals = 6;
+  double total_gross_revenue_usd = 7;
+  double total_imbalance_charges_usd = 8;
+  double total_net_revenue_usd = 9;
+  string status = 10;            // PRELIMINARY, FINAL, REVISED
+  string statement_id = 11;      // Market-issued statement ID
+  map<string, double> revenue_by_product = 12;
+}

@@ -1,0 +1,457 @@
+openapi: 3.1.0
+info:
+  title: Vela VPP Dispatch Optimization API
+  description: |
+    REST API for the Vela Virtual Power Plant dispatch optimization engine.
+    Provides endpoints for fleet management, dispatch planning, market bidding,
+    settlement calculation, and telemetry ingestion.
+  version: 0.1.0
+  contact:
+    name: Vela Engineering
+    email: engineering@vela.energy
+    url: https://docs.vela.energy
+  license:
+    name: Proprietary
+    url: https://vela.energy/terms
+
+servers:
+  - url: https://api.vela.energy/v1
+    description: Production
+  - url: https://api.staging.vela.energy/v1
+    description: Staging
+  - url: http://localhost:8000/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: health
+    description: Health and readiness endpoints
+  - name: assets
+    description: Asset fleet management
+  - name: dispatch
+    description: Dispatch optimization and plan management
+  - name: market
+    description: Market bids, offers, and LMP data
+  - name: settlement
+    description: Settlement calculation and records
+  - name: telemetry
+    description: Asset telemetry ingestion and retrieval
+  - name: forecasts
+    description: Price and load forecast endpoints
+  - name: portfolios
+    description: Portfolio management
+
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: healthz
+      security: []
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /readyz:
+    get:
+      tags: [health]
+      summary: Readiness probe
+      operationId: readyz
+      security: []
+      responses:
+        "200":
+          description: Service is ready to handle requests
+        "503":
+          description: Service is not ready (DB or Redis unavailable)
+
+  /assets:
+    get:
+      tags: [assets]
+      summary: List all assets
+      operationId: listAssets
+      parameters:
+        - name: market
+          in: query
+          schema: { type: string, enum: [caiso, ercot, pjm] }
+        - name: type
+          in: query
+          schema: { type: string, enum: [battery, flywheel, compressed_air, pumped_hydro] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [online, offline, fault, maintenance] }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Asset" }
+                  total: { type: integer }
+                  page: { type: integer }
+
+    post:
+      tags: [assets]
+      summary: Register a new asset
+      operationId: createAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetCreate" }
+      responses:
+        "201":
+          description: Asset created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /assets/{asset_id}:
+    get:
+      tags: [assets]
+      summary: Get asset by ID
+      operationId: getAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+          description: Asset details
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /assets/{asset_id}/state:
+    get:
+      tags: [assets]
+      summary: Get current asset state (SOC, power, status)
+      operationId: getAssetState
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Current asset state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetState" }
+
+  /dispatch/plans:
+    post:
+      tags: [dispatch]
+      summary: Trigger dispatch optimization and create a plan
+      operationId: createDispatchPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [portfolio_id]
+              properties:
+                portfolio_id: { type: string }
+                horizon_hours: { type: integer, default: 24 }
+                force: { type: boolean, default: false, description: "Override rate limit" }
+      responses:
+        "202":
+          description: Optimization task submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id: { type: string }
+                  status: { type: string }
+
+  /dispatch/plans/{plan_id}:
+    get:
+      tags: [dispatch]
+      summary: Get dispatch plan by ID
+      operationId: getDispatchPlan
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Dispatch plan
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DispatchPlan" }
+
+  /market/lmp:
+    get:
+      tags: [market]
+      summary: Get LMP prices for a node and time range
+      operationId: getLMP
+      parameters:
+        - name: market
+          in: query
+          required: true
+          schema: { type: string }
+        - name: node
+          in: query
+          required: true
+          schema: { type: string }
+        - name: start
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: end
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: interval_type
+          in: query
+          schema: { type: string, enum: [DAM, RTM, HASP], default: RTM }
+      responses:
+        "200":
+          description: LMP prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/LMPPoint" }
+
+  /settlement/records:
+    get:
+      tags: [settlement]
+      summary: List settlement records
+      operationId: listSettlementRecords
+      parameters:
+        - name: market
+          in: query
+          schema: { type: string }
+        - name: start_date
+          in: query
+          schema: { type: string, format: date }
+        - name: end_date
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Settlement records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SettlementRecord" }
+
+  /telemetry:
+    post:
+      tags: [telemetry]
+      summary: Ingest telemetry readings (batch)
+      operationId: ingestTelemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                readings:
+                  type: array
+                  maxItems: 1000
+                  items: { $ref: "#/components/schemas/TelemetryReading" }
+      responses:
+        "202":
+          description: Telemetry accepted
+
+  /forecasts/price:
+    get:
+      tags: [forecasts]
+      summary: Get price forecast for a node
+      operationId: getPriceForecast
+      parameters:
+        - name: market
+          in: query
+          required: true
+          schema: { type: string }
+        - name: node
+          in: query
+          required: true
+          schema: { type: string }
+        - name: horizon_hours
+          in: query
+          schema: { type: integer, default: 24 }
+      responses:
+        "200":
+          description: Price forecast
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PriceForecast" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AssetId:
+      name: asset_id
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1, minimum: 1 }
+    PageSize:
+      name: page_size
+      in: query
+      schema: { type: integer, default: 50, minimum: 1, maximum: 500 }
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        name: { type: string }
+        capacity_mwh: { type: number }
+        power_mw: { type: number }
+        market: { type: string }
+        node_id: { type: string }
+        created_at: { type: string, format: date-time }
+
+    AssetCreate:
+      type: object
+      required: [id, type, capacity_mwh, power_mw, location]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        name: { type: string }
+        capacity_mwh: { type: number }
+        power_mw: { type: number }
+        location:
+          type: object
+          required: [market, node]
+          properties:
+            market: { type: string }
+            node: { type: string }
+
+    AssetState:
+      type: object
+      properties:
+        asset_id: { type: string }
+        status: { type: string }
+        soc_pct: { type: number }
+        power_mw: { type: number }
+        temperature_celsius: { type: number }
+        timestamp: { type: string, format: date-time }
+
+    DispatchPlan:
+      type: object
+      properties:
+        plan_id: { type: string }
+        portfolio_id: { type: string }
+        created_at: { type: string, format: date-time }
+        horizon_start: { type: string, format: date-time }
+        horizon_end: { type: string, format: date-time }
+        objective_value_usd: { type: number }
+        mip_gap_pct: { type: number }
+        solve_time_seconds: { type: number }
+        solver_status: { type: string }
+        intervals:
+          type: array
+          items:
+            type: object
+            properties:
+              asset_id: { type: string }
+              interval_start: { type: string, format: date-time }
+              power_mw: { type: number }
+              mode: { type: string }
+              product: { type: string }
+              expected_revenue_usd: { type: number }
+
+    LMPPoint:
+      type: object
+      properties:
+        node_id: { type: string }
+        market: { type: string }
+        interval_start: { type: string, format: date-time }
+        lmp_usd_per_mwh: { type: number }
+        energy_component: { type: number }
+        congestion_component: { type: number }
+        loss_component: { type: number }
+
+    SettlementRecord:
+      type: object
+      properties:
+        record_id: { type: string }
+        market: { type: string }
+        settlement_date: { type: string, format: date }
+        status: { type: string }
+        total_net_revenue_usd: { type: number }
+
+    TelemetryReading:
+      type: object
+      required: [asset_id, timestamp, measurements]
+      properties:
+        asset_id: { type: string }
+        timestamp: { type: string, format: date-time }
+        measurements:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              value: { type: number }
+              unit: { type: string }
+              quality: { type: string }
+
+    PriceForecast:
+      type: object
+      properties:
+        forecast_id: { type: string }
+        market: { type: string }
+        node_id: { type: string }
+        generated_at: { type: string, format: date-time }
+        spike_probability: { type: number }
+        intervals:
+          type: array
+          items:
+            type: object
+            properties:
+              interval_start: { type: string, format: date-time }
+              p10: { type: number }
+              p50: { type: number }
+              p90: { type: number }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        detail: { type: string }
+        code: { type: string }
+        request_id: { type: string }

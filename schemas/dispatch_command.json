@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/dispatch_command.json",
+  "title": "DispatchCommand",
+  "description": "Command sent to a physical asset to change its operating setpoint",
+  "type": "object",
+  "required": ["command_id", "asset_id", "mode", "power_mw", "effective_at"],
+  "additionalProperties": false,
+  "properties": {
+    "command_id": { "type": "string", "format": "uuid" },
+    "asset_id": { "type": "string" },
+    "mode": {
+      "type": "string",
+      "enum": ["charge", "discharge", "standby", "regulation", "droop"]
+    },
+    "power_mw": {
+      "type": "number",
+      "description": "Positive = discharge, negative = charge"
+    },
+    "soc_target_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Optional SOC target at end of command window"
+    },
+    "effective_at": { "type": "string", "format": "date-time" },
+    "valid_for_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 300
+    },
+    "issued_by": {
+      "type": "string",
+      "enum": ["orchestrator", "manual", "emergency", "test"]
+    },
+    "plan_id": { "type": "string", "description": "Associated dispatch plan ID" },
+    "is_emergency": { "type": "boolean", "default": false }
+  }
+}

@@ -1,0 +1,26 @@
+# Staging environment overrides
+_extends: base
+
+api:
+  workers: 2
+  cors_origins:
+    - "https://app.staging.vela.energy"
+
+database:
+  pool_size: 5
+
+celery:
+  worker_prefetch_multiplier: 2
+
+logging:
+  level: DEBUG
+
+telemetry:
+  trace_sample_rate: 1.0  # Full tracing in staging
+
+optimizer:
+  timeout_seconds: 45
+
+markets:
+  mock: false
+  # Use staging credentials (set via env vars)

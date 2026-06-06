@@ -1,0 +1,78 @@
+# Optimizer configuration for the MILP dispatch engine
+
+solver:
+  name: highs               # Options: highs, glpk, cbc, cplex, gurobi
+  mip_gap: 0.005            # 0.5% optimality gap tolerance
+  timeout_seconds: 30       # Per-dispatch solve time limit
+  threads: 4                # Solver threads
+  presolve: true
+  primal_simplex: true
+  log_level: 1              # 0=silent, 1=minimal, 2=verbose
+
+dispatch:
+  horizon_hours: 24         # Rolling dispatch horizon
+  dt_minutes: 5             # Time step resolution
+  lookback_intervals: 3     # History intervals for continuity constraints
+  rolling_window: true      # Update dispatch every interval
+  min_solve_interval_seconds: 280  # Minimum gap between solve calls
+
+  # Warm start from previous solution
+  warm_start: true
+  warm_start_decay: 0.95    # Decay factor for warm start weights
+
+stochastic:
+  enabled: true
+  n_scenarios: 20           # Price scenarios for stochastic MILP
+  scenario_method: monte_carlo  # Options: monte_carlo, historical, neural_network
+  confidence_level: 0.90    # CVaR confidence level for risk-averse objective
+  risk_weight: 0.3          # Weight on CVaR vs expected value (0=risk-neutral)
+
+objective:
+  # Multi-objective weights (must sum to 1.0)
+  weights:
+    energy_revenue: 0.50
+    ancillary_revenue: 0.30
+    degradation_cost: -0.10  # Penalty for battery cycling
+    carbon_intensity: -0.05  # Carbon-aware dispatch penalty
+    soc_deviation: -0.05    # Penalty for SOC deviating from target
+  terminal_soc_weight: 0.10 # Weight on end-of-horizon SOC
+
+constraints:
+  # Battery cycling
+  max_daily_cycles: 2.0     # Maximum full equivalent cycles per day
+  soc_buffer_fraction: 0.02 # SOC buffer at min/max (e.g., 2-98% usable)
+
+  # Ramp rates (fraction of capacity per minute)
+  default_ramp_rate_pct_per_minute: 100  # Most batteries are fast
+
+  # Grid constraints
+  grid_import_limit_mw: null  # null = unconstrained
+  grid_export_limit_mw: null
+
+  # Minimum dispatch durations
+  min_dispatch_duration_intervals: 1  # Allow single-interval dispatch
+
+degradation:
+  model: rainflow            # Options: rainflow, throughput, none
+  cycle_cost_usd_per_kwh: 0.05  # Default USD/kWh cycle degradation cost
+  calendar_degradation_per_year: 0.02  # 2% per year capacity fade
+
+forecast:
+  price_forecast_horizon_hours: 48
+  price_forecast_model: price_spike_detector
+  load_forecast_model: lgbm_load
+  use_probabilistic: true   # Use quantile forecasts for stochastic solve
+
+# Market-specific optimizer settings
+caiso:
+  include_hasp: true        # Include HASP products in optimization
+  reg_mileage_multiplier: 1.0
+
+ercot:
+  include_regup_regdn: true
+  rrs_enabled: true
+  nsrs_enabled: true
+
+pjm:
+  include_rega: false       # RegA requires slow ramp assets
+  include_regd: true        # RegD preferred for batteries

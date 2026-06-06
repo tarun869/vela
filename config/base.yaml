@@ -1,0 +1,77 @@
+# Base configuration — applies to all environments
+# Override in environment-specific files
+
+app:
+  name: vela
+  version: "0.1.0"
+  debug: false
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  cors_origins: []
+  jwt_algorithm: HS256
+  access_token_expire_minutes: 60
+
+database:
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 1800
+  pool_pre_ping: true
+  echo: false
+
+redis:
+  decode_responses: true
+  max_connections: 50
+  socket_timeout: 5
+  socket_connect_timeout: 5
+
+celery:
+  task_serializer: json
+  result_serializer: json
+  accept_content: [json]
+  timezone: UTC
+  enable_utc: true
+  task_track_started: true
+  task_acks_late: true
+  worker_prefetch_multiplier: 1
+  task_routes:
+    vela.workers.tasks.run_dispatch: dispatch
+    vela.workers.tasks.run_settlement: settlement
+    vela.workers.tasks.run_forecast: forecast
+
+kafka:
+  topics:
+    telemetry: vela.telemetry
+    dispatch: vela.dispatch
+    settlement: vela.settlement
+    events: vela.events
+    forecasts: vela.forecasts
+  consumer_group: vela-main
+  auto_offset_reset: earliest
+  enable_auto_commit: false
+  max_poll_records: 500
+  session_timeout_ms: 30000
+  heartbeat_interval_ms: 10000
+
+logging:
+  version: 1
+  disable_existing_loggers: false
+  level: INFO
+  format: json
+  include_request_id: true
+  include_trace_id: true
+
+telemetry:
+  otlp_endpoint: ""
+  service_name: vela
+  trace_sample_rate: 0.1
+
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics
+  include_in_flight: true

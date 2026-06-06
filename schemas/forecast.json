@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/forecast.json",
+  "title": "PriceForecast",
+  "description": "Probabilistic price or load forecast schema",
+  "type": "object",
+  "required": ["forecast_id", "market", "product", "valid_from", "valid_to", "intervals"],
+  "properties": {
+    "forecast_id": { "type": "string", "format": "uuid" },
+    "market": { "type": "string" },
+    "node_id": { "type": "string" },
+    "product": { "type": "string" },
+    "forecast_type": {
+      "type": "string",
+      "enum": ["price", "load", "renewable_generation", "ancillary_clearing_price"],
+      "default": "price"
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_to": { "type": "string", "format": "date-time" },
+    "model_name": { "type": "string" },
+    "model_version": { "type": "string" },
+    "spike_probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "intervals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["interval_start", "p50"],
+        "properties": {
+          "interval_start": { "type": "string", "format": "date-time" },
+          "p10": { "type": "number" },
+          "p25": { "type": "number" },
+          "p50": { "type": "number" },
+          "p75": { "type": "number" },
+          "p90": { "type": "number" },
+          "mean": { "type": "number" },
+          "std_dev": { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+
+enum BidType {
+  BID_TYPE_UNSPECIFIED = 0;
+  BID_TYPE_ENERGY_SELL = 1;
+  BID_TYPE_ENERGY_BUY = 2;
+  BID_TYPE_REGULATION_UP = 3;
+  BID_TYPE_REGULATION_DOWN = 4;
+  BID_TYPE_SPINNING_RESERVE = 5;
+  BID_TYPE_NON_SPINNING_RESERVE = 6;
+  BID_TYPE_CAPACITY = 7;
+}
+
+enum BidStatus {
+  BID_STATUS_UNSPECIFIED = 0;
+  BID_STATUS_PENDING = 1;
+  BID_STATUS_ACCEPTED = 2;
+  BID_STATUS_PARTIALLY_ACCEPTED = 3;
+  BID_STATUS_REJECTED = 4;
+  BID_STATUS_WITHDRAWN = 5;
+  BID_STATUS_EXPIRED = 6;
+}
+
+message BidCurvePoint {
+  double price_usd_per_mwh = 1;
+  double quantity_mw = 2;
+}
+
+message MarketBid {
+  string bid_id = 1;
+  string asset_id = 2;
+  string market = 3;             // caiso, ercot, pjm
+  string product = 4;            // DAM, RTM, HASP, RegUp, etc.
+  BidType bid_type = 5;
+  string node_id = 6;
+  google.protobuf.Timestamp interval_start = 7;
+  google.protobuf.Timestamp interval_end = 8;
+  repeated BidCurvePoint offer_curve = 9;  // Price-quantity pairs
+  double min_quantity_mw = 10;
+  double max_quantity_mw = 11;
+  BidStatus status = 12;
+  google.protobuf.Timestamp submitted_at = 13;
+  string external_bid_id = 14;   // Market-assigned ID
+  map<string, string> metadata = 15;
+}
+
+message MarketClearingResult {
+  string bid_id = 1;
+  string market = 2;
+  string product = 3;
+  BidStatus status = 4;
+  double cleared_quantity_mw = 5;
+  double clearing_price_usd_per_mwh = 6;
+  double awarded_revenue_usd = 7;
+  google.protobuf.Timestamp cleared_at = 8;
+}
+
+message LMPPoint {
+  string node_id = 1;
+  string market = 2;
+  google.protobuf.Timestamp interval_start = 3;
+  double lmp_usd_per_mwh = 4;
+  double energy_component = 5;
+  double congestion_component = 6;
+  double loss_component = 7;
+  string interval_type = 8;  // DAM, RTM, HASP
+}

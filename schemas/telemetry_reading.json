@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vela.energy/v1/telemetry_reading.json",
+  "title": "TelemetryReading",
+  "description": "Real-time telemetry reading from an asset",
+  "type": "object",
+  "required": ["asset_id", "timestamp", "measurements"],
+  "properties": {
+    "asset_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "string",
+      "enum": ["scada", "bms", "ems", "manual", "simulated"],
+      "default": "scada"
+    },
+    "measurements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Measurement name (e.g. soc_pct, power_mw, temperature_c)"
+          },
+          "value": { "type": "number" },
+          "unit": { "type": "string" },
+          "quality": {
+            "type": "string",
+            "enum": ["good", "uncertain", "bad", "manual"],
+            "default": "good"
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

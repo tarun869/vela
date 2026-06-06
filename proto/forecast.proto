@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+
+message ForecastPoint {
+  google.protobuf.Timestamp interval_start = 1;
+  double p10 = 2;   // 10th percentile
+  double p25 = 3;   // 25th percentile
+  double p50 = 4;   // Median (point forecast)
+  double p75 = 5;   // 75th percentile
+  double p90 = 6;   // 90th percentile
+  double mean = 7;
+  double std_dev = 8;
+}
+
+message PriceForecast {
+  string forecast_id = 1;
+  string market = 2;
+  string node_id = 3;
+  string product = 4;
+  google.protobuf.Timestamp generated_at = 5;
+  google.protobuf.Timestamp valid_from = 6;
+  google.protobuf.Timestamp valid_to = 7;
+  repeated ForecastPoint intervals = 8;
+  string model_name = 9;
+  string model_version = 10;
+  double spike_probability = 11;  // Probability of price spike in horizon
+  map<string, double> feature_importances = 12;
+}
+
+message LoadForecast {
+  string forecast_id = 1;
+  string region = 2;
+  google.protobuf.Timestamp generated_at = 3;
+  repeated ForecastPoint intervals = 4;
+  string model_name = 5;
+  string model_version = 6;
+  double mae_mw = 7;   // Historical MAE for this model
+}

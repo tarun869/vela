@@ -1,0 +1,122 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  json:
+    class: pythonjsonlogger.jsonlogger.JsonFormatter
+    format: "%(asctime)s %(levelname)s %(name)s %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+    json_ensure_ascii: false
+    json_default: str
+    json_fields:
+      - timestamp: asctime
+      - level: levelname
+      - logger: name
+      - message: message
+      - module: module
+      - function: funcName
+      - line: lineno
+      - process: process
+      - thread: threadName
+
+  text:
+    format: "%(asctime)s [%(levelname)8s] %(name)s:%(lineno)d — %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  dispatch:
+    class: pythonjsonlogger.jsonlogger.JsonFormatter
+    format: "%(asctime)s %(levelname)s %(name)s %(message)s"
+    json_fields:
+      - timestamp: asctime
+      - level: levelname
+      - asset_id: asset_id
+      - market: market
+      - solve_time_s: solve_time
+      - objective_value: objective_value
+      - mip_gap: mip_gap
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    stream: ext://sys.stdout
+    formatter: json  # Overridden to 'text' in dev
+    level: DEBUG
+
+  file_app:
+    class: logging.handlers.RotatingFileHandler
+    filename: logs/vela.log
+    maxBytes: 52428800  # 50 MB
+    backupCount: 10
+    formatter: json
+    level: INFO
+
+  file_dispatch:
+    class: logging.handlers.RotatingFileHandler
+    filename: logs/dispatch.log
+    maxBytes: 104857600  # 100 MB
+    backupCount: 20
+    formatter: dispatch
+    level: DEBUG
+
+  file_errors:
+    class: logging.handlers.RotatingFileHandler
+    filename: logs/errors.log
+    maxBytes: 52428800
+    backupCount: 10
+    formatter: json
+    level: ERROR
+
+loggers:
+  vela:
+    level: INFO
+    handlers: [console, file_app]
+    propagate: false
+
+  vela.m6_optimizer:
+    level: DEBUG
+    handlers: [console, file_dispatch]
+    propagate: false
+
+  vela.m8_market:
+    level: INFO
+    handlers: [console, file_app]
+    propagate: false
+
+  vela.m9_settlement:
+    level: INFO
+    handlers: [console, file_app]
+    propagate: false
+
+  vela.api:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  uvicorn:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  uvicorn.access:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  celery:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  sqlalchemy.engine:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+  kafka:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+root:
+  level: WARNING
+  handlers: [console, file_errors]

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package vela.v1;
+
+option go_package = "github.com/vela-energy/vela/go/proto/v1;velav1";
+
+import "google/protobuf/timestamp.proto";
+
+enum MeasurementQuality {
+  QUALITY_UNSPECIFIED = 0;
+  QUALITY_GOOD = 1;
+  QUALITY_UNCERTAIN = 2;
+  QUALITY_BAD = 3;
+  QUALITY_MANUAL = 4;
+}
+
+message Measurement {
+  string name = 1;
+  double value = 2;
+  string unit = 3;
+  MeasurementQuality quality = 4;
+}
+
+message TelemetryReading {
+  string asset_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  repeated Measurement measurements = 3;
+  string source = 4;             // scada, bms, ems, manual
+  map<string, string> tags = 5;
+}
+
+message TelemetryBatch {
+  repeated TelemetryReading readings = 1;
+  google.protobuf.Timestamp batch_timestamp = 2;
+  string source_system = 3;
+  int32 sequence_number = 4;
+}
+
+message TelemetryAck {
+  int32 sequence_number = 1;
+  bool accepted = 2;
+  int32 accepted_count = 3;
+  int32 rejected_count = 4;
+  string reason = 5;
+}
