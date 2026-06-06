@@ -1,0 +1,42 @@
+{
+  "id": "BAT-001",
+  "type": "battery",
+  "name": "Lithium Ion Battery 1 — PG&E NP15",
+  "capacity_mwh": 10.0,
+  "power_mw": 5.0,
+  "soc_min": 0.05,
+  "soc_max": 0.95,
+  "soc_initial": 0.50,
+  "soc_target_end": 0.50,
+  "round_trip_efficiency": 0.88,
+  "charge_efficiency": 0.9381,
+  "discharge_efficiency": 0.9381,
+  "ramp_rate_mw_per_min": 5.0,
+  "location": {
+    "lat": 37.7749,
+    "lon": -122.4194,
+    "market": "caiso",
+    "node": "PGAE_APND",
+    "region": "NP15"
+  },
+  "ancillary": {
+    "regup_capable": true,
+    "regdn_capable": true,
+    "rrs_capable": true,
+    "nsrs_capable": false,
+    "min_reg_mw": 0.5
+  },
+  "degradation_model": "rainflow",
+  "cycle_cost_usd_per_kwh": 0.05,
+  "max_daily_cycles": 2.0,
+  "chemistry": "lfp",
+  "installed_date": "2024-01-15",
+  "warranty_cycles": 6000,
+  "metadata": {
+    "oem": "CATL",
+    "model": "EnerOne",
+    "serial": "CATL-2024-001",
+    "owner_id": "vela-demo",
+    "ems_endpoint": "https://ems.example.com/bms/bat-001"
+  }
+}
