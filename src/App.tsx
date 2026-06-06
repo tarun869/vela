@@ -6,16 +6,19 @@ import {
   Building2,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   CircleDollarSign,
   ClipboardCheck,
   CloudSun,
   DatabaseZap,
+  Download,
   FileText,
   Gauge,
   LayoutGrid,
   LineChart,
   List,
   Network,
+  Search,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -181,6 +184,14 @@ const assetById = assets.reduce<Record<string, Asset>>((index, asset) => {
   index[asset.id] = asset
   return index
 }, {})
+
+function downloadJson(filename: string, data: unknown) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
 
 const formatUsd = (value: number) =>
   new Intl.NumberFormat('en-US', {
@@ -1084,6 +1095,25 @@ function MarketsPage() {
 }
 
 function CoordinationPage() {
+  const [statusFilter, setStatusFilter] = useState<'all' | 'ready' | 'review' | 'blocked'>('all')
+  const [ownerFilter, setOwnerFilter] = useState('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const owners = ['all', 'RTO/ISO', 'Distribution utility', 'Aggregator', 'Customer', 'Internal']
+
+  const filtered = useMemo(() =>
+    coordinationReadiness.checkpoints.filter(cp =>
+      (statusFilter === 'all' || cp.status === statusFilter) &&
+      (ownerFilter === 'all' || cp.owner === ownerFilter)
+    ), [statusFilter, ownerFilter])
+
+  const exportReport = () => downloadJson(`coordination-${Date.now()}.json`, {
+    generatedAt: new Date().toISOString(),
+    score: coordinationReadiness.score,
+    blockedCount: coordinationReadiness.blockedCount,
+    checkpoints: coordinationReadiness.checkpoints,
+  })
+
   return (
     <>
       <PageHeader eyebrow="Market participation" title="Coordination" meta={`${coordinationReadiness.score}% coordination ready`} />
@@ -1109,10 +1139,7 @@ function CoordinationPage() {
           </div>
           <div className="coordination-note">
             <strong>Coordination posture</strong>
-            <p>
-              VELA can recommend a bid, but approval should stay gated until resource eligibility,
-              telemetry, utility review, and customer constraints are all replayable.
-            </p>
+            <p>VELA can recommend a bid, but approval should stay gated until resource eligibility, telemetry, utility review, and customer constraints are all replayable.</p>
           </div>
         </section>
 
@@ -1128,10 +1155,15 @@ function CoordinationPage() {
               const owned = coordinationReadiness.checkpoints.filter((item) => item.owner === owner)
               const blocked = owned.filter((item) => item.status === 'blocked').length
               return (
-                <article className="owner-card" key={owner}>
+                <article
+                  className={`owner-card${ownerFilter === owner ? ' selected' : ''}`}
+                  key={owner}
+                  onClick={() => setOwnerFilter(ownerFilter === owner ? 'all' : owner)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <strong>{owner}</strong>
                   <span>{owned.length} checkpoints</span>
-                  <em>{blocked > 0 ? `${blocked} blocked` : 'No blocks'}</em>
+                  <em className={blocked > 0 ? 'text-warn' : ''}>{blocked > 0 ? `${blocked} blocked` : 'No blocks'}</em>
                 </article>
               )
             })}
@@ -1145,20 +1177,56 @@ function CoordinationPage() {
             <p className="label">Coordination checklist</p>
             <h2>Registration, telemetry, utility review, customer rules</h2>
           </div>
+          <div className="panel-actions">
+            <span className="live-indicator">{filtered.length} shown</span>
+            <button className="icon-btn" onClick={exportReport} title="Export coordination report">
+              <Download size={13} />
+            </button>
+          </div>
+        </div>
+        <div className="opt-bar">
+          <span className="opt-label">Status</span>
+          {(['all', 'ready', 'review', 'blocked'] as const).map(s => (
+            <button key={s} className={`opt-pill${statusFilter === s ? ' active' : ''}`}
+              onClick={() => setStatusFilter(s)}>{s === 'all' ? 'All' : s}</button>
+          ))}
+          <div className="opt-sep" />
+          <span className="opt-label">Owner</span>
+          <select className="inline-select" value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)}>
+            {owners.map(o => <option key={o} value={o}>{o === 'all' ? 'All owners' : o}</option>)}
+          </select>
         </div>
         <div className="coordination-list">
-          {coordinationReadiness.checkpoints.map((checkpoint) => (
-            <article className={`coordination-row ${checkpoint.status}`} key={checkpoint.id}>
-              <div>
-                <strong>{checkpoint.label}</strong>
-                <span>{checkpoint.requirement}</span>
+          {filtered.map((checkpoint) => (
+            <article
+              key={checkpoint.id}
+              className={`coordination-row ${checkpoint.status}${expandedId === checkpoint.id ? ' expanded' : ''}`}
+              onClick={() => setExpandedId(expandedId === checkpoint.id ? null : checkpoint.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="cp-main">
+                <ChevronRight size={13} className={`cp-chevron${expandedId === checkpoint.id ? ' open' : ''}`} />
+                <div>
+                  <strong>{checkpoint.label}</strong>
+                  <span>{checkpoint.requirement}</span>
+                </div>
               </div>
               <b>{checkpoint.owner}</b>
               <em>{checkpoint.dueBy}</em>
               <small className={`risk ${checkpoint.risk}`}>{checkpoint.risk}</small>
-              <p>{checkpoint.evidence}</p>
+              {expandedId === checkpoint.id && (
+                <div className="cp-detail">
+                  <div className="cp-detail-row"><span>Evidence</span><p>{checkpoint.evidence}</p></div>
+                  <div className="cp-detail-row"><span>Requirement</span><p>{checkpoint.requirement}</p></div>
+                  <div className="cp-detail-row"><span>Owner</span><p>{checkpoint.owner}</p></div>
+                  <div className="cp-detail-row"><span>Due</span><p>{checkpoint.dueBy}</p></div>
+                </div>
+              )}
             </article>
           ))}
+          {filtered.length === 0 && (
+            <p style={{ color: 'var(--muted)', fontSize: 12, padding: '12px 0' }}>No checkpoints match the current filter.</p>
+          )}
         </div>
       </section>
     </>
@@ -1166,9 +1234,73 @@ function CoordinationPage() {
 }
 
 function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }) {
+  const [weights, setWeights] = useState({ revenue: 60, reliability: 25, degradation: 15 })
+  const [expandedSensId, setExpandedSensId] = useState<string | null>(null)
+
+  const reranked = useMemo(() => {
+    const total = weights.revenue + weights.reliability + weights.degradation || 1
+    return [...decisionCandidates]
+      .map(d => ({
+        ...d,
+        adjScore: Math.round(
+          (d.revenue / 100) * (weights.revenue / total) * 100 +
+          (d.reliability / 100) * (weights.reliability / total) * 100 +
+          (100 - d.riskPenalty) / 100 * (weights.degradation / total) * 100
+        ),
+      }))
+      .sort((a, b) => b.adjScore - a.adjScore)
+  }, [weights])
+
+  const exportModelRun = () => downloadJson(`model-run-${Date.now()}.json`, {
+    generatedAt: new Date().toISOString(),
+    modelVersion: modelRunSnapshot.modelVersion,
+    objectiveWeights: weights,
+    topDecision: { action: selectedDecision.action, targetMw: selectedDecision.targetMw, score: selectedDecision.score },
+    candidates: decisionCandidates.map(d => ({ id: d.id, action: d.action, targetMw: d.targetMw, score: d.score })),
+    sensitivityCases: sensitivityCases.map(s => ({ label: s.label, scoreDelta: s.scoreDelta })),
+    robustModel: selectedDecision.robustModel,
+  })
+
   return (
     <>
       <PageHeader eyebrow="Optimization workbench" title="Model" meta={selectedDecision.robustModel ? `${selectedDecision.robustModel.scenarios.length} scenarios` : 'No robust model'} />
+
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <p className="label">Objective weights</p>
+            <h2>Adjust to see how rankings shift</h2>
+          </div>
+          <button className="icon-btn" onClick={exportModelRun} title="Export model run JSON">
+            <Download size={13} />
+          </button>
+        </div>
+        <div className="weight-editor">
+          {(['revenue', 'reliability', 'degradation'] as const).map(key => (
+            <div key={key} className="weight-row">
+              <span className="weight-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+              <input
+                type="range" min={0} max={100} step={5}
+                value={weights[key]}
+                onChange={e => setWeights(w => ({ ...w, [key]: +e.target.value }))}
+              />
+              <span className="weight-val">{weights[key]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="rerank-list">
+          {reranked.slice(0, 5).map((d, i) => (
+            <div key={d.id} className={`rerank-row${i === 0 ? ' top' : ''}`}>
+              <span className="rerank-pos">#{i + 1}</span>
+              <div><strong>{actionLabels[d.action]} {d.targetMw} MW</strong><span>{d.market.product}</span></div>
+              <div className="rerank-scores">
+                <span>adj <b>{d.adjScore}</b></span>
+                <span className="rerank-orig">orig {d.score}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       {selectedDecision.robustModel && (
         <>
           <section className="model-overview">
@@ -1221,7 +1353,12 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
             <TornadoChartPanel />
             <div className="sensitivity-grid">
               {sensitivityCases.map((item) => (
-                <article className={`sensitivity-card ${item.scoreDelta < 0 ? 'negative' : 'positive'}`} key={item.id}>
+                <article
+                  key={item.id}
+                  className={`sensitivity-card ${item.scoreDelta < 0 ? 'negative' : 'positive'}${expandedSensId === item.id ? ' sens-expanded' : ''}`}
+                  onClick={() => setExpandedSensId(expandedSensId === item.id ? null : item.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="sensitivity-head">
                     <div><strong>{item.label}</strong><span>{item.parameter} {item.direction === 'up' ? '+' : '-'}{item.deltaPercent}%</span></div>
                     <b>{item.scoreDelta > 0 ? '+' : ''}{item.scoreDelta}</b>
@@ -1230,7 +1367,10 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
                     <span><b>{formatSignedUsd(item.expectedRevenueDelta)}</b><em>Revenue</em></span>
                     <span><b>{item.feasibilityDelta > 0 ? '+' : ''}{item.feasibilityDelta}</b><em>Feasibility</em></span>
                   </div>
-                  <p>{item.interpretation}</p>
+                  {expandedSensId === item.id
+                    ? <p style={{ marginTop: 8, fontSize: 12, lineHeight: 1.6 }}>{item.interpretation}</p>
+                    : <p className="sens-preview">{item.interpretation}</p>
+                  }
                 </article>
               ))}
             </div>
@@ -1282,6 +1422,31 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
 }
 
 function IntegrationsPage() {
+  const [expandedAdapter, setExpandedAdapter] = useState<string | null>(null)
+  const [healthFilter, setHealthFilter] = useState<'all' | 'ok' | 'warning' | 'error'>('all')
+
+  const filteredSources = useMemo(() =>
+    healthFilter === 'all' ? integrationSources : integrationSources.filter(s => s.health === healthFilter),
+    [healthFilter])
+
+  const exportCompliance = () => {
+    const lines = [
+      `Vela Compliance Report — ${new Date().toISOString()}`,
+      `Adapter confidence: ${coverage.confidence}%`,
+      `Integration readiness: ${integrationReadiness}%`,
+      '',
+      '=== Standards ===',
+      ...integrationStandards.map(s => `[${s.implementation.toUpperCase()}] ${s.name}: ${s.requirement}`),
+      '',
+      '=== Readiness Findings ===',
+      ...readinessFindings.map(f => `[${f.severity.toUpperCase()}] ${f.label}: ${f.detail}`),
+    ]
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `compliance-${Date.now()}.txt`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <>
       <PageHeader eyebrow="Data fabric" title="Integrations" meta={`${coverage.confidence}% adapter confidence`} />
@@ -1292,7 +1457,12 @@ function IntegrationsPage() {
               <p className="label">Adapter normalization</p>
               <h2>Vendor payloads mapped into canonical records</h2>
             </div>
-            <span className="live-indicator">{coverage.confidence}% confidence</span>
+            <div className="panel-actions">
+              <span className="live-indicator">{coverage.confidence}% confidence</span>
+              <button className="icon-btn" onClick={exportCompliance} title="Export compliance report">
+                <Download size={13} />
+              </button>
+            </div>
           </div>
           <div className="adapter-summary">
             <span><b>{coverage.recordCounts.telemetry}</b><em>Telemetry</em></span>
@@ -1302,12 +1472,41 @@ function IntegrationsPage() {
           </div>
           <div className="adapter-list">
             {adapterResults.map((result) => (
-              <article className="adapter-row" key={result.payloadId}>
-                <div><strong>{result.vendor}</strong><span>{result.adapter} · {result.payloadId}</span></div>
-                <b>{result.records.map((record) => record.kind).join(', ')}</b>
-                <em>{result.confidence}%</em>
-                <small>{result.warnings[0] ?? 'Normalized without warnings'}</small>
-              </article>
+              <div key={result.payloadId}>
+                <article
+                  className={`adapter-row${expandedAdapter === result.payloadId ? ' expanded' : ''}`}
+                  onClick={() => setExpandedAdapter(expandedAdapter === result.payloadId ? null : result.payloadId)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div>
+                    <strong>{result.vendor}</strong>
+                    <span>{result.adapter} · {result.payloadId}</span>
+                  </div>
+                  <b>{result.records.map((record) => record.kind).join(', ')}</b>
+                  <em>{result.confidence}%</em>
+                  <small>{result.warnings[0] ?? 'No warnings'}</small>
+                  <ChevronRight size={13} style={{
+                    transform: expandedAdapter === result.payloadId ? 'rotate(90deg)' : 'none',
+                    transition: 'transform .15s', color: 'var(--muted)', flexShrink: 0,
+                  }} />
+                </article>
+                {expandedAdapter === result.payloadId && (
+                  <div className="adapter-detail">
+                    <div className="adapter-detail-head">Normalized records ({result.records.length})</div>
+                    {result.records.map((rec, i) => (
+                      <div key={i} className="adapter-record">
+                        <span className="adapter-rec-kind">{rec.kind}</span>
+                        <pre className="adapter-rec-json">{JSON.stringify(rec, null, 2)}</pre>
+                      </div>
+                    ))}
+                    {result.warnings.length > 0 && (
+                      <div className="adapter-warnings">
+                        {result.warnings.map((w, i) => <p key={i}>⚠ {w}</p>)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </section>
@@ -1332,16 +1531,27 @@ function IntegrationsPage() {
         </section>
       </section>
 
-      <section className="panel integration-panel">
+      <section className="panel">
         <div className="panel-head">
           <div>
             <p className="label">Source systems</p>
             <h2>Where operational data enters VELA</h2>
           </div>
-          <DatabaseZap size={19} />
+          <div className="panel-actions">
+            <DatabaseZap size={19} />
+          </div>
         </div>
+        <div className="opt-bar">
+          <span className="opt-label">Health</span>
+          {(['all', 'ok', 'warning', 'error'] as const).map(h => (
+            <button key={h} className={`opt-pill${healthFilter === h ? ' active' : ''}`}
+              onClick={() => setHealthFilter(h)}>{h === 'all' ? 'All' : h}</button>
+          ))}
+          <span className="opt-label" style={{ marginLeft: 'auto' }}>{filteredSources.length} sources</span>
+        </div>
+
         <div className="integration-grid">
-          {integrationSources.map((source) => (
+          {filteredSources.map((source) => (
             <article className="integration-row" key={source.system}>
               <div><strong>{source.system}</strong><span>{source.category}</span></div>
               <p>{source.signals}</p>
@@ -1350,6 +1560,9 @@ function IntegrationsPage() {
               <em className={source.health}>{source.health}</em>
             </article>
           ))}
+          {filteredSources.length === 0 && (
+            <p style={{ color: 'var(--muted)', fontSize: 12, padding: '8px 0' }}>No sources match the selected health filter.</p>
+          )}
         </div>
       </section>
 
@@ -1425,6 +1638,30 @@ function IntegrationsPage() {
 }
 
 function RunLogPage() {
+  const [evidenceSearch, setEvidenceSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'used' | 'watch' | 'blocked'>('all')
+
+  const filteredRefs = useMemo(() =>
+    modelRunSnapshot.inputRefs.filter(ref => {
+      const matchSearch = evidenceSearch === '' ||
+        ref.source.toLowerCase().includes(evidenceSearch.toLowerCase()) ||
+        ref.recordType.toLowerCase().includes(evidenceSearch.toLowerCase())
+      const matchStatus = statusFilter === 'all' || ref.status === statusFilter
+      return matchSearch && matchStatus
+    }), [evidenceSearch, statusFilter])
+
+  const downloadReplay = () => downloadJson(`replay-${replayManifest.fingerprint}-${Date.now()}.json`, {
+    fingerprint: replayManifest.fingerprint,
+    generatedAt: replayManifest.generatedAt,
+    modelVersion: modelRunSnapshot.modelVersion,
+    replayReady: replayManifest.replayReady,
+    coverage: replayManifest.coverage,
+    gaps: replayManifest.gaps,
+    inputRefs: modelRunSnapshot.inputRefs,
+    rankedDecisions: modelRunSnapshot.rankedDecisions,
+    persistenceEvents: modelRunSnapshot.persistenceEvents,
+  })
+
   return (
     <>
       <PageHeader eyebrow="Evidence ledger" title="Run log" meta={modelRunSnapshot.modelVersion} />
@@ -1435,7 +1672,12 @@ function RunLogPage() {
               <p className="label">Model-run snapshot</p>
               <h2>Inputs used for the current recommendation</h2>
             </div>
-            <span className="live-indicator">{modelRunSnapshot.modelVersion}</span>
+            <div className="panel-actions">
+              <span className="live-indicator">{modelRunSnapshot.modelVersion}</span>
+              <button className="icon-btn" onClick={downloadReplay} title="Download replay package">
+                <Download size={13} />
+              </button>
+            </div>
           </div>
           <div className="run-summary">
             <span><b>{modelRunSnapshot.readinessScore}%</b><em>Readiness</em></span>
@@ -1444,14 +1686,37 @@ function RunLogPage() {
             <span><b>{modelRunSnapshot.rankedDecisions.length}</b><em>Candidates</em></span>
           </div>
           <p className="run-copy">{modelRunSnapshot.decisionSummary}</p>
+          <div className="evidence-filter">
+            <div className="search-wrap">
+              <Search size={13} />
+              <input
+                className="evidence-search"
+                placeholder="Search source or record type…"
+                value={evidenceSearch}
+                onChange={e => setEvidenceSearch(e.target.value)}
+              />
+              {evidenceSearch && (
+                <button className="search-clear" onClick={() => setEvidenceSearch('')}><X size={11} /></button>
+              )}
+            </div>
+            <div className="opt-bar" style={{ padding: 0 }}>
+              {(['all', 'used', 'watch', 'blocked'] as const).map(s => (
+                <button key={s} className={`opt-pill${statusFilter === s ? ' active' : ''}`}
+                  onClick={() => setStatusFilter(s)}>{s === 'all' ? 'All' : s}</button>
+              ))}
+            </div>
+          </div>
           <div className="evidence-list">
-            {modelRunSnapshot.inputRefs.map((ref) => (
+            {filteredRefs.map((ref) => (
               <article className={`evidence-row ${ref.status}`} key={`${ref.recordType}-${ref.id}`}>
                 <div><strong>{ref.source}</strong><span>{ref.recordType} · {ref.id}</span></div>
                 <b>{ref.confidence}%</b>
                 <em>{ref.status}</em>
               </article>
             ))}
+            {filteredRefs.length === 0 && (
+              <p style={{ color: 'var(--muted)', fontSize: 12, padding: '8px 0' }}>No records match.</p>
+            )}
           </div>
         </section>
 
