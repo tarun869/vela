@@ -1,0 +1,102 @@
+# Development overrides — hot reload, debug ports, volume mounts
+# Usage: docker compose up  (this file is auto-loaded alongside docker-compose.yml)
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    command: uvicorn vela.api.app:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/vela
+    volumes:
+      - ../vela:/app/vela
+      - ../config:/app/config
+      - ../tests:/app/tests
+    environment:
+      VELA_ENV: development
+      VELA_LOG_LEVEL: DEBUG
+      VELA_DB_URL: postgresql+asyncpg://vela:vela@postgres:5432/vela_dev
+      VELA_REDIS_URL: redis://redis:6379/0
+      VELA_KAFKA_BROKERS: kafka:9092
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # debugpy
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    command: celery -A vela.workers.celery_app worker --loglevel=debug --concurrency=2
+    volumes:
+      - ../vela:/app/vela
+      - ../config:/app/config
+    environment:
+      VELA_ENV: development
+      VELA_LOG_LEVEL: DEBUG
+      VELA_DB_URL: postgresql+asyncpg://vela:vela@postgres:5432/vela_dev
+      VELA_REDIS_URL: redis://redis:6379/0
+      VELA_KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+    volumes:
+      - ../dashboard:/app/dashboard
+    environment:
+      VELA_API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vela
+      POSTGRES_PASSWORD: vela
+      POSTGRES_DB: vela_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --loglevel verbose
+
+  kafka:
+    image: bitnami/kafka:3.6
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  grafana:
+    ports:
+      - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+
+volumes:
+  postgres_dev_data:

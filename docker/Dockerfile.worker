@@ -1,0 +1,12 @@
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY pyproject.toml .
+COPY vela/ vela/
+RUN pip install --no-cache-dir build && python -m build --wheel --no-isolation
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /app/dist/*.whl .
+RUN pip install --no-cache-dir *.whl
+COPY config/ config/
+CMD ["celery", "-A", "vela.workers.celery_app", "worker", "--loglevel=info"]
