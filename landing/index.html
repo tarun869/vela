@@ -264,55 +264,45 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   transition:background .15s,border-color .15s;white-space:nowrap}
 .sc-open:hover{background:var(--gdim);border-color:var(--green)}
 
-/* ── FEATURES ───────────────────────────────────── */
-#features{padding:96px 0;background:var(--bg1)}
-.feat-header{display:grid;grid-template-columns:1fr 1fr;gap:64px;
-  align-items:end;margin-bottom:64px}
-.feat-title{font-size:clamp(26px,3vw,40px);font-weight:800;
-  letter-spacing:-.025em;line-height:1.1}
-.feat-body{font-family:var(--mono);font-size:13px;color:var(--muted);
-  line-height:1.75}
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);
-  gap:0;border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
-.feat-col{padding:36px 32px 40px;border-right:0.5px solid var(--rule)}
-.feat-col:last-child{border-right:none}
-.feat-icon{width:40px;height:40px;margin-bottom:24px;
-  display:flex;align-items:center;justify-content:center}
-.feat-icon svg{width:28px;height:28px;stroke:var(--green);fill:none;stroke-width:1.5}
-.feat-name{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
-.feat-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
-.feat-list{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:8px}
-.feat-list li{font-family:var(--mono);font-size:11px;color:var(--muted);
-  display:flex;gap:8px;align-items:baseline}
-.feat-list li::before{content:'→';color:var(--green);flex-shrink:0}
+/* ── DETAILS ────────────────────────────────────── */
+#features{padding:96px 0}
+.det-split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.det-title{font-size:clamp(24px,2.8vw,38px);font-weight:800;
+  letter-spacing:-.025em;line-height:1.12;margin-bottom:20px}
+.det-body{font-family:var(--mono);font-size:13px;color:var(--muted);
+  line-height:1.8;margin-bottom:16px}
+.det-protocols{display:flex;flex-wrap:wrap;gap:8px;margin-top:32px}
+.det-proto{font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  color:var(--faint);border:0.5px solid var(--rule);
+  padding:4px 10px;border-radius:3px}
+.det-right{display:flex;flex-direction:column;gap:0;
+  border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.det-item{display:grid;grid-template-columns:48px 1fr;gap:0;
+  padding:28px 28px 28px 0;border-bottom:0.5px solid var(--rule)}
+.det-item:last-child{border-bottom:none}
+.det-num{font-family:var(--mono);font-size:11px;color:var(--green);
+  padding:28px 0 0 24px;letter-spacing:.06em}
+.det-name{font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+.det-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
 
 /* ── USE CASES ──────────────────────────────────── */
 #usecases{padding:96px 0;background:var(--bg1)}
-.uc-header{margin-bottom:64px}
-.uc-title{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.025em;
-  line-height:1.1;margin-bottom:14px}
-.uc-sub{font-family:var(--mono);font-size:13px;color:var(--muted);
-  max-width:480px;line-height:1.7}
 .uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;
   border:0.5px solid var(--rule);border-radius:var(--r);overflow:hidden}
-.uc-card{padding:40px 36px;border-right:0.5px solid var(--rule);
-  background:var(--bg2)}
+.uc-card{padding:40px 36px;border-right:0.5px solid var(--rule);background:var(--bg2)}
 .uc-card:last-child{border-right:none}
 .uc-num{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
-  color:var(--green);margin-bottom:16px}
-.uc-name{font-size:17px;font-weight:700;letter-spacing:-.01em;
-  margin-bottom:12px;line-height:1.3}
+  color:var(--green);margin-bottom:20px}
+.uc-name{font-size:16px;font-weight:700;letter-spacing:-.015em;
+  margin-bottom:16px;line-height:1.35}
 .uc-desc{font-family:var(--mono);font-size:12px;color:var(--muted);
-  line-height:1.75;margin-bottom:24px}
-.uc-pains{display:flex;flex-direction:column;gap:12px}
-.uc-row{display:grid;grid-template-columns:1fr 20px 1fr;
-  gap:4px;align-items:center}
-.uc-pain{font-family:var(--mono);font-size:11px;color:var(--muted);
-  background:rgba(240,237,230,.04);padding:5px 8px;border-radius:3px}
-.uc-arrow{font-size:12px;color:var(--green);text-align:center}
-.uc-sol{font-family:var(--mono);font-size:11px;color:var(--text);
-  background:var(--gdim);padding:5px 8px;border-radius:3px;
-  border:0.5px solid rgba(29,158,117,.2)}
+  line-height:1.8;margin-bottom:24px}
+.uc-bullets{display:flex;flex-direction:column;gap:10px;
+  border-top:0.5px solid var(--rule);padding-top:20px}
+.uc-b{font-family:var(--mono);font-size:11px;color:var(--muted);
+  padding-left:14px;position:relative;line-height:1.5}
+.uc-b::before{content:'';position:absolute;left:0;top:7px;
+  width:5px;height:1px;background:var(--green)}
 
 /* ── MARKETS ────────────────────────────────────── */
 #markets{padding:96px 0}
@@ -434,7 +424,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .uc-card{border-right:none;border-bottom:0.5px solid var(--rule)}
   .uc-card:last-child{border-bottom:none}
   .mkt-layout{grid-template-columns:1fr;gap:48px}
-  .uc-row{grid-template-columns:1fr 16px 1fr}
+  .det-split{grid-template-columns:1fr;gap:48px}
   .hero-stats{flex-direction:column;max-width:260px}
   .hstat{border-right:none;border-bottom:0.5px solid var(--rule)}
   .hstat:last-child{border-bottom:none}
@@ -484,14 +474,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <div class="nl">
     <span class="ndot"></span>
     <span class="nlogo">Vela</span>
-    <span class="nbadge">AGENTIC DERMS</span>
+    <span class="nbadge">ORDER 2222</span>
   </div>
   <ul class="nlinks">
     <li><a href="#showcase">Platform</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#how">How it works</a></li>
   </ul>
-  <a href="http://localhost:5173" target="_blank" class="ncta">
+  <a href="/app.html" target="_blank" class="ncta">
     <span class="ncta-dot"></span>Launch app
   </a>
 </nav>
@@ -513,12 +503,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <em>Vela never<br>misses one.</em>
           </h1>
           <p class="hero-sub">
-            An agentic intelligence layer for distributed energy portfolios &mdash;
-            observing market signals, reasoning across revenue stacks, and dispatching
-            every interval across every asset.
+            Bid optimization, dispatch coordination, and settlement reconciliation
+            for battery, DR, and flexible load portfolios &mdash; across ERCOT,
+            CAISO, PJM, NYISO, and MISO.
           </p>
           <div class="hero-btns">
-            <a href="http://localhost:5173" target="_blank" class="btn-primary">
+            <a href="/app.html" target="_blank" class="btn-primary">
               <span class="ncta-dot"></span>Launch the app &rarr;
             </a>
             <a href="#showcase" class="btn-ghost">Explore the platform</a>
@@ -638,7 +628,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div class="sc-card-desc">Agent-generated bid recommendations with full rationale &mdash; LMP spike probability, degradation cost, constraint audit. Approve or decline in one keystroke.</div>
           </div>
           <div class="sc-preview">
-            <iframe src="panel-1-bid.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe src="/landing/panel-1-bid.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
           </div>
           <div class="sc-card-bot">
             <div class="sc-tags">
@@ -646,7 +636,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
               <span class="sc-tag">SOC FLOOR</span>
               <span class="sc-tag">AUTO-APPROVE</span>
             </div>
-            <a href="panel-1-bid.html" target="_blank" class="sc-open">Open &rarr;</a>
+            <a href="/landing/panel-1-bid.html" target="_blank" class="sc-open">Open &rarr;</a>
           </div>
         </div>
 
@@ -658,7 +648,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div class="sc-card-desc">Run alongside your existing strategy with no live dispatch. See the exact revenue delta and new stacks the agent finds before you flip the switch.</div>
           </div>
           <div class="sc-preview">
-            <iframe src="panel-2-shadow.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe src="/landing/panel-2-shadow.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
           </div>
           <div class="sc-card-bot">
             <div class="sc-tags">
@@ -666,7 +656,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
               <span class="sc-tag">ANCILLARY</span>
               <span class="sc-tag">NO RISK</span>
             </div>
-            <a href="panel-2-shadow.html" target="_blank" class="sc-open">Open &rarr;</a>
+            <a href="/landing/panel-2-shadow.html" target="_blank" class="sc-open">Open &rarr;</a>
           </div>
         </div>
 
@@ -678,7 +668,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div class="sc-card-desc">Committed vs. delivered, verified to the 15-minute interval. Per-asset attribution, automated penalty detection, and root cause on every shortfall.</div>
           </div>
           <div class="sc-preview">
-            <iframe src="panel-3-settlement.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe src="/landing/panel-3-settlement.html" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
           </div>
           <div class="sc-card-bot">
             <div class="sc-tags">
@@ -686,7 +676,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
               <span class="sc-tag">ERCOT</span>
               <span class="sc-tag">ROOT CAUSE</span>
             </div>
-            <a href="panel-3-settlement.html" target="_blank" class="sc-open">Open &rarr;</a>
+            <a href="/landing/panel-3-settlement.html" target="_blank" class="sc-open">Open &rarr;</a>
           </div>
         </div>
 
@@ -706,7 +696,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <em class="proof-pct">44%</em> more revenue.<br>Proven before<br>a single live dispatch.
           </h2>
           <p class="proof-body">Run alongside your existing strategy for 30 days. No dispatch risk, no regulatory exposure. We show what we would have bid and what you would have earned. Flip the switch when you trust the numbers.</p>
-          <a href="panel-2-shadow.html" target="_blank" class="btn-ghost" style="display:inline-flex;margin-top:24px">View shadow mode panel &rarr;</a>
+          <a href="/landing/panel-2-shadow.html" target="_blank" class="btn-ghost" style="display:inline-flex;margin-top:24px">View shadow mode panel &rarr;</a>
         </div>
         <div class="proof-right">
           <div class="proof-table">
@@ -752,53 +742,51 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
   <hr class="rule-h"/>
 
-  <!-- ③ FEATURES -->
+  <!-- ③ DETAILS -->
+  <section id="features">
     <div class="wrap">
-      <div class="feat-header">
-        <div>
-          <div class="eyebrow">Why Vela</div>
-          <h2 class="feat-title">Built for operators who can't afford a black box.</h2>
-        </div>
-        <p class="feat-body">
-          Every dispatch decision surfaces its full reasoning &mdash; assets considered, constraints applied, alternatives rejected. You own the controls. Vela operates within them.
-        </p>
-      </div>
-      <div class="feat-grid">
-        <div class="feat-col">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/></svg>
+      <div class="det-split">
+        <div class="det-left">
+          <h2 class="det-title">The bid reasoning is the product.</h2>
+          <p class="det-body">Every dispatch recommendation Vela generates includes the LMP forecast it used, the degradation cost it factored, the constraints it checked, and the alternatives it rejected. If you'd have made a different call, you can see exactly why the engine didn't.</p>
+          <p class="det-body">Constraints are hard limits, not soft suggestions. SOC floor, cycle cap, backup reserve, customer opt-out windows &mdash; the engine cannot violate them. Your ops team sets the box; Vela works inside it.</p>
+          <div class="det-protocols">
+            <span class="det-proto">OpenADR 2.0</span>
+            <span class="det-proto">IEEE 2030.5</span>
+            <span class="det-proto">Modbus TCP</span>
+            <span class="det-proto">OCPP 2.0.1</span>
+            <span class="det-proto">DNP3</span>
           </div>
-          <div class="feat-name">Explainable by design</div>
-          <div class="feat-desc">Every bid includes LMP forecast, degradation cost, constraint list, and alternatives rejected. Not a black box &mdash; a co-pilot you can audit.</div>
-          <ul class="feat-list">
-            <li>Full rationale on every recommendation</li>
-            <li>Constraint audit trail per dispatch</li>
-            <li>Human approval queue for high-risk bids</li>
-          </ul>
         </div>
-        <div class="feat-col">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="7 8 10 11 14 7 17 10"/></svg>
+        <div class="det-right">
+          <div class="det-item">
+            <div class="det-num">01</div>
+            <div class="det-content">
+              <div class="det-name">Bid with rationale</div>
+              <div class="det-desc">Each recommendation shows the LMP threshold used, the SOC at dispatch time, the revenue estimate, and the next-best alternative &mdash; before you approve it.</div>
+            </div>
           </div>
-          <div class="feat-name">Hardware-agnostic</div>
-          <div class="feat-desc">Connects to any DER &mdash; batteries, EV fleets, HVAC, solar, flexible loads. OpenADR, IEEE 2030.5, Modbus, OCPP. One unified fleet view.</div>
-          <ul class="feat-list">
-            <li>Battery, EV, HVAC, solar integrations</li>
-            <li>Any SCADA or DERMS back-end</li>
-            <li>Onboard new assets in &lt;48 hours</li>
-          </ul>
-        </div>
-        <div class="feat-col">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="det-item">
+            <div class="det-num">02</div>
+            <div class="det-content">
+              <div class="det-name">Any asset, any protocol</div>
+              <div class="det-desc">Batteries, EV charging depots, HVAC, industrial flex load. If it has a control interface, Vela can dispatch it. New asset types onboard in under 48 hours.</div>
+            </div>
           </div>
-          <div class="feat-name">Constraint-first engine</div>
-          <div class="feat-desc">Hard limits the agent cannot violate: SOC floors, backup reserve thresholds, degradation caps, customer opt-out windows. Autonomy inside a defined box.</div>
-          <ul class="feat-list">
-            <li>SOC floor &amp; cycle cap enforcement</li>
-            <li>Customer comfort window exclusions</li>
-            <li>Zero constraint violations in production</li>
-          </ul>
+          <div class="det-item">
+            <div class="det-num">03</div>
+            <div class="det-content">
+              <div class="det-name">Settlement to the interval</div>
+              <div class="det-desc">AMI-metered actuals compared against ISO settlement statements, flagged by asset, with root cause on every shortfall &mdash; not just the total.</div>
+            </div>
+          </div>
+          <div class="det-item">
+            <div class="det-num">04</div>
+            <div class="det-content">
+              <div class="det-name">Shadow mode, then live</div>
+              <div class="det-desc">Run alongside your existing strategy for 30 days. No dispatch. No regulatory exposure. See the P&amp;L delta. Flip the switch when you trust it.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -809,76 +797,35 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <!-- ③b USE CASES -->
   <section id="usecases">
     <div class="wrap">
-      <div class="uc-header">
-        <div class="eyebrow">Who it's for</div>
-        <h2 class="uc-title">Built for operators,<br>not asset owners.</h2>
-        <p class="uc-sub">Vela is B2B infrastructure. Your buyers know what LMP means. We don't explain the grid &mdash; we help you win in it.</p>
-      </div>
       <div class="uc-grid">
         <div class="uc-card">
           <div class="uc-num">VPP OPERATORS</div>
-          <div class="uc-name">Stop leaving ancillary revenue on the table.</div>
-          <div class="uc-desc">Your DERMS controls the assets. Vela decides the optimal revenue stack allocation across energy, capacity, ancillary, and DR &mdash; every dispatch window, every ISO.</div>
-          <div class="uc-pains">
-            <div class="uc-row">
-              <span class="uc-pain">Static price thresholds</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Multi-objective agent reasoning</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">Manual ancillary enrollment</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Automated stack optimization</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">Offline backtesting</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Live shadow mode proof</span>
-            </div>
+          <div class="uc-name">Your DERMS dispatches. Vela decides what to bid.</div>
+          <div class="uc-desc">Threshold-based dispatch leaves ancillary revenue uncaptured most hours. Vela solves the full revenue stack simultaneously &mdash; energy arbitrage, spinning reserve, DR, and capacity &mdash; at each 15-minute interval, using real-time LMP signals and your constraint set.</div>
+          <div class="uc-bullets">
+            <div class="uc-b">Per-interval stack optimization across all enrolled programs</div>
+            <div class="uc-b">Shadow mode validation before any live dispatch</div>
+            <div class="uc-b">Human approval queue with full bid rationale</div>
           </div>
         </div>
         <div class="uc-card">
           <div class="uc-num">AGGREGATORS</div>
-          <div class="uc-name">Scale without scaling your ops team.</div>
-          <div class="uc-desc">Each new asset type, each new ISO, each new customer constraint &mdash; Vela handles the reasoning layer so your team handles the relationships.</div>
-          <div class="uc-pains">
-            <div class="uc-row">
-              <span class="uc-pain">Manual constraints per customer</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Natural language constraint engine</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">ISO-specific bidding expertise required</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Market-agnostic agent layer</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">Opaque customer reporting</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Auditable per-asset P&amp;L</span>
-            </div>
+          <div class="uc-name">Each customer has different constraints. Vela handles all of them.</div>
+          <div class="uc-desc">Managing per-customer opt-out windows, SOC floors, and ISO-specific enrollment rules across a mixed fleet is an ops problem that doesn't scale with headcount. Vela encodes those constraints and handles the bidding layer so your team stays on the relationship side.</div>
+          <div class="uc-bullets">
+            <div class="uc-b">Per-asset constraint configuration</div>
+            <div class="uc-b">Auditable P&amp;L reporting by customer</div>
+            <div class="uc-b">Works with your existing SCADA or DERMS</div>
           </div>
         </div>
         <div class="uc-card">
           <div class="uc-num">C&amp;I ASSET OWNERS</div>
-          <div class="uc-name">Your battery should be earning.</div>
-          <div class="uc-desc">Schools, warehouses, manufacturers &mdash; you bought a battery for bill savings. Vela adds wholesale market participation on top, fully managed, shadow mode first.</div>
-          <div class="uc-pains">
-            <div class="uc-row">
-              <span class="uc-pain">No wholesale market expertise</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Agent handles bidding automatically</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">Single revenue stream (bill savings)</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Stacked: arb + DR + ancillary</span>
-            </div>
-            <div class="uc-row">
-              <span class="uc-pain">Hardware vendor lock-in</span>
-              <span class="uc-arrow">&rarr;</span>
-              <span class="uc-sol">Hardware-agnostic, any battery</span>
-            </div>
+          <div class="uc-name">You bought the battery for demand charge savings. Vela adds a second revenue stream.</div>
+          <div class="uc-desc">Wholesale market participation has been inaccessible to most C&amp;I sites &mdash; too complex, too much risk. Vela runs in shadow mode first, proving the incremental P&amp;L before going live. Works with any behind-the-meter battery regardless of hardware vendor.</div>
+          <div class="uc-bullets">
+            <div class="uc-b">Shadow mode first, no dispatch risk day one</div>
+            <div class="uc-b">Stacks on top of existing demand charge program</div>
+            <div class="uc-b">Hardware-agnostic, any BESS vendor</div>
           </div>
         </div>
       </div>
@@ -1019,11 +966,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <section id="cta">
     <div class="wrap cta-inner">
       <div class="cta-tag">SHADOW MODE &middot; NO DISPATCH RISK ON DAY ONE</div>
-      <h2 class="cta-h">Ready to see what you're<br><em>leaving on the table?</em></h2>
-      <p class="cta-p">Onboard in 48 hours. Run shadow mode for 30 days. Flip the switch when you trust the numbers.</p>
+      <h2 class="cta-h">The grid clears<br>in <em>15 minutes.</em></h2>
+      <p class="cta-p">Shadow mode onboards in 48 hours. You'll see your first P&amp;L comparison within the week. No dispatch, no exposure &mdash; just the delta.</p>
       <div class="cta-btns">
-        <a href="http://localhost:5173" target="_blank" class="btn-primary"><span class="ncta-dot"></span>Launch the app &rarr;</a>
-        <a href="panel-1-bid.html" target="_blank" class="btn-ghost">Open dispatch queue &rarr;</a>
+        <a href="/app.html" target="_blank" class="btn-primary"><span class="ncta-dot"></span>Launch the app &rarr;</a>
+        <a href="/landing/panel-1-bid.html" target="_blank" class="btn-ghost">Open dispatch queue &rarr;</a>
       </div>
     </div>
   </section>
@@ -1041,9 +988,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="foot-col">
         <div class="foot-col-title">Platform</div>
         <a href="#showcase">Dispatch Queue</a>
-        <a href="panel-2-shadow.html" target="_blank">Shadow Mode P&amp;L</a>
-        <a href="panel-3-settlement.html" target="_blank">Settlement Reconciliation</a>
-        <a href="http://localhost:5173" target="_blank">Live Demo</a>
+        <a href="/landing/panel-2-shadow.html" target="_blank">Shadow Mode P&amp;L</a>
+        <a href="/landing/panel-3-settlement.html" target="_blank">Settlement Reconciliation</a>
+        <a href="/app.html" target="_blank">Live Demo</a>
       </div>
       <div class="foot-col">
         <div class="foot-col-title">Markets</div>
@@ -1192,7 +1139,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     });
   }, {threshold:0.06});
 
-  document.querySelectorAll('.sc-card,.feat-col,.how-step,.uc-card,.mkt-item,.tstat').forEach(function(el, i){
+  document.querySelectorAll('.sc-card,.det-item,.how-step,.uc-card,.mkt-item,.tstat').forEach(function(el, i){
     el.style.opacity = '0';
     el.style.transform = 'translateY(18px)';
     el.style.transition = 'opacity .55s ease '+(i*50)+'ms, transform .55s ease '+(i*50)+'ms';
