@@ -1,0 +1,93 @@
+# Production environment overrides
+
+api:
+  replicaCount: 5
+  autoscaling:
+    minReplicas: 5
+    maxReplicas: 30
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+worker:
+  replicaCount: 8
+  concurrency: 8
+  autoscaling:
+    minReplicas: 4
+    maxReplicas: 32
+  resources:
+    requests:
+      cpu: "2"
+      memory: 2Gi
+    limits:
+      cpu: "8"
+      memory: 8Gi
+
+dashboard:
+  replicaCount: 3
+
+orchestrator:
+  intervalSeconds: 300
+  resources:
+    requests:
+      cpu: "4"
+      memory: 4Gi
+    limits:
+      cpu: "16"
+      memory: 16Gi
+
+postgres:
+  storage: 500Gi
+  resources:
+    requests:
+      cpu: "4"
+      memory: 16Gi
+    limits:
+      cpu: "16"
+      memory: 64Gi
+
+redis:
+  storage: 100Gi
+  resources:
+    requests:
+      cpu: "1"
+      memory: 4Gi
+    limits:
+      cpu: "4"
+      memory: 16Gi
+
+kafka:
+  replicas: 3
+  storage: 1000Gi
+
+prometheus:
+  retention: 90d
+  storage: 500Gi
+  resources:
+    requests:
+      cpu: "1"
+      memory: 4Gi
+    limits:
+      cpu: "4"
+      memory: 16Gi
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "500"
+    nginx.ingress.kubernetes.io/limit-connections: "200"
+  hosts:
+    api: api.vela.energy
+    dashboard: app.vela.energy
+
+optimizer:
+  horizonHours: 48
+  mipGap: 0.001
+  timeoutSeconds: 25
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/vela-prod-service-role
