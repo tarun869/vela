@@ -1431,6 +1431,49 @@ h3 {
   background: var(--red-soft);
 }
 
+/* ---- Charts ---- */
+
+.chart-panel {
+  display: grid;
+  gap: 0;
+}
+
+.chart-area {
+  margin-top: 12px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.legend-da::before {
+  background: #235a91;
+}
+
+.legend-rt::before {
+  background: #9b6515;
+  background: repeating-linear-gradient(90deg, #9b6515 0 5px, transparent 5px 8px);
+}
+
 @media (max-width: 1180px) {
   .metrics-grid,
   .quality-grid,

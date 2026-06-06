@@ -17,6 +17,19 @@ import {
   SunMedium,
   Zap,
 } from 'lucide-react'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import './App.css'
 import { adapterCoverage, normalizeAdapterPayloads, rawAdapterPayloads } from './backend/adapters'
 import { buildCoordinationReadiness } from './backend/coordination'
@@ -118,6 +131,35 @@ const modelRunSnapshot = buildModelRunSnapshot({
 const replayManifest = buildReplayManifest(modelRunSnapshot)
 const forecastRevenue = Math.round(topDecision.targetMw * topDecision.market.price * 1.7)
 
+// ---- Chart data (deterministic, derived from mock signals) ----
+
+const _baseLmp = marketSignals[0]?.price ?? 48
+const lmpSeries = Array.from({ length: 24 }, (_, h) => {
+  // CAISO duck-curve shape: solar noon dip + evening ramp
+  const ev = Math.max(0, Math.sin(Math.PI * (h - 15) / 8))
+  const solar = Math.max(0, Math.sin(Math.PI * (h - 6) / 10))
+  const profile = 0.70 + 0.60 * ev - 0.22 * solar * (1 - ev * 1.4)
+  const da = Math.round(_baseLmp * Math.max(0.38, profile))
+  const rt = Math.round(da + (h % 2 === 0 ? 6 : -4) + Math.sin(h * 1.8) * 5)
+  return { hour: `${String(h).padStart(2, '0')}:00`, da, rt }
+})
+
+const capacityBarData = assets.map((a) => ({
+  name: a.name.split(' ').slice(0, 2).join(' '),
+  available: a.availableMw,
+  constrained: +(a.capacityMw - a.availableMw).toFixed(1),
+}))
+
+const tornadoSeries = [...sensitivityCases]
+  .sort((a, b) => Math.abs(b.scoreDelta) - Math.abs(a.scoreDelta))
+  .slice(0, 6)
+  .map((s) => ({ label: s.label.slice(0, 22), delta: s.scoreDelta }))
+
+const candidateScoreSeries = decisionCandidates.map((d) => ({
+  name: `${actionLabels[d.action]} ${d.targetMw}MW`,
+  score: d.score,
+}))
+
 const assetById = assets.reduce<Record<string, Asset>>((index, asset) => {
   index[asset.id] = asset
   return index
@@ -131,6 +173,176 @@ const formatUsd = (value: number) =>
   }).format(value)
 
 const formatSignedUsd = (value: number) => `${value < 0 ? '-' : ''}${formatUsd(Math.abs(value))}`
+
+// ---- Chart style constants ----
+const AX = { fontSize: 10, fill: '#68736f' } as const
+const GRID = { stroke: '#dbe2de' }
+const TIP_STYLE = { fontSize: 12, borderRadius: 6, border: '1px solid #dbe2de', background: '#fff' }
+
+function LmpChartPanel() {
+  return (
+    <section className="panel chart-panel">
+      <div className="panel-head">
+        <div>
+          <p className="label">LMP price curve</p>
+          <h2>Day-ahead vs real-time — 24-hour window</h2>
+        </div>
+        <span className="live-indicator">${_baseLmp}/MWh base</span>
+      </div>
+      <div className="chart-area">
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={lmpSeries} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+            <defs>
+              <linearGradient id="daGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#235a91" stopOpacity={0.13} />
+                <stop offset="95%" stopColor="#235a91" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" {...GRID} vertical={false} />
+            <XAxis dataKey="hour" tick={AX} tickLine={false} axisLine={GRID} interval={3} />
+            <YAxis tick={AX} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} width={38} />
+            <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown, n?: string | number) => [`$${v as number}/MWh`, n === 'da' ? 'DA price' : 'RT price'] as [string, string]} />
+            <Area type="monotone" dataKey="da" stroke="#235a91" strokeWidth={2} fill="url(#daGrad)" name="da" />
+            <Area type="monotone" dataKey="rt" stroke="#9b6515" strokeWidth={1.5} strokeDasharray="5 3" fill="none" name="rt" />
+          </AreaChart>
+        </ResponsiveContainer>
+        <div className="chart-legend">
+          <span className="legend-item legend-da">Day-ahead</span>
+          <span className="legend-item legend-rt">Real-time</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CapacityChartPanel() {
+  return (
+    <section className="panel chart-panel">
+      <div className="panel-head">
+        <div>
+          <p className="label">Fleet capacity</p>
+          <h2>Available vs constrained MW per asset</h2>
+        </div>
+      </div>
+      <div className="chart-area">
+        <ResponsiveContainer width="100%" height={170}>
+          <BarChart data={capacityBarData} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" {...GRID} horizontal={false} />
+            <XAxis type="number" tick={AX} tickLine={false} axisLine={GRID} tickFormatter={(v) => `${v}MW`} />
+            <YAxis type="category" dataKey="name" tick={AX} tickLine={false} axisLine={false} width={74} />
+            <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown, name?: string | number) => [`${v as number} MW`, name === 'available' ? 'Available' : 'Constrained'] as [string, string]} />
+            <Bar dataKey="available" stackId="cap" fill="#167a55" name="available" />
+            <Bar dataKey="constrained" stackId="cap" fill="#dbe2de" name="constrained" radius={[0, 3, 3, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  )
+}
+
+function WaterfallChartPanel({ lines, netMargin }: { lines: Array<{ label: string; amount: number }>; netMargin: number }) {
+  const data = lines.map((l) => ({
+    name: l.label.replace('Day-ahead ', 'DA ').replace('Real-time ', 'RT ').replace(' Reserve', ' Rsv').replace('Ancillary ', ''),
+    amount: l.amount,
+  }))
+  return (
+    <section className="panel chart-panel">
+      <div className="panel-head">
+        <div>
+          <p className="label">Settlement waterfall</p>
+          <h2>Revenue and cost by product line</h2>
+        </div>
+        <span className="live-indicator">{netMargin >= 0 ? '+' : ''}${Math.round(netMargin).toLocaleString()} net</span>
+      </div>
+      <div className="chart-area">
+        <ResponsiveContainer width="100%" height={210}>
+          <BarChart data={data} margin={{ top: 8, right: 16, bottom: 36, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" {...GRID} vertical={false} />
+            <XAxis dataKey="name" tick={{ ...AX, fontSize: 9 }} tickLine={false} axisLine={GRID} angle={-28} textAnchor="end" interval={0} />
+            <YAxis tick={AX} tickLine={false} axisLine={false} tickFormatter={(v) => `$${Math.round((v as number) / 1000)}k`} width={42} />
+            <ReferenceLine y={0} stroke="#c5d0cb" strokeWidth={1.5} />
+            <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [`$${Math.round(v as number).toLocaleString()}`, 'Amount'] as [string, string]} />
+            <Bar dataKey="amount" radius={[3, 3, 0, 0]}>
+              {data.map((entry, i) => (
+                <Cell key={i} fill={entry.amount >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.85} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  )
+}
+
+function ScenarioChartPanel({ outcomes }: { outcomes: Array<{ label: string; netRevenue: number; probability: number }> }) {
+  const data = outcomes.map((o) => ({
+    name: o.label.replace('Price ', 'P').replace('Demand ', 'D').replace(' scenario', '').slice(0, 14),
+    revenue: o.netRevenue,
+    prob: Math.round(o.probability * 100),
+  }))
+  return (
+    <div className="chart-area">
+      <p className="label" style={{ marginBottom: 6 }}>Revenue by scenario</p>
+      <ResponsiveContainer width="100%" height={170}>
+        <BarChart data={data} margin={{ top: 4, right: 16, bottom: 28, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" {...GRID} vertical={false} />
+          <XAxis dataKey="name" tick={{ ...AX, fontSize: 9 }} tickLine={false} axisLine={GRID} angle={-18} textAnchor="end" interval={0} />
+          <YAxis tick={AX} tickLine={false} axisLine={false} tickFormatter={(v) => `$${Math.round((v as number) / 1000)}k`} width={42} />
+          <ReferenceLine y={0} stroke="#c5d0cb" strokeWidth={1.5} />
+          <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown, n?: string | number) => [(n === 'revenue' ? `$${Math.round(v as number).toLocaleString()}` : `${v as number}%`), (n === 'revenue' ? 'Net revenue' : 'Probability')] as [string, string]} />
+          <Bar dataKey="revenue" radius={[3, 3, 0, 0]}>
+            {data.map((entry, i) => (
+              <Cell key={i} fill={entry.revenue >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.82} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function TornadoChartPanel() {
+  return (
+    <div className="chart-area">
+      <p className="label" style={{ marginBottom: 6 }}>Sensitivity tornado — score delta per assumption</p>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={tornadoSeries} layout="vertical" margin={{ top: 4, right: 24, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" {...GRID} horizontal={false} />
+          <XAxis type="number" tick={AX} tickLine={false} axisLine={GRID} />
+          <YAxis type="category" dataKey="label" tick={{ ...AX, fontSize: 9 }} tickLine={false} axisLine={false} width={150} />
+          <ReferenceLine x={0} stroke="#c5d0cb" strokeWidth={1.5} />
+          <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [(v as number) > 0 ? `+${v as number}` : String(v as number), 'Score delta'] as [string, string]} />
+          <Bar dataKey="delta" radius={[0, 3, 3, 0]}>
+            {tornadoSeries.map((entry, i) => (
+              <Cell key={i} fill={entry.delta >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.85} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function CandidateScoreChartPanel() {
+  return (
+    <div className="chart-area">
+      <p className="label" style={{ marginBottom: 6 }}>Candidate score comparison</p>
+      <ResponsiveContainer width="100%" height={150}>
+        <BarChart data={candidateScoreSeries} margin={{ top: 4, right: 16, bottom: 30, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" {...GRID} vertical={false} />
+          <XAxis dataKey="name" tick={{ ...AX, fontSize: 9 }} tickLine={false} axisLine={GRID} angle={-18} textAnchor="end" interval={0} />
+          <YAxis domain={[0, 100]} tick={AX} tickLine={false} axisLine={false} width={28} />
+          <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [String(v as number), 'Score'] as [string, string]} />
+          <Bar dataKey="score" radius={[3, 3, 0, 0]}>
+            {candidateScoreSeries.map((entry, i) => (
+              <Cell key={i} fill={entry.score >= 80 ? '#167a55' : entry.score >= 65 ? '#9b6515' : '#a23b35'} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
 
 function KpiCard({
   label,
@@ -208,6 +420,8 @@ function CommandPage({
         <KpiCard icon={CircleDollarSign} label="Forecast net" value={formatUsd(forecastRevenue)} detail="Current recommended dispatch window" />
         <KpiCard icon={AlertTriangle} label="Readiness" value={`${integrationReadiness}%`} detail={`${coverage.adaptersOnline} adapters online, ${coverage.warningCount} warnings`} />
       </section>
+
+      <LmpChartPanel />
 
       <section className="decision-layout">
         <article className="decision-hero">
@@ -431,6 +645,8 @@ function PortfolioPage({
           </div>
         </aside>
       </section>
+
+      <CapacityChartPanel />
     </>
   )
 }
@@ -485,6 +701,8 @@ function MarketsPage() {
           </div>
         </section>
       </section>
+
+      <WaterfallChartPanel lines={settlementProjection.lines} netMargin={settlementProjection.netMargin} />
 
       <section className="panel">
         <div className="panel-head">
@@ -606,6 +824,7 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
                   <h2>Tail exposure by case</h2>
                 </div>
               </div>
+              <ScenarioChartPanel outcomes={selectedDecision.robustModel.scenarioOutcomes} />
               <div className="scenario-outcome-list">
                 {selectedDecision.robustModel.scenarioOutcomes.map((outcome) => (
                   <article className="scenario-outcome-row" key={outcome.scenarioId}>
@@ -644,6 +863,7 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
                 <h2>Recommendation movement under stressed assumptions</h2>
               </div>
             </div>
+            <TornadoChartPanel />
             <div className="sensitivity-grid">
               {sensitivityCases.map((item) => (
                 <article className={`sensitivity-card ${item.scoreDelta < 0 ? 'negative' : 'positive'}`} key={item.id}>
@@ -887,6 +1107,7 @@ function RunLogPage() {
               <h2>Persisted candidate ordering</h2>
             </div>
           </div>
+          <CandidateScoreChartPanel />
           <div className="rank-list">
             {modelRunSnapshot.rankedDecisions.map((rank, index) => (
               <article className="rank-row" key={rank.candidateId}>
