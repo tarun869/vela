@@ -80,6 +80,12 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
   box-shadow:0 0 0 3px var(--green-tint);animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
 
+.hero .pill{
+  display:flex;
+  width:max-content;
+  margin:0 auto 70px;
+}
+
 /* ── buttons ── */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
@@ -146,13 +152,17 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
   -webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%);
   mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%)}
 .hero-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
-.hero h1{font-size:clamp(40px,6.2vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1.0;margin:32px 0 0}
+
+/* increased spacing between the pill and headline */
+.hero h1{font-size:clamp(40px,6.2vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1.0;margin:0}
 .hero-sub{max-width:60ch;margin:24px auto 0;font-size:clamp(16px,1.6vw,19px);color:var(--muted);line-height:1.65}
 .hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px}
 .hero-meta{margin-top:24px;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--faint)}
 
+/* decreased spacing between shadow-mode line and operating-across line */
+.logo-strip{margin-top:6px}
+
 /* market logo strip */
-.logo-strip{margin-top:40px}
 .logo-strip-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:20px}
 .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .iso-chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--ink-2);
@@ -337,6 +347,22 @@ section.band{padding:96px 0;position:relative}
   .foot-grid{grid-template-columns:1fr 1fr;gap:28px}
   .section-head .lead{font-size:15px}
   .band{padding:64px 0}
+}
+
+/* ── FINAL HERO SPACING OVERRIDE ── (last in cascade so nothing beats it) */
+#hero .hero-inner > .pill{
+  display:flex !important;          /* block-level so margin-bottom pushes the headline */
+  width:max-content !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  margin-top:0 !important;
+  margin-bottom:16px !important;    /* ← EDIT THIS NUMBER: pill → headline gap */
+}
+#hero .hero-inner > h1{
+  margin-top:0 !important;
+}
+#hero .logo-strip{
+  margin-top:6px !important;
 }
 </style>
 </head>
