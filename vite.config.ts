@@ -10,6 +10,9 @@ export default defineConfig({
       input: {
         landing: resolve(__dirname, 'index.html'),
         app: resolve(__dirname, 'app.html'),
+        panelBid: resolve(__dirname, 'landing/panel-1-bid.html'),
+        panelShadow: resolve(__dirname, 'landing/panel-2-shadow.html'),
+        panelSettlement: resolve(__dirname, 'landing/panel-3-settlement.html'),
       },
     },
   },

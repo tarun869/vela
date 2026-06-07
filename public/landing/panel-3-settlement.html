@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VoltaOS &mdash; Settlement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<style>
+  :root {
+    --bg-page: #080C0A;
+    --bg-panel: #0D1510;
+    --bg-chrome: #080C0A;
+    --accent: #1D9E75;
+    --amber: #EF9F27;
+    --text: #F5F2E8;
+    --text-muted: rgba(245,242,232,0.45);
+    --rule: rgba(29,158,117,0.1);
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-page); color: var(--text);
+    font-family: var(--font-display); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  body {
+    background: radial-gradient(ellipse at 50% 0%, rgba(29,158,117,0.06) 0%, transparent 55%), var(--bg-page);
+    padding: 40px; display: flex; align-items: flex-start; justify-content: center;
+  }
+  .mockup {
+    width: 100%; max-width: 860px; border-radius: 8px; overflow: hidden;
+    border: 0.5px solid rgba(29,158,117,0.18);
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 12px 30px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.4);
+    opacity: 0;
+  }
+  .chrome {
+    background: var(--bg-chrome); height: 40px; display: flex; align-items: center;
+    padding: 0 14px; border-bottom: 0.5px solid rgba(29,158,117,0.15); position: relative;
+  }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; } .dot.y { background: #FEBC2E; } .dot.g { background: #28C840; }
+  .url {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    font-family: var(--font-mono); font-size: 12px; color: rgba(245,242,232,0.25);
+    background: rgba(255,255,255,0.05); border-radius: 4px; padding: 4px 16px;
+    width: 260px; text-align: center; letter-spacing: 0.02em;
+  }
+  .panel { background: var(--bg-panel); }
+  .panel-status {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 12px 20px; border-bottom: 0.5px solid var(--rule);
+  }
+  .panel-status .left { font-family: var(--font-mono); font-size: 11px; color: rgba(29,158,117,0.6); letter-spacing: 0.12em; padding-top: 4px; }
+  .panel-status .right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .reconciled-badge {
+    font-family: var(--font-mono); font-size: 10px; background: rgba(29,158,117,0.12);
+    color: var(--accent); border: 0.5px solid rgba(29,158,117,0.3); padding: 3px 9px;
+    border-radius: 3px; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .reconciled-badge::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 6px rgba(29,158,117,0.7);
+  }
+  .panel-status .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.02em; }
+  .panel-body { padding: 22px 20px 24px; }
+  .section-title { font-family: var(--font-mono); font-size: 10px; color: rgba(29,158,117,0.6); letter-spacing: 0.1em; margin-bottom: 12px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+  .metric-card {
+    background: rgba(0,0,0,0.25); border: 0.5px solid rgba(29,158,117,0.12);
+    border-radius: 6px; padding: 14px 16px; opacity: 0; position: relative; overflow: hidden;
+  }
+  .metric-card.amber { border-color: rgba(239,159,39,0.25); }
+  .metric-card.amber::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(239,159,39,0.5), transparent);
+  }
+  .metric-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
+  .metric-value { font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text); letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 6px; }
+  .metric-value.dim { color: rgba(245,242,232,0.7); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .metric-sub.amber { color: var(--amber); font-size: 11px; }
+  .delivery-wrap { margin-bottom: 32px; margin-top: 18px; }
+  .delivery-bar { height: 6px; border-radius: 3px; background: rgba(29,158,117,0.12); display: flex; overflow: hidden; }
+  .seg { height: 100%; width: 0; }
+  .seg.delivered { background: var(--accent); border-radius: 3px 0 0 3px; box-shadow: 0 0 8px rgba(29,158,117,0.4); }
+  .seg.shortfall { background: rgba(239,159,39,0.5); border-radius: 0 3px 3px 0; }
+  .delivery-labels { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
+  .delivery-labels .left { color: var(--accent); }
+  .delivery-labels .right { color: var(--amber); }
+  .table-section { margin-bottom: 28px; }
+  .compare-table { display: flex; flex-direction: column; }
+  .grid-row { display: grid; grid-template-columns: 1.7fr 0.7fr 0.7fr 0.65fr 0.85fr 1fr; align-items: center; gap: 14px; }
+  .table-header { font-family: var(--font-mono); font-size: 10px; color: rgba(245,242,232,0.3); letter-spacing: 0.08em; border-bottom: 0.5px solid var(--rule); padding-bottom: 8px; }
+  .table-header > div:not(:first-child):not(:last-child) { text-align: right; }
+  .table-header > div:nth-child(5) { text-align: right; }
+  .table-header > div:last-child { text-align: left; padding-left: 8px; }
+  .table-row { border-bottom: 0.5px solid rgba(29,158,117,0.06); padding: 12px 0; opacity: 0; }
+  .table-row .asset .name { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--text); letter-spacing: -0.005em; margin-bottom: 2px; }
+  .table-row .asset .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.02em; }
+  .table-row .num { font-family: var(--font-mono); font-size: 12px; color: var(--text); text-align: right; }
+  .table-row .num.dim { color: rgba(245,242,232,0.7); }
+  .table-row .perf { color: var(--accent); }
+  .table-row .perf.amber { color: var(--amber); }
+  .table-row .rev { color: var(--text); text-align: right; }
+  .status-cell { padding-left: 8px; }
+  .status-badge { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 5px; }
+  .status-badge.settled { background: rgba(29,158,117,0.12); color: var(--accent); border: 0.5px solid rgba(29,158,117,0.3); }
+  .status-badge.settled::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .status-badge.under { background: rgba(239,159,39,0.12); color: var(--amber); border: 0.5px solid rgba(239,159,39,0.3); }
+  .status-badge.under::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--amber); }
+  .table-row.flag { background: rgba(239,159,39,0.03); border-left: 2px solid rgba(239,159,39,0.4); padding-left: 10px; margin-left: -12px; border-radius: 2px; }
+  .alert-block {
+    background: rgba(239,159,39,0.06); border: 0.5px solid rgba(239,159,39,0.25);
+    border-left: 3px solid var(--amber); border-radius: 6px; padding: 14px 16px 16px; margin-top: 10px; opacity: 0;
+  }
+  .alert-header { font-family: var(--font-mono); font-size: 10px; color: var(--amber); letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .alert-header::before { content: "&#9888;"; font-size: 11px; color: var(--amber); }
+  .alert-body { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+  .alert-causes { display: flex; flex-direction: column; gap: 8px; }
+  .cause-item { display: flex; gap: 8px; align-items: baseline; }
+  .cause-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; min-width: 78px; flex-shrink: 0; }
+  .cause-text { font-family: var(--font-mono); font-size: 11px; color: rgba(245,242,232,0.6); line-height: 1.5; }
+  .cause-text .amber-em { color: var(--amber); }
+  .cause-text .text-em { color: var(--text); }
+  .alert-note { font-family: var(--font-mono); font-size: 10px; color: rgba(245,242,232,0.35); line-height: 1.6; max-width: 300px; padding-left: 16px; border-left: 0.5px solid rgba(239,159,39,0.2); letter-spacing: 0.02em; }
+  .alert-note .stamp { color: var(--amber); opacity: 0.8; }
+  .waterfall-section { margin-top: 28px; }
+  .waterfall-list { display: flex; flex-direction: column; }
+  .wf-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid rgba(29,158,117,0.06); font-family: var(--font-mono); font-size: 12px; opacity: 0; }
+  .wf-item .label { color: rgba(245,242,232,0.7); }
+  .wf-item .value { color: var(--text); }
+  .wf-item.penalty .value { color: var(--amber); }
+  .wf-item.fee .label, .wf-item.fee .value { color: rgba(245,242,232,0.45); }
+  .wf-divider { border-top: 0.5px solid rgba(29,158,117,0.25); margin-top: 4px; }
+  .wf-net { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; padding-bottom: 4px; opacity: 0; }
+  .wf-net .label { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text); letter-spacing: -0.005em; }
+  .wf-net .value { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: -0.01em; }
+  .wf-meta { display: flex; gap: 24px; margin-top: 14px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .wf-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .wf-meta span:first-child::before { content: ""; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; opacity: 0.6; }
+</style>
+</head>
+<body>
+<div class="mockup">
+  <div class="chrome">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="url">voltaos.io/settlement/2026-05-07</div>
+  </div>
+  <div class="panel">
+    <div class="panel-status">
+      <div class="left">SETTLEMENT &middot; MAY 7 2026</div>
+      <div class="right">
+        <span class="reconciled-badge">RECONCILED</span>
+        <span class="sub">Interval meter data verified &middot; 15-min granularity</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="section-title">DELIVERY SUMMARY</div>
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span class="metric-label">COMMITTED</span>
+          <div class="metric-value">8.4 MW</div>
+          <div class="metric-sub">day-ahead position</div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">DELIVERED</span>
+          <div class="metric-value dim">8.1 MW</div>
+          <div class="metric-sub">verified &middot; AMI metered</div>
+        </div>
+        <div class="metric-card amber">
+          <span class="metric-label">PERFORMANCE</span>
+          <div class="metric-value amber" id="perfValue">96.4%</div>
+          <div class="metric-sub amber">&darr;0.3 MW shortfall</div>
+        </div>
+      </div>
+      <div class="delivery-wrap">
+        <div class="delivery-bar">
+          <div class="seg delivered" data-w="96.4"></div>
+          <div class="seg shortfall" data-w="3.6"></div>
+        </div>
+        <div class="delivery-labels">
+          <span class="left">8.1 MW delivered</span>
+          <span class="right">0.3 MW shortfall</span>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="section-title">PER-ASSET ATTRIBUTION</div>
+        <div class="compare-table">
+          <div class="grid-row table-header">
+            <div>Asset</div><div>Committed</div><div>Delivered</div><div>Performance</div><div>Revenue</div><div>Status</div>
+          </div>
+          <div class="grid-row table-row">
+            <div class="asset"><div class="name">Meridian Warehouse</div><div class="sub">Battery &middot; Site 1</div></div>
+            <div class="num">3.4 MW</div><div class="num dim">3.4 MW</div>
+            <div class="num perf">100%</div><div class="num rev">$1,870</div>
+            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+          </div>
+          <div class="grid-row table-row">
+            <div class="asset"><div class="name">Riverton Cold Store</div><div class="sub">HVAC &middot; Site 2</div></div>
+            <div class="num">1.1 MW</div><div class="num dim">1.1 MW</div>
+            <div class="num perf">100%</div><div class="num rev">$490</div>
+            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+          </div>
+          <div class="grid-row table-row flag" id="flagRow">
+            <div class="asset"><div class="name">NorthPark Mfg</div><div class="sub">Battery &middot; Site 3</div></div>
+            <div class="num">2.4 MW</div><div class="num dim">2.1 MW</div>
+            <div class="num perf amber">87.5%</div><div class="num rev">$940</div>
+            <div class="status-cell"><span class="status-badge under">UNDERPERFORM</span></div>
+          </div>
+          <div class="grid-row table-row">
+            <div class="asset"><div class="name">FleetCo Depot 4</div><div class="sub">EV Fleet &middot; Site 4</div></div>
+            <div class="num">0.8 MW</div><div class="num dim">0.8 MW</div>
+            <div class="num perf">100%</div><div class="num rev">$310</div>
+            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+          </div>
+          <div class="grid-row table-row">
+            <div class="asset"><div class="name">Meadowbrook School</div><div class="sub">Battery &middot; Site 5</div></div>
+            <div class="num">0.7 MW</div><div class="num dim">0.7 MW</div>
+            <div class="num perf">100%</div><div class="num rev">$210</div>
+            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+          </div>
+        </div>
+        <div class="alert-block">
+          <div class="alert-header">&#9888; UNDERPERFORMANCE &middot; NORTHPARK MFG</div>
+          <div class="alert-body">
+            <div class="alert-causes">
+              <div class="cause-item">
+                <span class="cause-label">Root cause:</span>
+                <span class="cause-text">SOC fell below <span class="text-em">20% floor</span> at 15:47 CT &rarr; emergency reserve triggered</span>
+              </div>
+              <div class="cause-item">
+                <span class="cause-label">Impact:</span>
+                <span class="cause-text">&darr;0.3 MW for 42 minutes &middot; Performance penalty: <span class="amber-em">&minus;$124</span></span>
+              </div>
+            </div>
+            <div class="alert-note">
+              <span class="stamp">Agent flagged risk at 14:52 CT</span> &rarr; operator override declined dispatch reduction.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="waterfall-section">
+        <div class="section-title">REVENUE WATERFALL</div>
+        <div class="waterfall-list">
+          <div class="wf-item"><span class="label">Gross settlement revenue</span><span class="value">$7,820</span></div>
+          <div class="wf-item penalty"><span class="label">Performance penalty (ERCOT)</span><span class="value">&minus;$124</span></div>
+          <div class="wf-item fee"><span class="label">Platform fee (18%)</span><span class="value">&minus;$1,388</span></div>
+          <div class="wf-divider"></div>
+          <div class="wf-net">
+            <span class="label">Customer net revenue</span>
+            <span class="value" id="netValue">$0</span>
+          </div>
+        </div>
+        <div class="wf-meta">
+          <span>Settlement period: May 7 00:00&ndash;23:59 CT</span>
+          <span>Next settlement: May 8 &middot; estimated $7,200&ndash;$8,100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  anime({ targets: '.mockup', opacity: [0,1], duration: 400, easing: 'easeOutQuad' });
+  anime({ targets: '.metric-card', translateY: [12,0], opacity: [0,1], delay: anime.stagger(80,{start:300}), duration: 600, easing: 'easeOutExpo' });
+  document.querySelectorAll('.seg').forEach(el => {
+    anime({ targets: el, width: el.dataset.w+'%', duration: 700, delay: 500, easing: 'easeOutCubic' });
+  });
+  const perfEl = document.getElementById('perfValue');
+  const perfObj = { v: 0 };
+  anime({ targets: perfObj, v: 96.4, duration: 1100, delay: 600, easing: 'easeOutExpo',
+    update: () => { perfEl.textContent = perfObj.v.toFixed(1) + '%'; }
+  });
+  anime({ targets: '.table-row', translateX: [-10,0], opacity: [0,1], delay: anime.stagger(60,{start:700}), duration: 600, easing: 'easeOutExpo' });
+  const flagRow = document.getElementById('flagRow');
+  anime({ targets: flagRow, backgroundColor: [
+    { value: 'rgba(239,159,39,0.03)', duration: 0 },
+    { value: 'rgba(239,159,39,0.18)', duration: 400, easing: 'easeOutQuad' },
+    { value: 'rgba(239,159,39,0.03)', duration: 400, easing: 'easeInQuad' }
+  ], delay: 1100 });
+  anime({ targets: '.alert-block', translateY: [8,0], opacity: [0,1], delay: 1300, duration: 600, easing: 'easeOutExpo' });
+  anime({ targets: '.wf-item', translateX: [-8,0], opacity: [0,1], delay: anime.stagger(70,{start:1500}), duration: 500, easing: 'easeOutExpo' });
+  const netEl = document.getElementById('netValue');
+  const netObj = { v: 0 };
+  anime({ targets: '.wf-net', opacity: [0,1], delay: 1800, duration: 200, easing: 'linear' });
+  anime({ targets: netObj, v: 6308, round: 1, duration: 600, delay: 1800, easing: 'easeOutExpo',
+    update: () => { netEl.textContent = '$' + Math.round(netObj.v).toLocaleString(); }
+  });
+})();
+</script>
+</body>
+</html>
