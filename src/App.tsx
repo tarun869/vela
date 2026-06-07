@@ -44,7 +44,6 @@ import {
 import { generateDispatchSeries, generatePriceFan } from './backend/chartData'
 import type { DispatchPoint, PriceFanPoint } from './backend/chartData'
 import './App.css'
-import velaLogo from './assets/vela_logo.svg'
 import { adapterCoverage, normalizeAdapterPayloads, rawAdapterPayloads } from './backend/adapters'
 import { buildCoordinationReadiness } from './backend/coordination'
 import { buildControlLoopChecks } from './backend/controlLoop'
@@ -1424,7 +1423,7 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
 
 function IntegrationsPage() {
   const [expandedAdapter, setExpandedAdapter] = useState<string | null>(null)
-  const [healthFilter, setHealthFilter] = useState<'all' | 'ok' | 'warning' | 'error'>('all')
+  const [healthFilter, setHealthFilter] = useState<'all' | 'healthy' | 'limited' | 'delayed'>('all')
 
   const filteredSources = useMemo(() =>
     healthFilter === 'all' ? integrationSources : integrationSources.filter(s => s.health === healthFilter),
@@ -1544,7 +1543,7 @@ function IntegrationsPage() {
         </div>
         <div className="opt-bar">
           <span className="opt-label">Health</span>
-          {(['all', 'ok', 'warning', 'error'] as const).map(h => (
+          {(['all', 'healthy', 'limited', 'delayed'] as const).map(h => (
             <button key={h} className={`opt-pill${healthFilter === h ? ' active' : ''}`}
               onClick={() => setHealthFilter(h)}>{h === 'all' ? 'All' : h}</button>
           ))}
