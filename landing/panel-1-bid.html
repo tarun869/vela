@@ -14,14 +14,14 @@
     --bg-card: #111916;
     --bg-bid: #1A2420;
     --bg-chrome: #080C0A;
-    --accent: #1D9E75;
-    --accent-dark: #0F6E56;
+    --accent: #2E8FE6;
+    --accent-dark: #0C5BAE;
     --amber: #EF9F27;
     --text: #F5F2E8;
     --text-muted: rgba(245,242,232,0.45);
     --text-faint: rgba(245,242,232,0.25);
-    --rule: rgba(29,158,117,0.1);
-    --rule-mid: rgba(29,158,117,0.2);
+    --rule: rgba(46,143,230,0.1);
+    --rule-mid: rgba(46,143,230,0.2);
     --font-display: 'Syne', sans-serif;
     --font-mono: 'DM Mono', monospace;
   }
@@ -39,7 +39,7 @@
 
   body {
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(29,158,117,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 0%, rgba(46,143,230,0.06) 0%, transparent 55%),
       var(--bg-page);
     padding: 48px 24px;
     display: flex;
@@ -52,7 +52,7 @@
     max-width: 880px;
     border-radius: 8px;
     overflow: hidden;
-    border: 0.5px solid rgba(29,158,117,0.18);
+    border: 0.5px solid rgba(46,143,230,0.18);
     box-shadow:
       0 30px 80px -20px rgba(0,0,0,0.7),
       0 12px 30px -10px rgba(0,0,0,0.5),
@@ -65,7 +65,7 @@
     display: flex;
     align-items: center;
     padding: 0 14px;
-    border-bottom: 0.5px solid rgba(29,158,117,0.15);
+    border-bottom: 0.5px solid rgba(46,143,230,0.15);
     position: relative;
   }
   .dots { display: flex; gap: 8px; }
@@ -100,7 +100,7 @@
   .panel-status .left {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: rgba(29,158,117,0.6);
+    color: rgba(46,143,230,0.6);
     letter-spacing: 0.12em;
   }
   .panel-status .right {
@@ -133,7 +133,7 @@
     color: var(--text-muted);
     letter-spacing: 0.04em;
   }
-  .queue-header .right { color: rgba(29,158,117,0.6); }
+  .queue-header .right { color: rgba(46,143,230,0.6); }
 
   .cards-wrap {
     padding: 4px 20px 24px;
@@ -144,12 +144,12 @@
 
   .bid-card {
     background: var(--bg-bid);
-    border: 0.5px solid rgba(29,158,117,0.35);
+    border: 0.5px solid rgba(46,143,230,0.35);
     border-left: 3px solid var(--accent);
     border-radius: 6px;
     overflow: hidden;
   }
-  .bid-card.collapsed { border-left-color: rgba(29,158,117,0.5); }
+  .bid-card.collapsed { border-left-color: rgba(46,143,230,0.5); }
 
   .bid-header {
     display: flex;
@@ -195,9 +195,9 @@
     border: 0.5px solid rgba(239,159,39,0.3);
   }
   .risk-badge.low {
-    background: rgba(29,158,117,0.12);
+    background: rgba(46,143,230,0.12);
     color: var(--accent);
-    border: 0.5px solid rgba(29,158,117,0.35);
+    border: 0.5px solid rgba(46,143,230,0.35);
   }
 
   .bid-spec {
@@ -246,7 +246,7 @@
   .field-label {
     font-family: var(--font-mono);
     font-size: 10px;
-    color: rgba(29,158,117,0.6);
+    color: rgba(46,143,230,0.6);
     letter-spacing: 0.1em;
     margin-bottom: 8px;
     display: block;
@@ -269,9 +269,9 @@
   .tag {
     font-family: var(--font-mono);
     font-size: 10px;
-    background: rgba(29,158,117,0.08);
-    border: 0.5px solid rgba(29,158,117,0.25);
-    color: rgba(29,158,117,0.8);
+    background: rgba(46,143,230,0.08);
+    border: 0.5px solid rgba(46,143,230,0.25);
+    color: rgba(46,143,230,0.8);
     padding: 3px 8px;
     border-radius: 3px;
     letter-spacing: 0.02em;
@@ -355,7 +355,7 @@
   .auto-flag {
     font-family: var(--font-mono);
     font-size: 10px;
-    color: rgba(29,158,117,0.7);
+    color: rgba(46,143,230,0.7);
     letter-spacing: 0.06em;
     display: inline-flex;
     align-items: center;
@@ -366,7 +366,7 @@
     width: 5px; height: 5px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 6px rgba(29,158,117,0.7);
+    box-shadow: 0 0 6px rgba(46,143,230,0.7);
   }
   .chevron {
     color: rgba(245,242,232,0.25);

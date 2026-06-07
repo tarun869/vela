@@ -262,8 +262,8 @@ function FleetDispatchChart() {
               <ComposedChart data={dispatchSeries} margin={{ top: 4, right: 52, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gBess" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#167a55" stopOpacity={0.7} />
-                    <stop offset="95%" stopColor="#167a55" stopOpacity={0.05} />
+                    <stop offset="5%"  stopColor="#1A74D8" stopOpacity={0.7} />
+                    <stop offset="95%" stopColor="#1A74D8" stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="gSolar" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#d97706" stopOpacity={0.65} />
@@ -288,7 +288,7 @@ function FleetDispatchChart() {
                   return [`${((v as number) / 1000).toFixed(2)} MW`, labels[name as string] ?? String(name)] as [string, string]
                 }} />
                 <ReferenceLine yAxisId="kw" y={0} stroke="#c5d0cb" strokeWidth={1.5} />
-                {on.bess  && <Area yAxisId="kw" type="monotone" dataKey="bess"  fill="url(#gBess)"  stroke="#167a55" strokeWidth={1.5} />}
+                {on.bess  && <Area yAxisId="kw" type="monotone" dataKey="bess"  fill="url(#gBess)"  stroke="#1A74D8" strokeWidth={1.5} />}
                 {on.solar && <Area yAxisId="kw" type="monotone" dataKey="solar" fill="url(#gSolar)" stroke="#d97706" strokeWidth={1.5} />}
                 {on.hvac  && <Area yAxisId="kw" type="monotone" dataKey="hvac"  fill="url(#gHvac)"  stroke="#235a91" strokeWidth={1.5} />}
                 {on.ev    && <Area yAxisId="kw" type="monotone" dataKey="ev"    fill="url(#gEv)"    stroke="#a23b35" strokeWidth={1.5} />}
@@ -419,7 +419,7 @@ function CapacityChartPanel() {
             <XAxis type="number" tick={AX} tickLine={false} axisLine={GRID} tickFormatter={(v) => `${v}MW`} />
             <YAxis type="category" dataKey="name" tick={AX} tickLine={false} axisLine={false} width={74} />
             <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown, name?: string | number) => [`${v as number} MW`, name === 'available' ? 'Available' : 'Constrained'] as [string, string]} />
-            <Bar dataKey="available" stackId="cap" fill="#167a55" name="available" />
+            <Bar dataKey="available" stackId="cap" fill="#1A74D8" name="available" />
             <Bar dataKey="constrained" stackId="cap" fill="#dbe2de" name="constrained" radius={[0, 3, 3, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -452,7 +452,7 @@ function WaterfallChartPanel({ lines, netMargin }: { lines: Array<{ label: strin
             <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [`$${Math.round(v as number).toLocaleString()}`, 'Amount'] as [string, string]} />
             <Bar dataKey="amount" radius={[3, 3, 0, 0]}>
               {data.map((entry, i) => (
-                <Cell key={i} fill={entry.amount >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.85} />
+                <Cell key={i} fill={entry.amount >= 0 ? '#1A74D8' : '#a23b35'} fillOpacity={0.85} />
               ))}
             </Bar>
           </BarChart>
@@ -480,7 +480,7 @@ function ScenarioChartPanel({ outcomes }: { outcomes: Array<{ label: string; net
           <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown, n?: string | number) => [(n === 'revenue' ? `$${Math.round(v as number).toLocaleString()}` : `${v as number}%`), (n === 'revenue' ? 'Net revenue' : 'Probability')] as [string, string]} />
           <Bar dataKey="revenue" radius={[3, 3, 0, 0]}>
             {data.map((entry, i) => (
-              <Cell key={i} fill={entry.revenue >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.82} />
+              <Cell key={i} fill={entry.revenue >= 0 ? '#1A74D8' : '#a23b35'} fillOpacity={0.82} />
             ))}
           </Bar>
         </BarChart>
@@ -502,7 +502,7 @@ function TornadoChartPanel() {
           <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [(v as number) > 0 ? `+${v as number}` : String(v as number), 'Score delta'] as [string, string]} />
           <Bar dataKey="delta" radius={[0, 3, 3, 0]}>
             {tornadoSeries.map((entry, i) => (
-              <Cell key={i} fill={entry.delta >= 0 ? '#167a55' : '#a23b35'} fillOpacity={0.85} />
+              <Cell key={i} fill={entry.delta >= 0 ? '#1A74D8' : '#a23b35'} fillOpacity={0.85} />
             ))}
           </Bar>
         </BarChart>
@@ -523,7 +523,7 @@ function CandidateScoreChartPanel() {
           <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [String(v as number), 'Score'] as [string, string]} />
           <Bar dataKey="score" radius={[3, 3, 0, 0]}>
             {candidateScoreSeries.map((entry, i) => (
-              <Cell key={i} fill={entry.score >= 80 ? '#167a55' : entry.score >= 65 ? '#9b6515' : '#a23b35'} />
+              <Cell key={i} fill={entry.score >= 80 ? '#1A74D8' : entry.score >= 65 ? '#9b6515' : '#a23b35'} />
             ))}
           </Bar>
         </BarChart>
@@ -1854,7 +1854,7 @@ function App() {
     <main className={`vela-shell${density !== 'comfortable' ? ` density-${density}` : ''}`}>
       <aside className="sidebar">
         <div className="brand">
-          <svg width="26" height="24" viewBox="418 48 620 544" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><path id="velaMarkApp" d="M 962 56 L 958 56 L 949 62 L 938 67 L 931 72 L 926 74 L 924 76 L 917 79 L 915 81 L 900 89 L 895 93 L 887 97 L 847 123 L 844 126 L 831 134 L 816 146 L 812 148 L 741 204 L 734 211 L 727 216 L 719 224 L 694 245 L 645 292 L 644 292 L 605 332 L 605 333 L 565 375 L 558 384 L 549 393 L 542 403 L 536 409 L 532 415 L 511 440 L 509 444 L 504 449 L 492 465 L 486 475 L 483 478 L 482 481 L 479 484 L 472 496 L 464 507 L 463 510 L 459 515 L 457 520 L 455 522 L 449 534 L 443 543 L 439 552 L 437 554 L 423 582 L 423 585 L 436 580 L 442 579 L 445 577 L 448 577 L 464 571 L 467 571 L 470 569 L 473 569 L 480 566 L 494 563 L 501 560 L 508 559 L 512 557 L 517 557 L 524 554 L 528 554 L 540 550 L 545 550 L 553 547 L 559 547 L 568 544 L 573 544 L 577 542 L 589 541 L 598 538 L 609 537 L 614 535 L 627 534 L 628 533 L 637 532 L 638 531 L 649 531 L 650 530 L 660 529 L 661 528 L 677 528 L 678 527 L 684 527 L 685 526 L 691 526 L 692 525 L 722 525 L 722 522 L 719 515 L 719 511 L 717 507 L 717 492 L 716 491 L 716 485 L 715 484 L 715 474 L 717 468 L 717 455 L 718 454 L 718 449 L 720 445 L 720 439 L 721 438 L 725 419 L 727 415 L 727 412 L 729 408 L 729 405 L 731 402 L 731 399 L 736 388 L 736 385 L 738 382 L 738 380 L 740 377 L 744 365 L 747 360 L 748 355 L 753 346 L 756 337 L 764 321 L 766 319 L 766 317 L 768 315 L 780 291 L 785 284 L 788 277 L 795 267 L 800 257 L 804 252 L 806 247 L 831 209 L 854 178 L 876 151 L 879 146 L 902 119 L 912 109 L 918 101 L 943 76 L 943 75 L 949 69 L 950 69 L 952 66 L 962 58 Z M 883 189 L 856 225 L 851 234 L 838 253 L 836 258 L 826 274 L 823 281 L 821 283 L 804 318 L 802 325 L 799 330 L 799 332 L 796 337 L 795 342 L 789 355 L 787 363 L 785 366 L 783 374 L 781 377 L 781 380 L 779 383 L 779 386 L 777 389 L 776 395 L 773 402 L 772 409 L 770 413 L 770 417 L 767 425 L 767 429 L 765 433 L 764 443 L 762 447 L 762 454 L 761 455 L 761 460 L 760 461 L 759 473 L 787 491 L 802 502 L 827 523 L 849 545 L 852 546 L 858 546 L 859 547 L 865 547 L 866 548 L 871 548 L 876 550 L 883 550 L 892 553 L 903 554 L 911 557 L 917 557 L 921 559 L 932 560 L 940 563 L 945 563 L 953 566 L 958 566 L 961 568 L 966 568 L 969 570 L 974 570 L 980 573 L 984 573 L 987 575 L 991 575 L 998 578 L 1005 579 L 1028 587 L 1033 587 L 1033 585 L 1030 584 L 1018 576 L 978 546 L 941 510 L 925 489 L 915 474 L 913 469 L 909 464 L 894 435 L 894 433 L 892 431 L 891 426 L 887 418 L 886 413 L 884 410 L 881 401 L 881 398 L 879 395 L 879 391 L 876 384 L 876 381 L 874 376 L 874 372 L 871 364 L 871 358 L 870 357 L 870 352 L 869 351 L 869 346 L 868 345 L 868 317 L 867 316 L 868 263 L 870 258 L 871 243 L 872 242 L 872 238 L 874 233 L 874 227 L 875 226 L 875 223 L 878 214 L 878 210 L 882 199 L 882 196 L 884 193 L 884 189 Z"/><clipPath id="velaClipApp"><use href="#velaMarkApp"/></clipPath></defs><use href="#velaMarkApp" fill="#2A6C52"/><g clipPath="url(#velaClipApp)"><polygon points="420,586 648,290 724,525" fill="#4EAE88"/><polygon points="648,290 966,56 786,372" fill="#0E8A5F"/><polygon points="724,525 648,290 794,462" fill="#14684D"/><polygon points="724,525 794,462 1036,586" fill="#0B5D44"/><polygon points="786,372 888,188 880,438" fill="#74C5A6" opacity="0.95"/><polygon points="794,462 880,438 1036,586" fill="#1B7F5F"/><polygon points="648,290 786,372 794,462" fill="#1A7556" opacity="0.9"/><polygon points="420,586 724,525 1036,586" fill="#2F8F6A" opacity="0.55"/></g></svg>
+          <svg width="26" height="24" viewBox="418 48 620 544" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><path id="velaMarkApp" d="M 962 56 L 958 56 L 949 62 L 938 67 L 931 72 L 926 74 L 924 76 L 917 79 L 915 81 L 900 89 L 895 93 L 887 97 L 847 123 L 844 126 L 831 134 L 816 146 L 812 148 L 741 204 L 734 211 L 727 216 L 719 224 L 694 245 L 645 292 L 644 292 L 605 332 L 605 333 L 565 375 L 558 384 L 549 393 L 542 403 L 536 409 L 532 415 L 511 440 L 509 444 L 504 449 L 492 465 L 486 475 L 483 478 L 482 481 L 479 484 L 472 496 L 464 507 L 463 510 L 459 515 L 457 520 L 455 522 L 449 534 L 443 543 L 439 552 L 437 554 L 423 582 L 423 585 L 436 580 L 442 579 L 445 577 L 448 577 L 464 571 L 467 571 L 470 569 L 473 569 L 480 566 L 494 563 L 501 560 L 508 559 L 512 557 L 517 557 L 524 554 L 528 554 L 540 550 L 545 550 L 553 547 L 559 547 L 568 544 L 573 544 L 577 542 L 589 541 L 598 538 L 609 537 L 614 535 L 627 534 L 628 533 L 637 532 L 638 531 L 649 531 L 650 530 L 660 529 L 661 528 L 677 528 L 678 527 L 684 527 L 685 526 L 691 526 L 692 525 L 722 525 L 722 522 L 719 515 L 719 511 L 717 507 L 717 492 L 716 491 L 716 485 L 715 484 L 715 474 L 717 468 L 717 455 L 718 454 L 718 449 L 720 445 L 720 439 L 721 438 L 725 419 L 727 415 L 727 412 L 729 408 L 729 405 L 731 402 L 731 399 L 736 388 L 736 385 L 738 382 L 738 380 L 740 377 L 744 365 L 747 360 L 748 355 L 753 346 L 756 337 L 764 321 L 766 319 L 766 317 L 768 315 L 780 291 L 785 284 L 788 277 L 795 267 L 800 257 L 804 252 L 806 247 L 831 209 L 854 178 L 876 151 L 879 146 L 902 119 L 912 109 L 918 101 L 943 76 L 943 75 L 949 69 L 950 69 L 952 66 L 962 58 Z M 883 189 L 856 225 L 851 234 L 838 253 L 836 258 L 826 274 L 823 281 L 821 283 L 804 318 L 802 325 L 799 330 L 799 332 L 796 337 L 795 342 L 789 355 L 787 363 L 785 366 L 783 374 L 781 377 L 781 380 L 779 383 L 779 386 L 777 389 L 776 395 L 773 402 L 772 409 L 770 413 L 770 417 L 767 425 L 767 429 L 765 433 L 764 443 L 762 447 L 762 454 L 761 455 L 761 460 L 760 461 L 759 473 L 787 491 L 802 502 L 827 523 L 849 545 L 852 546 L 858 546 L 859 547 L 865 547 L 866 548 L 871 548 L 876 550 L 883 550 L 892 553 L 903 554 L 911 557 L 917 557 L 921 559 L 932 560 L 940 563 L 945 563 L 953 566 L 958 566 L 961 568 L 966 568 L 969 570 L 974 570 L 980 573 L 984 573 L 987 575 L 991 575 L 998 578 L 1005 579 L 1028 587 L 1033 587 L 1033 585 L 1030 584 L 1018 576 L 978 546 L 941 510 L 925 489 L 915 474 L 913 469 L 909 464 L 894 435 L 894 433 L 892 431 L 891 426 L 887 418 L 886 413 L 884 410 L 881 401 L 881 398 L 879 395 L 879 391 L 876 384 L 876 381 L 874 376 L 874 372 L 871 364 L 871 358 L 870 357 L 870 352 L 869 351 L 869 346 L 868 345 L 868 317 L 867 316 L 868 263 L 870 258 L 871 243 L 872 242 L 872 238 L 874 233 L 874 227 L 875 226 L 875 223 L 878 214 L 878 210 L 882 199 L 882 196 L 884 193 L 884 189 Z"/><clipPath id="velaClipApp"><use href="#velaMarkApp"/></clipPath><linearGradient id="velaBlueApp" x1="0%" y1="90%" x2="70%" y2="10%"><stop offset="0%" stop-color="#258AE8"/><stop offset="100%" stop-color="#0C6DCC"/></linearGradient></defs><use href="#velaMarkApp" fill="url(#velaBlueApp)"/><g clipPath="url(#velaClipApp)"><polygon points="420,586 650,290 728,527" fill="#2F8DE2"/><polygon points="650,290 966,56 792,372" fill="#0A67C1"/><polygon points="650,290 792,372 804,468" fill="#0A4198"/><polygon points="420,586 728,527 804,468" fill="#1768D9"/><polygon points="792,372 888,188 882,438" fill="#7AB8F4"/><polygon points="882,438 1036,586 804,468" fill="#2577D9"/><polygon points="804,468 1036,586 728,527" fill="#083891"/><polygon points="882,438 888,188 966,320" fill="#4B95F0" opacity="0.65"/></g></svg>
           <div>
             <strong>vela</strong>
             <span>Virtual energy operations</span>

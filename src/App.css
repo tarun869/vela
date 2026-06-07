@@ -17,7 +17,8 @@
   height: 100svh;
   padding: 14px 12px;
   border-right: 1px solid var(--line);
-  background: #f8faf8;
+  background: rgba(245, 248, 252, 0.72);
+  backdrop-filter: blur(8px);
 }
 
 .brand,
@@ -180,7 +181,7 @@ nav button:hover {
 }
 
 nav button.active .nav-badge {
-  background: #e8f5f0;
+  background: #e2eefb;
   color: var(--green);
 }
 
@@ -318,16 +319,16 @@ h3 {
 
 .metric-card {
   display: flex;
-  gap: 12px;
-  min-height: 104px;
-  padding: 14px;
+  gap: 11px;
+  min-height: 86px;
+  padding: 13px 14px;
 }
 
 .metric-icon {
   display: grid;
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   place-items: center;
   border-radius: 7px;
   color: var(--green);
@@ -336,9 +337,11 @@ h3 {
 
 .metric-card strong {
   display: block;
-  margin-top: 7px;
-  font-size: 23px;
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 600;
   line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .metric-card span {
@@ -378,7 +381,7 @@ h3 {
 
 .decision-hero,
 .panel {
-  padding: 16px;
+  padding: 15px;
 }
 
 .decision-hero {
@@ -414,8 +417,10 @@ h3 {
 
 .decision-main h2 {
   margin-top: 3px;
-  font-size: 50px;
+  font-size: 40px;
+  font-weight: 600;
   line-height: 0.98;
+  letter-spacing: -0.02em;
 }
 
 .decision-main p:last-child {
@@ -433,7 +438,7 @@ h3 {
   height: 104px;
   place-items: center;
   align-content: center;
-  border: 1px solid rgba(22, 122, 85, 0.28);
+  border: 1px solid rgba(26, 116, 216, 0.28);
   border-radius: 50%;
   color: var(--green);
   background:
@@ -595,7 +600,7 @@ h3 {
 
 .queue-row.active,
 .asset-table-row.selected {
-  border-color: rgba(22, 122, 85, 0.35);
+  border-color: rgba(26, 116, 216, 0.35);
   background: #f3faf6;
 }
 
@@ -767,7 +772,7 @@ h3 {
 .finding-row.pass,
 .constraint-row.satisfied,
 .enrollment-row.active {
-  border-color: rgba(22, 122, 85, 0.2);
+  border-color: rgba(26, 116, 216, 0.2);
 }
 
 .gate-row.needs-review,
@@ -1011,7 +1016,7 @@ h3 {
 }
 
 .coordination-row.ready {
-  border-color: rgba(22, 122, 85, 0.2);
+  border-color: rgba(26, 116, 216, 0.2);
 }
 
 .coordination-row.review {
@@ -1304,7 +1309,7 @@ h3 {
 }
 
 .control-loop-row.ready {
-  border-color: rgba(22, 122, 85, 0.2);
+  border-color: rgba(26, 116, 216, 0.2);
 }
 
 .control-loop-row.watch {
@@ -1389,7 +1394,7 @@ h3 {
 }
 
 .sensitivity-card.positive {
-  border-color: rgba(22, 122, 85, 0.2);
+  border-color: rgba(26, 116, 216, 0.2);
 }
 
 .sensitivity-head {
@@ -1575,7 +1580,7 @@ h3 {
   background: repeating-linear-gradient(90deg, #9b6515 0 5px, transparent 5px 8px);
 }
 
-.legend-bess::before   { background: #167a55; }
+.legend-bess::before   { background: #1A74D8; }
 .legend-solar::before  { background: #d97706; }
 .legend-ev::before     { background: #a23b35; }
 .legend-hvac::before   { background: #235a91; }

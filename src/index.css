@@ -1,14 +1,14 @@
 :root {
-  --bg: #f4f6f4;
+  --bg: #F4F7FB;
   --surface: #ffffff;
-  --surface-2: #edf2ef;
+  --surface-2: #E9EFF7;
   --ink: #121615;
   --muted: #68736f;
   --muted-2: #87918d;
   --line: #dbe2de;
   --strong-line: #c5d0cb;
-  --green: #167a55;
-  --green-soft: #dff2e9;
+  --green: #1A74D8;
+  --green-soft: #E2EEFB;
   --blue: #235a91;
   --blue-soft: #dfeaf5;
   --amber: #9b6515;
@@ -42,6 +42,12 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(26, 116, 216, 0.06), transparent 55%),
+    radial-gradient(rgba(26, 116, 216, 0.05) 1px, transparent 1.4px);
+  background-size: auto, 24px 24px;
+  background-attachment: fixed, fixed;
 }
 
 button,
