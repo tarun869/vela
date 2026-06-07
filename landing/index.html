@@ -102,7 +102,7 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
 /* ── ticker ── */
 #ticker{
   position:fixed;top:0;left:0;right:0;z-index:1100;height:30px;
-  background:rgba(251,250,247,.92);backdrop-filter:blur(10px);
+  background:rgba(246,248,252,.85);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line-soft);
   display:flex;align-items:center;overflow:hidden;
   font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;
@@ -119,7 +119,7 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
 #nav{
   position:fixed;top:30px;left:0;right:0;z-index:1000;height:60px;
   display:flex;align-items:center;
-  background:rgba(251,250,247,.78);backdrop-filter:blur(16px);
+  background:rgba(246,248,252,.72);backdrop-filter:blur(16px);
   border-bottom:1px solid transparent;transition:border-color .25s,background .25s,box-shadow .25s;
 }
 #nav.scrolled{border-bottom-color:var(--line-soft);box-shadow:0 1px 20px rgba(21,24,27,.04)}
@@ -148,6 +148,14 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
   background-size:54px 54px;
   -webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%);
   mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%)}
+/* origami crease stencil — faceted sail geometry as a faint folded-paper watermark */
+.hero-origami{position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:min(1240px,128%);height:auto;pointer-events:none;
+  -webkit-mask-image:radial-gradient(ellipse 64% 62% at 50% 24%,#000 24%,transparent 76%);
+  mask-image:radial-gradient(ellipse 64% 62% at 50% 24%,#000 24%,transparent 76%)}
+.hero-origami .ofacet{fill:none;stroke:var(--green);stroke-width:1.1;opacity:.16;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hero-origami .ofill{stroke:none;fill:var(--green);opacity:.028}
 .hero-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
 .hero h1{font-size:clamp(40px,6.2vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1.0;margin:26px 0 0}
 .hero-sub{max-width:620px;margin:24px auto 0;font-size:clamp(16px,1.6vw,19px);color:var(--muted);line-height:1.6}
@@ -375,7 +383,23 @@ section.band{padding:96px 0;position:relative}
 <!-- ── HERO ── -->
 <header id="top">
 <section id="hero">
-  <div class="hero-bg"></div>
+  <div class="hero-bg">
+    <svg class="hero-origami" viewBox="418 48 620 544" aria-hidden="true">
+      <!-- faint depth fills on a few facets -->
+      <polygon class="ofill" points="650,290 966,56 792,372"/>
+      <polygon class="ofill" points="792,372 888,188 882,438"/>
+      <polygon class="ofill" points="420,586 728,527 804,468"/>
+      <!-- origami crease lines (faceted sail) -->
+      <polygon class="ofacet" points="420,586 650,290 728,527"/>
+      <polygon class="ofacet" points="650,290 966,56 792,372"/>
+      <polygon class="ofacet" points="650,290 792,372 804,468"/>
+      <polygon class="ofacet" points="420,586 728,527 804,468"/>
+      <polygon class="ofacet" points="792,372 888,188 882,438"/>
+      <polygon class="ofacet" points="882,438 1036,586 804,468"/>
+      <polygon class="ofacet" points="804,468 1036,586 728,527"/>
+      <polygon class="ofacet" points="882,438 888,188 966,320"/>
+    </svg>
+  </div>
   <div class="wrap hero-inner">
     <span class="pill"><span class="dot"></span>Hardware-agnostic dispatch · FERC Order 2222</span>
     <h1>The neutral dispatch<br>layer for <span class="green">every fleet.</span></h1>

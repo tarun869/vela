@@ -153,6 +153,14 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
   background-size:54px 54px;
   -webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%);
   mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%)}
+/* origami crease stencil — faceted sail geometry as a faint folded-paper watermark */
+.hero-origami{position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:min(1240px,128%);height:auto;pointer-events:none;
+  -webkit-mask-image:radial-gradient(ellipse 64% 62% at 50% 24%,#000 24%,transparent 76%);
+  mask-image:radial-gradient(ellipse 64% 62% at 50% 24%,#000 24%,transparent 76%)}
+.hero-origami .ofacet{fill:none;stroke:var(--green);stroke-width:1.1;opacity:.16;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hero-origami .ofill{stroke:none;fill:var(--green);opacity:.028}
 .hero-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
 
 /* increased spacing between the pill and headline */
@@ -400,7 +408,23 @@ section.band{padding:96px 0;position:relative}
 <!-- ── HERO ── -->
 <header id="top">
 <section id="hero">
-  <div class="hero-bg"></div>
+  <div class="hero-bg">
+    <svg class="hero-origami" viewBox="418 48 620 544" aria-hidden="true">
+      <!-- faint depth fills on a few facets -->
+      <polygon class="ofill" points="650,290 966,56 792,372"/>
+      <polygon class="ofill" points="792,372 888,188 882,438"/>
+      <polygon class="ofill" points="420,586 728,527 804,468"/>
+      <!-- origami crease lines (faceted sail) -->
+      <polygon class="ofacet" points="420,586 650,290 728,527"/>
+      <polygon class="ofacet" points="650,290 966,56 792,372"/>
+      <polygon class="ofacet" points="650,290 792,372 804,468"/>
+      <polygon class="ofacet" points="420,586 728,527 804,468"/>
+      <polygon class="ofacet" points="792,372 888,188 882,438"/>
+      <polygon class="ofacet" points="882,438 1036,586 804,468"/>
+      <polygon class="ofacet" points="804,468 1036,586 728,527"/>
+      <polygon class="ofacet" points="882,438 888,188 966,320"/>
+    </svg>
+  </div>
   <div class="wrap hero-inner">
     <span class="pill"><span class="dot"></span>Hardware-agnostic dispatch · FERC Order 2222</span>
     <h1>The neutral dispatch<br>layer for <span class="green">every fleet.</span></h1>
