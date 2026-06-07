@@ -34,7 +34,13 @@
 }
 
 .brand {
-  gap: 11px;
+  padding: 2px 0;
+}
+
+.brand-logo {
+  width: 96px;
+  height: auto;
+  display: block;
 }
 
 .brand svg { flex-shrink: 0; }
