@@ -13,9 +13,9 @@
   top: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   height: 100svh;
-  padding: 18px;
+  padding: 14px 12px;
   border-right: 1px solid var(--line);
   background: #f8faf8;
 }
@@ -34,7 +34,9 @@
 }
 
 .brand {
-  padding: 2px 0;
+  padding: 10px 8px 10px;
+  gap: 10px;
+  align-items: center;
 }
 
 .brand-logo {
@@ -43,7 +45,7 @@
   display: block;
 }
 
-.brand svg { flex-shrink: 0; }
+.brand svg { flex-shrink: 0; color: var(--green); }
 
 .brand strong,
 .brand span,
@@ -66,7 +68,15 @@
 .brand span,
 .operator-card span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  margin-top: 1px;
+}
+
+.brand strong {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 nav {
@@ -77,15 +87,24 @@ nav {
 nav button {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 38px;
-  padding: 8px 10px;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 8px;
   border: 0;
   border-radius: 7px;
   color: var(--muted);
   background: transparent;
-  font-size: 14px;
+  font-size: 13.5px;
   text-align: left;
+  width: 100%;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+nav button span:not(.nav-item-label):not(.nav-badge) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 nav button.active,
@@ -96,13 +115,17 @@ nav button:hover {
 
 .nav-item-label {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .nav-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 10px 4px;
+  padding: 6px 8px 2px;
   margin-top: 4px;
 }
 
@@ -137,16 +160,18 @@ nav button:hover {
 }
 
 .nav-badge {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: .02em;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 10px;
   background: var(--surface-2);
   color: var(--muted);
   white-space: nowrap;
-  flex-shrink: 0;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-badge.warn {

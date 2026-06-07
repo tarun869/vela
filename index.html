@@ -2,1986 +2,802 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Vela</title>
+<title>Vela | The neutral dispatch layer for every fleet</title>
+<meta name="description" content="Vela couples market revenue, live battery degradation, and your constraints in one explainable MILP solve, then hands the schedule to whatever EMS you already run." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --color-bg: #F0EDE6;
-    --color-panel: #FAFAF8;
-    --color-card: #FAFAF8;
-    --color-accent: #1A7A5E;
-    --color-accent-dark: #145540;
-    --color-amber: #EF9F27;
-    --color-text: #1A1A18;
-    --color-text-muted: #5A5A54;
-    --color-text-faint: #9A9A90;
-    --color-rule: rgba(0,0,0,0.08);
-    --font-display: 'Inter', sans-serif;
-    --font-mono: 'IBM Plex Mono', monospace;
-  }
+:root{
+  --bg:#FBFAF7;
+  --bg-soft:#F4F2EC;
+  --bg-tint:#EFEDE5;
+  --card:#FFFFFF;
+  --ink:#15181B;
+  --ink-2:#33373C;
+  --muted:#5C6167;
+  --faint:#9AA0A6;
+  --line:rgba(21,24,27,0.10);
+  --line-soft:rgba(21,24,27,0.06);
+  --green:#127A5B;
+  --green-2:#0F664C;
+  --green-deep:#0C4D39;
+  --green-tint:rgba(18,122,91,0.08);
+  --green-tint-2:rgba(18,122,91,0.14);
+  --amber:#C47C1C;
+  --up:#1B9E6E;
+  --dn:#C2543F;
+  --sans:'Inter',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --maxw:1140px;
+  --r:14px;
+  --r-lg:20px;
+  --shadow-sm:0 1px 2px rgba(21,24,27,.04),0 2px 6px rgba(21,24,27,.04);
+  --shadow:0 2px 4px rgba(21,24,27,.04),0 12px 32px rgba(21,24,27,.07);
+  --shadow-lg:0 4px 8px rgba(21,24,27,.05),0 24px 64px rgba(21,24,27,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:400;
+  line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img,svg,video{display:block;max-width:100%}
+::selection{background:var(--green-tint-2);color:var(--green-deep)}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
 
-  html { scroll-behavior: smooth; }
+/* ── shared type ── */
+.eyebrow{
+  font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--green);display:inline-flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--green);opacity:.6}
+.eyebrow.center{justify-content:center}
+.eyebrow.center::before{display:none}
 
-  body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: var(--font-display);
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-    line-height: 1.5;
-  }
+h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
+.h2{font-size:clamp(30px,4vw,46px);font-weight:700;letter-spacing:-.03em;line-height:1.04}
+.lead{font-size:clamp(16px,1.5vw,18px);color:var(--muted);line-height:1.6;font-weight:400}
 
-  a { color: inherit; text-decoration: none; }
-  button { font-family: inherit; cursor: pointer; }
+.green{color:var(--green)}
+.serif-em{font-style:normal;color:var(--green)}
 
-  /* ============ NAV ============ */
-  #mainNav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    height: 56px;
-    background: rgba(240,237,230,0.93);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 0.5px solid rgba(0,0,0,0.08);
-  }
+/* ── pill / badge ── */
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.04em;
+  color:var(--green-2);background:var(--green-tint);
+  border:1px solid var(--green-tint-2);
+  padding:6px 13px;border-radius:100px;
+}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 3px var(--green-tint);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
 
-  .nav-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 32px;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    gap: 24px;
-  }
+/* ── buttons ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--sans);font-size:14.5px;font-weight:600;letter-spacing:-.01em;
+  padding:11px 22px;border-radius:10px;transition:transform .14s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease,color .18s ease;
+  white-space:nowrap;
+}
+.btn-primary{background:var(--ink);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:var(--shadow);background:#000}
+.btn-primary .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(18,122,91,.9)}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 1px 2px rgba(12,77,57,.18),0 8px 20px rgba(18,122,91,.16)}
+.btn-green:hover{transform:translateY(-1px);background:var(--green-2)}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--ink);background:var(--card)}
+.btn-sm{padding:9px 16px;font-size:13.5px;border-radius:9px}
 
-  .nav-left {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-  .nav-logo {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 17px;
-    color: var(--color-accent);
-    letter-spacing: -0.005em;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .nav-logo svg { display: block; flex-shrink: 0; }
-  .nav-badge {
-    margin-left: 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    border: 0.5px solid rgba(26,122,94,0.4);
-    color: var(--color-accent);
-    padding: 2px 7px;
-    border-radius: 3px;
-    letter-spacing: 0.06em;
-  }
+/* ── ticker ── */
+#ticker{
+  position:fixed;top:0;left:0;right:0;z-index:1100;height:30px;
+  background:rgba(251,250,247,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;overflow:hidden;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;
+}
+.ticker-track{display:flex;white-space:nowrap;animation:tick 40s linear infinite}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick{display:flex;align-items:center;gap:8px;padding:0 22px;border-right:1px solid var(--line-soft);color:var(--faint)}
+.tick .mkt{color:var(--green);letter-spacing:.1em;font-weight:500}
+.tick .val{color:var(--ink-2)}
+.tick .up{color:var(--up)}.tick .dn{color:var(--dn)}
+.tick .lbl{color:var(--faint);letter-spacing:.08em}
 
-  .nav-center {
-    display: flex;
-    gap: 2px;
-    flex: 1;
-    justify-content: center;
-  }
+/* ── nav ── */
+#nav{
+  position:fixed;top:30px;left:0;right:0;z-index:1000;height:60px;
+  display:flex;align-items:center;
+  background:rgba(251,250,247,.78);backdrop-filter:blur(16px);
+  border-bottom:1px solid transparent;transition:border-color .25s,background .25s,box-shadow .25s;
+}
+#nav.scrolled{border-bottom-color:var(--line-soft);box-shadow:0 1px 20px rgba(21,24,27,.04)}
+.nav-inner{max-width:var(--maxw);margin:0 auto;padding:0 28px;width:100%;display:flex;align-items:center;gap:20px}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:19px;letter-spacing:-.03em;color:var(--ink)}
+.nav-logo .sail{width:18px;height:18px}
+.nav-badge{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;
+  color:var(--green-2);border:1px solid var(--green-tint-2);background:var(--green-tint);
+  padding:3px 8px;border-radius:5px}
+.nav-links{display:flex;gap:2px;flex:1;justify-content:center}
+.nav-links a{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--muted);
+  padding:7px 14px;border-radius:8px;transition:color .15s,background .15s}
+.nav-links a:hover{color:var(--ink);background:var(--bg-soft)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-link-sub{font-size:14px;font-weight:500;color:var(--muted);padding:7px 6px;transition:color .15s}
+.nav-link-sub:hover{color:var(--ink)}
 
-  .nav-item {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: #5A5A54;
-    background: transparent;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: color 150ms ease, background 150ms ease;
-    position: relative;
-    letter-spacing: 0.02em;
-  }
-  .nav-item:hover {
-    color: var(--color-text);
-    background: rgba(26,122,94,0.06);
-  }
-  .nav-item.active {
-    color: var(--color-text) !important;
-  }
-  .nav-item.active::after {
-    content: '';
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    bottom: -2px;
-    height: 1.5px;
-    background: var(--color-accent);
-    border-radius: 1px;
-  }
+/* ── hero ── */
+#hero{position:relative;padding:140px 0 60px;text-align:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;pointer-events:none;z-index:0}
+.hero-bg::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% -8%,var(--green-tint) 0%,transparent 60%)}
+.hero-bg::after{content:'';position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+  background-size:54px 54px;
+  -webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%);
+  mask-image:radial-gradient(ellipse 75% 55% at 50% 2%,#000 25%,transparent 75%)}
+.hero-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
+.hero h1{font-size:clamp(40px,6.2vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1.0;margin:34px 0 0}
+.hero-sub{max-width:620px;margin:24px auto 0;font-size:clamp(16px,1.6vw,19px);color:var(--muted);line-height:1.6}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+.hero-meta{margin-top:18px;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--faint)}
 
+/* market logo strip */
+.logo-strip{margin-top:36px}
+.logo-strip-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:18px}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.iso-chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--ink-2);
+  padding:8px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.iso-chip .live{width:6px;height:6px;border-radius:50%;background:var(--up)}
+.iso-chip.soon{color:var(--faint)}
+.iso-chip.soon .live{background:var(--amber)}
+.iso-chip .yr{font-size:10px;color:var(--faint);letter-spacing:.08em}
 
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .nav-cta {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    background: #1A1A18;
-    color: #F0EDE6;
-    border: none;
-    padding: 7px 16px;
-    border-radius: 4px;
-    transition: background 150ms ease;
-    letter-spacing: 0.02em;
-  }
-  .nav-cta:hover { background: #2A2A24; }
+/* hero video frame (browser chrome) */
+.hero-video{max-width:1000px;margin:64px auto 0;position:relative;z-index:1}
+.browser{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden}
+.browser-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(var(--card),#FCFBF8)}
+.browser-dots{display:flex;gap:7px}
+.browser-dots i{width:11px;height:11px;border-radius:50%;display:block}
+.browser-dots i:nth-child(1){background:#FF5F57}.browser-dots i:nth-child(2){background:#FEBC2E}.browser-dots i:nth-child(3){background:#28C840}
+.browser-url{flex:1;display:flex;justify-content:center}
+.browser-url span{font-family:var(--mono);font-size:11.5px;color:var(--faint);background:var(--bg-soft);border:1px solid var(--line-soft);padding:4px 16px;border-radius:7px;letter-spacing:.02em}
+.hero-video video{width:100%;display:block;background:#0B100D;aspect-ratio:16/9;object-fit:cover}
 
-  /* ============ DROPDOWN ============ */
+/* ── section frame ── */
+section.band{padding:96px 0;position:relative}
+.band.tint{background:var(--bg-soft)}
+.section-head{max-width:680px}
+.section-head.center{margin:0 auto;text-align:center}
+.section-head h2{margin-top:16px}
+.section-head .lead{margin-top:16px}
 
+/* ── trust strip ── */
+.trust{padding:40px 0;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+.trust-label{text-align:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:26px}
+.trust-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.tstat{text-align:center}
+.tstat .v{font-size:clamp(28px,3.4vw,40px);font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+.tstat .v span{font-size:.5em;font-weight:600;color:var(--green);margin-left:2px}
+.tstat .l{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.4}
 
-  /* ============ APP / PAGES ============ */
-  #app { transition: opacity 150ms ease; }
-  .page { padding-top: 56px; min-height: 100vh; }
-  .page-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
-  .page-hero { padding: 80px 0 60px; }
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(26,122,94,0.6);
-    letter-spacing: 0.15em;
-    margin-bottom: 16px;
-  }
-  .page-headline {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(32px, 5vw, 60px);
-    color: var(--color-text);
-    line-height: 1.0;
-    letter-spacing: -0.04em;
-  }
-  .page-subhead {
-    font-family: var(--font-display);
-    font-size: 17px;
-    color: #5A5A54;
-    max-width: 560px;
-    margin-top: 20px;
-    line-height: 1.6;
-  }
+/* ── proof card ── */
+.proof-card{display:grid;grid-template-columns:1fr 1.05fr;gap:0;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.proof-left{padding:44px 40px}
+.proof-left h2{margin:18px 0 0;font-size:clamp(26px,2.8vw,34px);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.proof-left .pct{color:var(--green);font-style:normal}
+.proof-left p{margin-top:18px;color:var(--muted);font-size:15px;line-height:1.62}
+.proof-right{padding:32px;background:var(--bg-soft);border-left:1px solid var(--line-soft)}
+.ptable{font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.ptable .pth,.ptable .ptr{display:grid;grid-template-columns:1.6fr 1fr 1fr .8fr;align-items:center}
+.ptable .pth{background:var(--bg-tint);color:var(--faint);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:11px 16px}
+.ptable .pth div:not(:first-child),.ptable .ptr div:not(:first-child){text-align:right}
+.ptable .ptr{padding:13px 16px;border-top:1px solid var(--line-soft);color:var(--ink-2)}
+.ptable .ptr .stream{color:var(--ink);font-family:var(--sans);font-weight:500;font-size:13px;letter-spacing:0}
+.ptable .ptr .delta{color:var(--green);font-weight:500}
+.ptable .ptr.new{background:var(--green-tint)}
+.newtag{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--green);color:#fff;padding:1px 6px;border-radius:4px;margin-left:7px;vertical-align:middle}
+.zero{color:var(--faint)}
+.ptable .ptr.total{border-top:1px solid var(--line);background:var(--bg-tint);font-weight:600}
+.ptable .ptr.total .stream{font-weight:700}
+.ptable .ptr.total .delta{font-size:13px}
+.proof-note{margin-top:14px;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--faint);text-align:center}
 
-  /* ============ HOME (preserved) ============ */
-  .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
-  hr.rule { border: none; border-top: 0.5px solid var(--color-rule); margin: 0; }
+/* ── showcase modules ── */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:48px}
+.sc-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .18s ease,box-shadow .2s ease,border-color .2s}
+.sc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--line)}
+.sc-top{padding:24px 24px 18px}
+.sc-num{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--green);text-transform:uppercase}
+.sc-name{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:10px 0 8px}
+.sc-desc{font-size:13.5px;color:var(--muted);line-height:1.55}
+.sc-shot{margin:0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0B100D;position:relative}
+.sc-shot-bar{display:flex;align-items:center;gap:6px;padding:8px 11px;background:#0A0F0C;border-bottom:1px solid rgba(255,255,255,.06)}
+.sc-shot-bar i{width:8px;height:8px;border-radius:50%}
+.sc-shot-bar i:nth-child(1){background:#FF5F57}.sc-shot-bar i:nth-child(2){background:#FEBC2E}.sc-shot-bar i:nth-child(3){background:#28C840}
+.sc-frame{position:relative;width:100%;height:236px;overflow:hidden;background:#0B100D}
+.sc-frame iframe{position:absolute;top:0;left:0;width:200%;height:472px;border:0;display:block;pointer-events:none;background:#0B100D;transform:scale(.5);transform-origin:0 0}
+.sc-bot{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 22px;margin-top:auto}
+.sc-tags{display:flex;gap:6px;flex-wrap:wrap}
+.sc-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--muted);background:var(--bg-soft);border:1px solid var(--line-soft);padding:3px 8px;border-radius:5px}
+.sc-open{font-family:var(--mono);font-size:11.5px;color:var(--green);font-weight:500;white-space:nowrap}
+.sc-open:hover{color:var(--green-2)}
 
-  .cta {
-    font-family: var(--font-display); font-weight: 500; font-size: 14px;
-    padding: 12px 28px; border-radius: 4px; cursor: pointer;
-    transition: all 200ms ease; text-decoration: none;
-    display: inline-flex; align-items: center; gap: 8px;
-    opacity: 0; transform: translateX(-10px);
-    border: 0.5px solid transparent;
-  }
-  .cta-primary {
-    background: #1A1A18; color: #F0EDE6;
-    border-color: #1A1A18;
-  }
-  .cta-primary:hover { background: #2A2A24; border-color: #2A2A24; }
-  .cta-secondary {
-    background: transparent; border-color: rgba(0,0,0,0.2); color: var(--color-text);
-  }
-  .cta-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
-  .cta .arrow { transition: transform 200ms ease; }
-  .cta:hover .arrow { transform: translateX(3px); }
+/* ── differentiators (features) ── */
+.det-split{display:grid;grid-template-columns:0.85fr 1.15fr;gap:56px;align-items:start}
+.det-left h2{margin-top:16px;font-size:clamp(26px,3vw,38px);font-weight:700;letter-spacing:-.03em;line-height:1.08}
+.det-left p{margin-top:18px;color:var(--muted);font-size:15px;line-height:1.62}
+.det-protocols{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.det-proto{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--ink-2);border:1px solid var(--line);background:var(--card);padding:6px 11px;border-radius:8px}
+.det-items{display:flex;flex-direction:column;gap:2px}
+.det-item{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:22px;border:1px solid transparent;border-radius:14px;transition:background .18s,border-color .18s}
+.det-item:hover{background:var(--card);border-color:var(--line);box-shadow:var(--shadow-sm)}
+.det-num{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--green);padding-top:3px}
+.det-name{font-size:16px;font-weight:650;font-weight:600;letter-spacing:-.01em}
+.det-desc{margin-top:7px;font-size:13.5px;color:var(--muted);line-height:1.58}
 
-  .section { padding: 120px 0; position: relative; }
-  .section-head {
-    margin-bottom: 64px; display: grid;
-    grid-template-columns: 1fr 2fr; gap: 64px; align-items: end;
-  }
-  .section-eyebrow {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--color-accent); letter-spacing: 0.12em;
-    text-transform: uppercase; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .section-eyebrow .num { color: var(--color-text-faint); }
-  .section-title {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(28px, 3.4vw, 44px); line-height: 1.08;
-    letter-spacing: -0.03em; color: var(--color-text);
-  }
-  .section-subtitle {
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--color-text-muted); letter-spacing: 0.06em;
-  }
+/* ── how it works ── */
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:48px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+.how-step{background:var(--bg);padding:28px 26px;position:relative;transition:background .18s}
+.how-step:hover{background:var(--card)}
+.step-num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--green);letter-spacing:.1em}
+.step-name{font-size:18px;font-weight:700;letter-spacing:-.02em;margin:10px 0 8px}
+.step-desc{font-size:13.5px;color:var(--muted);line-height:1.55}
 
-  .stages-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-    background: rgba(26,122,94,0.08);
-    border: 0.5px solid rgba(26,122,94,0.08);
-  }
-  .stage-card {
-    background: rgba(26,122,94,0.04);
-    border-left: 0.5px solid var(--color-accent);
-    padding: 36px 32px 40px; position: relative;
-    transition: background 250ms ease, border-color 250ms ease;
-    opacity: 0; transform: translateY(30px); overflow: hidden;
-  }
-  .stage-card:hover {
-    background: rgba(26,122,94,0.08); border-left-color: var(--color-amber);
-  }
-  .stage-num {
-    font-family: var(--font-mono); font-size: 48px;
-    color: var(--color-accent); opacity: 0.25;
-    line-height: 1; margin-bottom: 28px; font-weight: 400;
-  }
-  .stage-name {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: 16px; margin-bottom: 12px; letter-spacing: -0.01em;
-  }
-  .stage-desc {
-    font-family: var(--font-display); font-weight: 400; font-size: 14px;
-    color: #5A5A54; line-height: 1.55;
-  }
+/* ── use cases ── */
+.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:48px}
+.uc-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);padding:30px 26px;box-shadow:var(--shadow-sm);transition:transform .18s,box-shadow .2s}
+.uc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.uc-num{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--green);text-transform:uppercase}
+.uc-name{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:14px 0 12px}
+.uc-desc{font-size:13.5px;color:var(--muted);line-height:1.58}
+.uc-bullets{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.uc-b{display:flex;gap:10px;font-size:13px;color:var(--ink-2);line-height:1.45}
+.uc-b::before{content:'';flex-shrink:0;width:15px;height:15px;margin-top:2px;border-radius:50%;background:var(--green-tint);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 15 15'%3E%3Cpath d='M4 7.5l2.2 2.2L11 5' stroke='%23127A5B' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 
-  .metrics-card {
-    background: var(--color-panel);
-    border: 0.5px solid rgba(0,0,0,0.08);
-    border-radius: 8px; max-width: 1080px; margin: 0 auto;
-    padding: 56px; display: grid; grid-template-columns: 1fr 1fr;
-    gap: 56px; position: relative; overflow: hidden;
-  }
-  .metrics-card::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
-    opacity: 0.4;
-  }
-  .metrics-tag {
-    font-family: var(--font-mono); font-size: 11px; color: var(--color-amber);
-    letter-spacing: 0.12em; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .metrics-tag::before {
-    content: ""; width: 8px; height: 8px; background: var(--color-amber);
-    border-radius: 50%; box-shadow: 0 0 6px rgba(239,159,39,0.3);
-  }
-  .metrics-headline {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(22px, 2.4vw, 30px); line-height: 1.15;
-    letter-spacing: -0.02em; margin-bottom: 20px;
-  }
-  .metrics-headline .pct {
-    color: var(--color-amber); font-style: italic; font-weight: 400;
-  }
-  .metrics-sub {
-    font-family: var(--font-display); font-size: 14px;
-    color: #5A5A54; line-height: 1.6; max-width: 380px;
-  }
+/* ── markets ── */
+.mkt-layout{display:grid;grid-template-columns:0.8fr 1.2fr;gap:56px;align-items:center}
+.mkt-left h2{margin-top:16px;font-size:clamp(28px,3.2vw,40px);font-weight:700;letter-spacing:-.03em}
+.mkt-left p{margin-top:16px;color:var(--muted);font-size:15px;line-height:1.6}
+.mkt-note{margin-top:20px;font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--faint);line-height:1.7}
+.mkt-grid{display:flex;flex-direction:column;gap:10px}
+.mkt-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:18px 22px;border:1px solid var(--line);border-radius:14px;background:var(--card);transition:border-color .18s,box-shadow .18s}
+.mkt-item:hover{box-shadow:var(--shadow-sm)}
+.mkt-item.soon{background:var(--bg-soft);border-style:dashed}
+.mkt-name{font-size:17px;font-weight:700;letter-spacing:-.01em;min-width:74px}
+.mkt-detail{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.01em}
+.mkt-badge{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.08em;color:#fff;background:var(--green);padding:4px 9px;border-radius:6px}
+.mkt-badge.soon{background:transparent;color:var(--amber);border:1px solid rgba(196,124,28,.4)}
 
-  .compare-table {
-    display: grid; grid-template-columns: 1.6fr 1fr 1fr 0.9fr;
-    column-gap: 12px; align-self: center;
-  }
-  .ct-header, .ct-row { display: contents; }
-  .ct-header > div {
-    font-family: var(--font-mono); font-size: 11px;
-    color: #9A9A90; letter-spacing: 0.06em;
-    padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.08);
-    text-transform: uppercase;
-  }
-  .ct-header > div:not(:first-child) { text-align: right; }
-  .ct-row > div {
-    font-family: var(--font-mono); font-size: 13px; padding: 14px 0;
-    border-bottom: 0.5px solid rgba(26,122,94,0.08);
-    color: var(--color-text); opacity: 0; transform: translateX(-20px);
-  }
-  .ct-row > div:not(:first-child) { text-align: right; }
-  .ct-row > div:first-child { color: #5A5A54; }
-  .ct-row.total > div {
-    font-weight: 500; color: var(--color-text);
-    border-bottom: none; padding-top: 18px;
-  }
-  .ct-row .delta { color: var(--color-accent); }
-  .ct-row .new-tag {
-    color: var(--color-amber); border: 0.5px solid var(--color-amber);
-    padding: 2px 8px; border-radius: 2px; font-size: 10px;
-    display: inline-block;
-  }
-  .ct-row .dash { color: #9A9A90; }
+/* ── faq ── */
+.faq{max-width:780px;margin:48px auto 0}
+.faq-item{border-bottom:1px solid var(--line-soft)}
+.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;text-align:left;padding:22px 4px;font-size:16.5px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.faq-q .ic{flex-shrink:0;width:20px;height:20px;position:relative;transition:transform .2s}
+.faq-q .ic::before,.faq-q .ic::after{content:'';position:absolute;background:var(--green);border-radius:2px}
+.faq-q .ic::before{top:9px;left:2px;right:2px;height:2px}
+.faq-q .ic::after{left:9px;top:2px;bottom:2px;width:2px;transition:opacity .2s}
+.faq-item.open .ic::after{opacity:0}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .28s ease}
+.faq-a p{padding:0 4px 22px;font-size:14.5px;color:var(--muted);line-height:1.62;max-width:90%}
 
-  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-  .feature-col {
-    padding: 0 32px; border-left: 0.5px solid rgba(0,0,0,0.08);
-    opacity: 0; transform: scale(0.96);
-  }
-  .feature-col:first-child { padding-left: 0; border-left: none; }
-  .feature-col:last-child { padding-right: 0; }
+/* ── final cta ── */
+.cta-band{position:relative;overflow:hidden;background:var(--green-deep);color:#fff;border-radius:var(--r-lg);padding:72px 40px;text-align:center}
+.cta-band::before{content:'';position:absolute;inset:0;opacity:.4;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 50% 0%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 80% at 50% 0%,#000,transparent 75%)}
+.cta-band::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 50% -10%,rgba(255,255,255,.12),transparent 60%)}
+.cta-inner{position:relative;z-index:1}
+.cta-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);padding:6px 14px;border-radius:100px}
+.cta-band h2{margin:22px 0 0;font-size:clamp(32px,4.4vw,52px);font-weight:800;letter-spacing:-.035em;color:#fff;line-height:1.02}
+.cta-band .em{color:#7FE3C0;font-style:normal}
+.cta-band p{max-width:520px;margin:18px auto 0;font-size:16px;color:rgba(255,255,255,.82);line-height:1.6}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.btn-on-green{background:#fff;color:var(--green-deep)}
+.btn-on-green:hover{transform:translateY(-1px);background:#fff}
+.btn-on-green-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-on-green-ghost:hover{border-color:#fff}
 
-  .feature-icon {
-    width: 48px; height: 48px; margin-bottom: 28px;
-    position: relative; display: flex; align-items: center; justify-content: center;
-  }
-  .icon-rings, .icon-rings::before, .icon-rings::after {
-    border-radius: 50%; border: 0.5px solid var(--color-accent); position: absolute;
-  }
-  .icon-rings { width: 44px; height: 44px; animation: spin 18s linear infinite; }
-  .icon-rings::before {
-    content: ""; width: 28px; height: 28px; top: 7px; left: 7px;
-    border-color: rgba(26,122,94,0.6); animation: spin 12s linear infinite reverse;
-  }
-  .icon-rings::after {
-    content: ""; width: 14px; height: 14px; top: 14px; left: 14px;
-    background: var(--color-accent); border: none;
-    box-shadow: 0 0 6px rgba(26,122,94,0.2);
-  }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .icon-bars { display: flex; align-items: flex-end; gap: 4px; width: 44px; height: 44px; }
-  .icon-bars span {
-    flex: 1; background: var(--color-accent); height: 0;
-    transition: height 600ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .icon-lock { width: 28px; height: 36px; position: relative; }
-  .icon-lock::before {
-    content: ""; position: absolute; top: 0; left: 5px;
-    width: 18px; height: 16px; border: 0.5px solid var(--color-accent);
-    border-bottom: none; border-radius: 9px 9px 0 0;
-  }
-  .icon-lock::after {
-    content: ""; position: absolute; top: 14px; left: 0;
-    width: 28px; height: 22px; border: 0.5px solid var(--color-accent);
-    border-radius: 2px;
-    background: radial-gradient(circle at 50% 30%, var(--color-accent) 0 2px, transparent 3px);
-  }
-  .feature-name {
-    font-family: var(--font-display); font-weight: 700; font-size: 18px;
-    margin-bottom: 14px; letter-spacing: -0.01em;
-  }
-  .feature-desc {
-    font-family: var(--font-display); font-size: 14px;
-    color: #5A5A54; line-height: 1.6; margin-bottom: 24px;
-  }
-  .feature-link {
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--color-accent); text-decoration: none;
-    letter-spacing: 0.04em; display: inline-flex;
-    align-items: center; gap: 8px; transition: gap 200ms ease;
-  }
-  .feature-link:hover { gap: 14px; }
+/* ── footer ── */
+#foot{border-top:1px solid var(--line-soft);padding:64px 0 36px;background:var(--bg)}
+.foot-grid{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:32px}
+.foot-logo{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:19px;letter-spacing:-.03em;color:var(--ink)}
+.foot-tagline{margin-top:14px;font-size:13.5px;color:var(--muted);line-height:1.55;max-width:240px}
+.foot-copy{margin-top:18px;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.02em}
+.foot-col-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.foot-col a{display:block;font-size:13.5px;color:var(--muted);padding:5px 0;transition:color .15s}
+.foot-col a:hover{color:var(--green)}
+.foot-bottom{margin-top:48px;padding-top:24px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.foot-bottom span{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--faint)}
 
-  .markets-section { text-align: center; }
-  .markets-section .section-title { max-width: 700px; margin: 0 auto 18px; }
-  .markets-section .section-subtitle { margin-bottom: 56px; }
-  .pills {
-    display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 12px; margin-bottom: 48px;
-  }
-  .pill {
-    border: 0.5px solid rgba(26,122,94,0.4); color: var(--color-accent);
-    font-family: var(--font-mono); font-size: 13px;
-    padding: 8px 20px; border-radius: 40px;
-    transition: background 200ms ease, border-color 200ms ease;
-    cursor: default; letter-spacing: 0.04em; background: transparent;
-  }
-  .pill:hover { background: rgba(26,122,94,0.08); border-color: var(--color-accent); }
-  .markets-note {
-    font-family: var(--font-display); font-size: 14px;
-    color: #9A9A90; line-height: 1.65;
-    max-width: 640px; margin: 0 auto;
-  }
-
-  .site-footer {
-    border-top: 0.5px solid rgba(0,0,0,0.08);
-    padding: 32px 0; margin-top: 40px;
-  }
-  .footer-inner {
-    max-width: 1200px; margin: 0 auto; padding: 0 32px;
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    align-items: center; gap: 24px;
-  }
-  .footer-center {
-    text-align: center; font-family: var(--font-mono);
-    font-size: 12px; color: var(--color-text-muted);
-  }
-  .footer-right {
-    text-align: right; font-family: var(--font-mono);
-    font-size: 12px; color: var(--color-text-faint);
-  }
-
-  /* ============ PRODUCT PAGE ============ */
-  .feature-row {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 64px; align-items: center; padding: 72px 0;
-  }
-  .feature-row.reverse { direction: rtl; }
-  .feature-row.reverse > * { direction: ltr; }
-  .feature-row > * { opacity: 0; }
-
-  .module-label {
-    font-family: var(--font-mono); font-size: 11px;
-    color: rgba(26,122,94,0.6); letter-spacing: 0.12em;
-    margin-bottom: 18px;
-  }
-  .module-headline {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: 28px; color: var(--color-text);
-    line-height: 1.15; letter-spacing: -0.015em; margin-bottom: 18px;
-  }
-  .module-body {
-    font-family: var(--font-display); font-size: 15px;
-    color: #5A5A54; line-height: 1.7; margin-bottom: 24px;
-  }
-  .module-bullets { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .module-bullets li {
-    font-family: var(--font-mono); font-size: 12px;
-    color: #5A5A54; letter-spacing: 0.01em;
-    display: flex; gap: 10px; align-items: baseline;
-  }
-  .module-bullets li::before {
-    content: "→"; color: var(--color-accent); font-weight: 700;
-  }
-
-  /* Inline mockups (compact panel) */
-  .inline-panel {
-    background: var(--color-panel);
-    border: 0.5px solid rgba(0,0,0,0.08);
-    border-radius: 8px; overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
-  .ip-chrome {
-    background: var(--color-bg); height: 32px;
-    display: flex; align-items: center; padding: 0 12px;
-    border-bottom: 0.5px solid rgba(0,0,0,0.08);
-    position: relative;
-  }
-  .ip-dots { display: flex; gap: 6px; }
-  .ip-dot { width: 9px; height: 9px; border-radius: 50%; }
-  .ip-dot.r { background: #FF5F57; } .ip-dot.y { background: #FEBC2E; } .ip-dot.g { background: #28C840; }
-  .ip-url {
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-    font-family: var(--font-mono); font-size: 10px;
-    color: #9A9A90; background: rgba(255,255,255,0.05);
-    padding: 3px 12px; border-radius: 3px; letter-spacing: 0.02em;
-  }
-  .ip-status {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.06);
-    font-family: var(--font-mono); font-size: 10px;
-  }
-  .ip-status .l { color: rgba(26,122,94,0.6); letter-spacing: 0.1em; }
-  .ip-status .r { color: #9A9A90; display: flex; align-items: center; gap: 6px; }
-  .ip-status .pulse {
-    width: 6px; height: 6px; border-radius: 50%; background: #28C840;
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .ip-body { padding: 14px; }
-
-  /* Inline bid card */
-  .ip-bid {
-    background: #F5F2EC; border: 0.5px solid rgba(26,122,94,0.35);
-    border-left: 3px solid var(--color-accent); border-radius: 6px;
-    overflow: hidden;
-  }
-  .ip-bid-head {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 12px 14px; gap: 12px;
-  }
-  .ip-bid-asset .name {
-    font-family: var(--font-display); font-weight: 700; font-size: 13px;
-    color: var(--color-text); margin-bottom: 3px;
-  }
-  .ip-bid-asset .market {
-    font-family: var(--font-mono); font-size: 10px; color: #9A9A90;
-  }
-  .ip-bid-meta { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
-  .ip-risk {
-    font-family: var(--font-mono); font-size: 9px; padding: 2px 7px;
-    border-radius: 3px; letter-spacing: 0.08em;
-    background: rgba(186,117,23,0.15); color: var(--color-amber);
-    border: 0.5px solid rgba(239,159,39,0.3);
-  }
-  .ip-spec {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--color-accent); font-weight: 700;
-  }
-  .ip-rev {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 10px 14px;
-    border-top: 0.5px solid rgba(0,0,0,0.06);
-    border-bottom: 0.5px solid rgba(0,0,0,0.06);
-  }
-  .ip-rev .label { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; }
-  .ip-rev .val { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--color-text); letter-spacing: -0.01em; }
-  .ip-rev .val span { font-family: var(--font-mono); font-size: 10px; color: #9A9A90; font-weight: 400; margin-left: 4px; }
-  .ip-rationale {
-    margin: 12px 14px;
-    font-family: var(--font-mono); font-size: 11px;
-    color: #5A5A54; line-height: 1.65;
-    background: rgba(0,0,0,0.04); padding: 9px 11px; border-radius: 4px;
-  }
-  .ip-rationale .em { color: var(--color-accent); }
-  .ip-rationale .am { color: var(--color-amber); }
-  .ip-tags-wrap { padding: 0 14px 12px; }
-  .ip-tags-label { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; margin-bottom: 6px; }
-  .ip-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-  .ip-tag {
-    font-family: var(--font-mono); font-size: 9px;
-    background: rgba(26,122,94,0.08); border: 0.5px solid rgba(26,122,94,0.25);
-    color: rgba(26,122,94,0.8); padding: 2px 7px; border-radius: 3px;
-  }
-  .ip-actions {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 14px;
-    border-top: 0.5px solid rgba(0,0,0,0.06);
-  }
-  .ip-actions .meta { font-family: var(--font-mono); font-size: 10px; color: #9A9A90; }
-  .ip-actions .btns { display: flex; gap: 6px; }
-  .ip-btn {
-    font-family: var(--font-mono); font-size: 11px;
-    padding: 5px 12px; border-radius: 3px; border: none; cursor: pointer;
-    letter-spacing: 0.04em;
-  }
-  .ip-btn.decline { background: transparent; border: 0.5px solid rgba(0,0,0,0.12); color: #9A9A90; }
-  .ip-btn.approve { background: #1A1A18; color: #F0EDE6; font-weight: 700; }
-
-  /* Inline shadow mode */
-  .ip-metric-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
-  .ip-metric {
-    background: rgba(0,0,0,0.04); border: 0.5px solid rgba(26,122,94,0.08);
-    border-radius: 5px; padding: 10px 12px;
-  }
-  .ip-metric .l { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; letter-spacing: 0.1em; }
-  .ip-metric .v { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--color-text); letter-spacing: -0.01em; margin-top: 4px; }
-  .ip-metric .v.dim { color: #9A9A90; }
-  .ip-metric .v.up { color: var(--color-accent); }
-  .ip-metric .s { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; margin-top: 2px; }
-  .ip-metric .s.up { color: var(--color-accent); }
-
-  .ip-table { display: flex; flex-direction: column; }
-  .ip-tr {
-    display: grid; grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr;
-    gap: 10px; padding: 8px 0;
-    border-bottom: 0.5px solid rgba(26,122,94,0.06);
-    font-family: var(--font-mono); font-size: 11px;
-  }
-  .ip-tr.h { font-size: 9px; color: #9A9A90; letter-spacing: 0.08em; padding-bottom: 6px; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
-  .ip-tr > div:not(:first-child) { text-align: right; }
-  .ip-tr .stream { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--color-text); }
-  .ip-tr .ag { color: var(--color-text); }
-  .ip-tr .ba { color: #9A9A90; }
-  .ip-tr .dl { color: var(--color-accent); }
-  .ip-tr.tot { border-top: 0.5px solid rgba(26,122,94,0.25); border-bottom: none; padding-top: 10px; margin-top: 4px; }
-  .ip-tr.tot > div { font-weight: 700; }
-  .ip-new {
-    color: var(--color-amber); border: 0.5px solid rgba(239,159,39,0.4);
-    background: rgba(239,159,39,0.12); padding: 1px 6px; border-radius: 3px;
-    font-size: 9px; display: inline-block;
-  }
-
-  /* Inline settlement */
-  .ip-bar {
-    height: 5px; border-radius: 3px; background: rgba(26,122,94,0.08);
-    display: flex; overflow: hidden; margin-top: 12px;
-  }
-  .ip-bar-d { background: var(--color-accent); width: 96.4%; }
-  .ip-bar-s { background: rgba(239,159,39,0.5); width: 3.6%; }
-  .ip-bar-labels {
-    display: flex; justify-content: space-between; margin-top: 6px;
-    font-family: var(--font-mono); font-size: 9px;
-  }
-  .ip-bar-labels .l { color: var(--color-accent); }
-  .ip-bar-labels .r { color: var(--color-amber); }
-  .ip-asset-row {
-    display: grid; grid-template-columns: 1.3fr 0.6fr 0.7fr 0.9fr;
-    gap: 8px; padding: 7px 0;
-    border-bottom: 0.5px solid rgba(26,122,94,0.06);
-    font-family: var(--font-mono); font-size: 10px; align-items: center;
-  }
-  .ip-asset-row.h { font-size: 9px; color: #9A9A90; letter-spacing: 0.06em; }
-  .ip-asset-row > div:not(:first-child) { text-align: right; }
-  .ip-asset-row .a-name { font-family: var(--font-display); font-weight: 700; font-size: 11px; color: var(--color-text); }
-  .ip-asset-row .a-sub { font-family: var(--font-mono); font-size: 9px; color: #9A9A90; margin-top: 1px; }
-  .ip-asset-row.flag { background: rgba(239,159,39,0.04); border-left: 2px solid rgba(239,159,39,0.4); padding-left: 6px; margin-left: -8px; }
-  .ip-asset-row .perf-up { color: var(--color-accent); }
-  .ip-asset-row .perf-down { color: var(--color-amber); }
-  .ip-status-pill {
-    font-family: var(--font-mono); font-size: 8px; padding: 2px 6px;
-    border-radius: 3px; letter-spacing: 0.05em; display: inline-block;
-  }
-  .ip-status-pill.ok { background: rgba(26,122,94,0.08); color: var(--color-accent); border: 0.5px solid rgba(26,122,94,0.3); }
-  .ip-status-pill.warn { background: rgba(239,159,39,0.12); color: var(--color-amber); border: 0.5px solid rgba(239,159,39,0.3); }
-
-  /* Product CTA block */
-  .cta-block {
-    text-align: center; padding: 80px 0;
-    border-top: 0.5px solid rgba(0,0,0,0.06);
-  }
-  .cta-block h2 {
-    font-family: var(--font-display); font-weight: 700; font-size: 32px;
-    color: var(--color-text); margin-bottom: 12px; letter-spacing: -0.02em;
-  }
-  .cta-block p {
-    font-family: var(--font-display); font-size: 16px;
-    color: #5A5A54; margin-bottom: 28px;
-  }
-  .cta-block .cta {
-    opacity: 1; transform: none;
-  }
-
-  /* ============ SOLUTIONS PAGE ============ */
-  .solution-card {
-    background: var(--color-panel);
-    border: 0.5px solid rgba(0,0,0,0.08);
-    border-left: 3px solid var(--color-accent);
-    border-radius: 8px; padding: 32px 36px; margin-bottom: 16px;
-    opacity: 0; transform: translateY(20px);
-  }
-  .seg-label {
-    font-family: var(--font-mono); font-size: 11px;
-    color: rgba(26,122,94,0.6); letter-spacing: 0.12em; margin-bottom: 14px;
-  }
-  .sol-headline {
-    font-family: var(--font-display); font-weight: 700; font-size: 22px;
-    color: var(--color-text); letter-spacing: -0.01em; margin-bottom: 14px;
-  }
-  .sol-body {
-    font-family: var(--font-display); font-size: 15px;
-    color: #5A5A54; line-height: 1.7; margin-bottom: 8px;
-  }
-  .pain-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px 24px; margin-top: 24px;
-    border-top: 0.5px solid rgba(0,0,0,0.06); padding-top: 20px;
-  }
-  .pain-grid .ph {
-    font-family: var(--font-mono); font-size: 10px;
-    color: #9A9A90; letter-spacing: 0.1em;
-    padding-bottom: 8px;
-  }
-  .pain-row {
-    font-family: var(--font-mono); font-size: 12px;
-    padding: 8px 0; border-top: 0.5px solid rgba(0,0,0,0.05);
-    opacity: 0; transform: translateX(-8px);
-  }
-  .pain-row.pain { color: #9A9A90; }
-  .pain-row.pain::before { content: "✗ "; color: rgba(239,159,39,0.6); }
-  .pain-row.sol { color: var(--color-text); }
-  .pain-row.sol::before { content: "→ "; color: var(--color-accent); }
-
-  .stats-row {
-    display: grid; grid-template-columns: repeat(3,1fr);
-    gap: 32px; padding: 60px 0; text-align: center;
-    border-top: 0.5px solid rgba(0,0,0,0.06); margin-top: 40px;
-  }
-  .stat-num {
-    font-family: var(--font-display); font-weight: 700; font-size: 36px;
-    color: var(--color-text); letter-spacing: -0.02em; margin-bottom: 8px;
-  }
-  .stat-lbl {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--color-text-muted); letter-spacing: 0.08em;
-  }
-
-  /* ============ RESOURCES PAGE ============ */
-  .resource-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 16px; margin-top: 48px;
-  }
-  .resource-card {
-    background: var(--color-panel);
-    border: 0.5px solid rgba(0,0,0,0.08);
-    border-radius: 8px; padding: 28px 32px;
-    opacity: 0; transform: scale(0.97);
-    transition: border-color 200ms ease;
-  }
-  .resource-card:hover { border-color: rgba(26,122,94,0.35); }
-  .res-label {
-    font-family: var(--font-mono); font-size: 10px;
-    color: rgba(26,122,94,0.6); letter-spacing: 0.12em; margin-bottom: 12px;
-  }
-  .res-title {
-    font-family: var(--font-display); font-weight: 700; font-size: 18px;
-    color: var(--color-text); margin-bottom: 12px; letter-spacing: -0.01em;
-  }
-  .res-body {
-    font-family: var(--font-display); font-size: 14px;
-    color: #5A5A54; line-height: 1.65; margin-bottom: 18px;
-  }
-  .res-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-  .res-tag {
-    font-family: var(--font-mono); font-size: 10px;
-    background: rgba(26,122,94,0.08);
-    border: 0.5px solid rgba(0,0,0,0.08);
-    color: rgba(26,122,94,0.7);
-    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.02em;
-  }
-  .res-link {
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--color-accent); display: inline-flex;
-    align-items: center; gap: 6px; transition: gap 200ms ease;
-  }
-  .res-link:hover { gap: 12px; }
-
-  .timeline { border-left: 1.5px solid rgba(26,122,94,0.3); padding-left: 18px; margin-top: 4px; }
-  .tl-entry { margin-bottom: 16px; position: relative; }
-  .tl-entry::before {
-    content: ""; position: absolute; left: -24px; top: 5px;
-    width: 8px; height: 8px; background: var(--color-accent);
-    border-radius: 50%;
-  }
-  .tl-date {
-    font-family: var(--font-mono); font-size: 10px;
-    color: var(--color-text-muted); letter-spacing: 0.06em;
-  }
-  .tl-title {
-    font-family: var(--font-display); font-weight: 700; font-size: 13px;
-    color: var(--color-text); margin: 2px 0 3px;
-  }
-  .tl-desc {
-    font-family: var(--font-mono); font-size: 11px;
-    color: #9A9A90; line-height: 1.5;
-  }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 1024px) {
-    .stages-grid { grid-template-columns: repeat(2, 1fr); }
-    .metrics-card { grid-template-columns: 1fr; gap: 40px; padding: 40px; }
-    .features-grid { grid-template-columns: 1fr; gap: 0; }
-    .feature-col { padding: 32px 0; border-left: none; border-top: 0.5px solid rgba(0,0,0,0.08); }
-    .feature-col:first-child { border-top: none; padding-top: 0; }
-    .section-head { grid-template-columns: 1fr; gap: 24px; }
-  }
-  @media (max-width: 768px) {
-    .nav-center { display: none; }
-    .nav-inner { gap: 12px; }
-    .container, .page-inner { padding: 0 20px; }
-    .section { padding: 64px 0; }
-    .stages-grid { grid-template-columns: 1fr; }
-    .footer-inner { grid-template-columns: 1fr; text-align: center; }
-    .footer-right, .footer-center { text-align: center; }
-    .feature-row, .resource-grid, .pain-grid {
-      grid-template-columns: 1fr;
-    }
-    .feature-row { gap: 32px; padding: 40px 0; }
-    .feature-row.reverse { direction: ltr; }
-    .stats-row { grid-template-columns: 1fr; gap: 24px; }
-    .compare-table { font-size: 11px; }
-    .metrics-card { padding: 28px; }
-  }
-
-  /* ============ NAV: HOME LIGHT THEME ============ */
-  #mainNav.home-active {
-    background: rgba(240,237,230,0.93);
-    border-bottom: 0.5px solid rgba(26,26,20,0.12);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-  #mainNav.home-active .nav-logo { color: #1A7A5E; }
-  #mainNav.home-active .nav-logo::before {
-    background: #1A7A5E; box-shadow: 0 0 10px rgba(26,122,94,0.45);
-  }
-  #mainNav.home-active .nav-badge { border-color: rgba(26,122,94,0.35); color: #1A7A5E; }
-  #mainNav.home-active .nav-item { color: rgba(26,26,20,0.5); }
-  #mainNav.home-active .nav-item:hover { color: #1A1A14; background: rgba(26,122,94,0.07); }
-  #mainNav.home-active .nav-item.active { color: #1A1A14 !important; }
-  #mainNav.home-active .nav-item.active::after { background: #1A7A5E; }
-  #mainNav.home-active .nav-cta { background: #1A1A18; color: #F0EDE6; }
-  #mainNav.home-active .nav-cta:hover { background: #2A2A24; }
-
-
-  /* ============ HERO EDITORIAL (light) ============ */
-  .hero-editorial {
-    background: #F0EDE6;
-    min-height: 100vh;
-    padding-top: 56px;
-    color: #1A1A14;
-    font-family: 'Inter', var(--font-display), sans-serif;
-    position: relative;
-    overflow: hidden;
-  }
-  .he-noise {
-    position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.025;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05  0 0 0 0 0.05  0 0 0 0 0.04  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
-  .he-container {
-    position: relative; z-index: 1;
-    max-width: 1200px; margin: 0 auto; padding: 0 32px;
-  }
-
-  /* Editorial header */
-  .he-header {
-    padding: 60px 0 44px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: end;
-  }
-  .he-eyebrow {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    letter-spacing: 0.15em; color: #1A7A5E; margin-bottom: 20px;
-    text-transform: uppercase; display: flex; align-items: center; gap: 10px;
-    opacity: 0;
-  }
-  .he-eyebrow::before { content: ''; width: 20px; height: 0.5px; background: #1A7A5E; }
-  .he-headline {
-    font-family: 'Inter', sans-serif; font-weight: 800;
-    font-size: clamp(38px, 5.2vw, 68px); line-height: 1.02;
-    letter-spacing: -0.04em; color: #1A1A14;
-    opacity: 0; transform: translateY(22px);
-  }
-  .he-headline em { font-style: italic; font-weight: 500; color: #1A7A5E; letter-spacing: -0.02em; }
-  .he-right { display: flex; flex-direction: column; justify-content: flex-end; }
-  .he-sub {
-    font-family: 'Inter', sans-serif; font-size: 15px;
-    color: rgba(26,26,20,0.52); line-height: 1.72;
-    margin-bottom: 28px; max-width: 420px;
-    opacity: 0; transform: translateY(14px);
-  }
-  .he-ctas { display: flex; gap: 12px; flex-wrap: wrap; opacity: 0; }
-  .he-btn {
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-    letter-spacing: 0.04em; padding: 10px 22px; border-radius: 3px;
-    cursor: pointer; text-decoration: none; display: inline-flex;
-    align-items: center; gap: 8px; transition: all 180ms ease;
-    border: 1px solid transparent;
-  }
-  .he-btn-primary { background: #1A1A18; color: #F0EDE6; border-color: #1A1A18; }
-  .he-btn-primary:hover { background: #2A2A24; border-color: #2A2A24; }
-  .he-btn-secondary { background: transparent; color: #1A1A14; border-color: rgba(0,0,0,0.2); }
-  .he-btn-secondary:hover { border-color: #1A7A5E; color: #1A7A5E; }
-
-  /* Metric strip */
-  .he-metrics {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-bottom: 28px;
-  }
-  .he-metric {
-    background: rgba(255,255,255,0.62); border: 0.5px solid rgba(26,26,20,0.09);
-    border-radius: 6px; padding: 16px 18px; position: relative; overflow: hidden;
-    opacity: 0; transform: translateY(10px);
-  }
-  .he-metric::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1.5px;
-    background: #1A7A5E; transform: scaleX(0); transform-origin: left;
-    transition: transform 700ms cubic-bezier(0.16,1,0.3,1);
-  }
-  .he-metric.loaded::after { transform: scaleX(1); }
-  .he-m-label {
-    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-    letter-spacing: 0.14em; color: rgba(26,26,20,0.38); text-transform: uppercase; margin-bottom: 8px;
-  }
-  .he-m-val {
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 26px; line-height: 1; letter-spacing: -0.03em; color: #1A1A14; margin-bottom: 6px;
-  }
-  .he-m-val.green { color: #1A7A5E; }
-  .he-m-delta {
-    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .he-m-delta.up { color: #1A7A5E; }
-  .he-m-delta.dim { color: rgba(26,26,20,0.35); }
-  .he-pulse { width: 5px; height: 5px; border-radius: 50%; background: #1A7A5E; flex-shrink: 0; animation: hePulse 1.8s ease-in-out infinite; }
-  @keyframes hePulse { 0%,100% { opacity:0.3; transform:scale(1); } 50% { opacity:1; transform:scale(1.5); } }
-
-  /* Dashboard panel */
-  .he-dashboard {
-    background: rgba(255,255,255,0.5); border: 0.5px solid rgba(26,26,20,0.09);
-    border-radius: 10px; overflow: hidden;
-    box-shadow: 0 2px 28px rgba(26,26,20,0.05), 0 0 0 0.5px rgba(26,26,20,0.04);
-    margin-bottom: 80px; opacity: 0; transform: translateY(18px);
-  }
-  .he-tabs {
-    display: flex; border-bottom: 0.5px solid rgba(26,26,20,0.09);
-    background: rgba(240,237,230,0.65); overflow-x: auto;
-  }
-  .he-tab {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
-    color: rgba(26,26,20,0.42); background: transparent; border: none;
-    padding: 13px 22px; cursor: pointer; position: relative;
-    transition: color 140ms ease; border-right: 0.5px solid rgba(26,26,20,0.07);
-    white-space: nowrap; flex-shrink: 0;
-  }
-  .he-tab:hover { color: rgba(26,26,20,0.8); }
-  .he-tab.active { color: #1A1A14; background: rgba(255,255,255,0.75); }
-  .he-tab.active::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-    height: 1.5px; background: #1A7A5E;
-  }
-  .he-panel { display: none; padding: 24px 28px; }
-  .he-panel.active { display: block; }
-
-  /* Revenue Stack chart */
-  .he-chart-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
-  .he-chart-title { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px; color: rgba(26,26,20,0.45); letter-spacing: 0.12em; }
-  .he-chart-total { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 22px; color: #1A7A5E; letter-spacing: -0.03em; }
-  .he-chart-wrap { position: relative; height: 240px; }
-  .he-marker-line {
-    position: absolute; top: 0; bottom: 0; width: 1px;
-    background: rgba(193,123,46,0.45); pointer-events: none;
-  }
-  .he-marker-line span {
-    position: absolute; top: 4px; left: 3px;
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px;
-    color: #C17B2E; letter-spacing: 0.1em; white-space: nowrap;
-  }
-  .he-chart-legend {
-    display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px;
-    border-top: 0.5px solid rgba(26,26,20,0.07); padding-top: 14px;
-  }
-  .he-legend-item {
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px;
-    color: rgba(26,26,20,0.5); letter-spacing: 0.04em;
-  }
-  .he-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-
-  /* Dispatch plan */
-  .he-dispatch-table { width: 100%; border-collapse: collapse; }
-  .he-dispatch-table thead th {
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; letter-spacing: 0.12em;
-    color: rgba(26,26,20,0.32); text-transform: uppercase; font-weight: 400;
-    padding: 0 16px 10px 0; border-bottom: 0.5px solid rgba(26,26,20,0.1); text-align: left;
-  }
-  .he-dispatch-table tbody tr { border-bottom: 0.5px solid rgba(26,26,20,0.05); transition: background 120ms ease; }
-  .he-dispatch-table tbody tr:hover { background: rgba(26,122,94,0.04); }
-  .he-dispatch-table tbody td {
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px;
-    color: rgba(26,26,20,0.6); padding: 10px 16px 10px 0;
-  }
-  .he-td-asset { font-family: 'Inter',sans-serif !important; font-size: 12px !important; color: #1A1A14 !important; font-weight: 500; }
-  .he-sp {
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; letter-spacing: 0.07em;
-    padding: 2px 7px; border-radius: 3px; display: inline-block; text-transform: uppercase;
-  }
-  .he-sp.queued { background: rgba(26,26,20,0.05); color: rgba(26,26,20,0.4); border: 0.5px solid rgba(26,26,20,0.1); }
-  .he-sp.approved { background: rgba(26,122,94,0.09); color: #1A7A5E; border: 0.5px solid rgba(26,122,94,0.28); }
-  .he-sp.dispatched { background: rgba(26,122,94,0.14); color: #1A7A5E; border: 0.5px solid rgba(26,122,94,0.38); font-weight: 500; }
-  .he-sp.pending { background: rgba(193,123,46,0.09); color: #C17B2E; border: 0.5px solid rgba(193,123,46,0.28); }
-
-  /* Risk controls */
-  .he-risk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: rgba(26,26,20,0.08); border-radius: 6px; overflow: hidden; }
-  .he-risk-col { background: #F8F6F1; }
-  .he-risk-col-head {
-    font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; letter-spacing: 0.16em;
-    color: rgba(26,26,20,0.36); text-transform: uppercase;
-    padding: 12px 16px 9px; border-bottom: 0.5px solid rgba(26,26,20,0.08);
-  }
-  .he-risk-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 9px 16px; border-bottom: 0.5px solid rgba(26,26,20,0.05);
-  }
-  .he-risk-row:last-child { border-bottom: none; }
-  .he-risk-k { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.45); letter-spacing: 0.04em; }
-  .he-risk-v { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 10px; color: #1A1A14; }
-  .he-risk-v.ok { color: #1A7A5E; }
-  .he-risk-v.warn { color: #C17B2E; }
-  .he-flag {
-    display: flex; align-items: flex-start; gap: 9px;
-    padding: 10px 16px; border-bottom: 0.5px solid rgba(26,26,20,0.05);
-  }
-  .he-flag:last-child { border-bottom: none; }
-  .he-flag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-  .he-flag-dot.ok { background: #1A7A5E; }
-  .he-flag-dot.warn { background: #C17B2E; }
-  .he-flag-title { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.45); letter-spacing: 0.06em; margin-bottom: 2px; }
-  .he-flag-val { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 10px; color: #1A1A14; }
-  .he-flag-sub { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 9px; color: rgba(26,26,20,0.38); margin-top: 2px; }
-
-  /* Asset fleet */
-  .he-fleet-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-  .he-asset-card {
-    background: #F8F6F1; border: 0.5px solid rgba(26,26,20,0.09);
-    border-radius: 6px; padding: 14px 16px; position: relative;
-  }
-  .he-asset-dot {
-    position: absolute; top: 12px; right: 12px;
-    width: 6px; height: 6px; border-radius: 50%;
-  }
-  .he-asset-dot.online { background: #1A7A5E; box-shadow: 0 0 5px rgba(26,122,94,0.55); }
-  .he-asset-dot.dispatched { background: #C17B2E; box-shadow: 0 0 5px rgba(193,123,46,0.55); }
-  .he-asset-dot.standby { background: rgba(26,26,20,0.18); }
-  .he-asset-name { font-family: 'Inter',sans-serif; font-weight: 500; font-size: 12px; color: #1A1A14; margin-bottom: 2px; }
-  .he-asset-type { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; color: rgba(26,26,20,0.38); letter-spacing: 0.08em; margin-bottom: 12px; }
-  .he-asset-soc-track { height: 2px; background: rgba(26,26,20,0.09); border-radius: 1px; margin-bottom: 6px; overflow: hidden; }
-  .he-asset-soc-fill { height: 100%; border-radius: 1px; background: #1A7A5E; }
-  .he-asset-soc-fill.low { background: #C17B2E; }
-  .he-asset-nums { display: flex; justify-content: space-between; }
-  .he-asset-num { text-align: right; }
-  .he-asset-num:first-child { text-align: left; }
-  .he-asset-num-k { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 8px; color: rgba(26,26,20,0.33); letter-spacing: 0.1em; }
-  .he-asset-num-v { font-family: 'IBM Plex Mono','IBM Plex Mono',monospace; font-size: 11px; color: #1A1A14; }
-
-  /* ============ VIDEO WRAP ============ */
-  .he-video-wrap {
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 48px;
-    box-shadow: 0 2px 28px rgba(26,26,20,0.07), 0 0 0 0.5px rgba(26,26,20,0.08);
-    opacity: 0;
-    transform: translateY(18px);
-    background: #1A1A18;
-  }
-  .he-video-wrap video {
-    width: 100%;
-    display: block;
-    background: #1A1A18;
-  }
-  .he-report-wrap { padding-bottom: 80px; }
-
-  /* Editorial responsive */
-  @media (max-width: 1024px) {
-    .he-header { grid-template-columns: 1fr; gap: 28px; }
-    .he-metrics { grid-template-columns: repeat(2,1fr); }
-    .he-fleet-grid { grid-template-columns: repeat(2,1fr); }
-    .he-risk-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 768px) {
-    .he-container { padding: 0 20px; }
-    .he-metrics { grid-template-columns: repeat(2,1fr); }
-    .he-fleet-grid { grid-template-columns: repeat(2,1fr); }
-    .he-panel { padding: 16px 18px; }
-  }
+/* ── responsive ── */
+@media(max-width:980px){
+  .det-split,.mkt-layout{grid-template-columns:1fr;gap:36px}
+  .proof-card{grid-template-columns:1fr}
+  .proof-right{border-left:none;border-top:1px solid var(--line-soft)}
+  .sc-grid,.uc-grid,.how-steps{grid-template-columns:1fr 1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:680px){
+  #ticker{display:none}#nav{top:0}
+  #hero{padding:104px 0 50px}
+  .nav-links{display:none}
+  .trust-stats{grid-template-columns:1fr 1fr;gap:28px 16px}
+  .sc-grid,.uc-grid,.how-steps{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .section-head .lead{font-size:15px}
+  .band{padding:64px 0}
+}
 </style>
 </head>
 <body>
+<!-- ── TICKER ── -->
+<div id="ticker" aria-hidden="true">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
 
-<nav id="mainNav">
+<!-- ── NAV ── -->
+<nav id="nav">
   <div class="nav-inner">
-    <div class="nav-left" onclick="navigate('#home')">
-      <span class="nav-logo"><svg height="22" viewBox="418 48 1500 548" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-label="Vela" style="display:block"><path d="M 962.0 56.0 L 958.0 56.0 L 949.0 62.0 L 938.0 67.0 L 931.0 72.0 L 926.0 74.0 L 924.0 76.0 L 917.0 79.0 L 915.0 81.0 L 900.0 89.0 L 895.0 93.0 L 887.0 97.0 L 847.0 123.0 L 844.0 126.0 L 831.0 134.0 L 816.0 146.0 L 812.0 148.0 L 741.0 204.0 L 734.0 211.0 L 727.0 216.0 L 719.0 224.0 L 694.0 245.0 L 645.0 292.0 L 644.0 292.0 L 605.0 332.0 L 605.0 333.0 L 565.0 375.0 L 558.0 384.0 L 549.0 393.0 L 542.0 403.0 L 536.0 409.0 L 532.0 415.0 L 511.0 440.0 L 509.0 444.0 L 504.0 449.0 L 492.0 465.0 L 486.0 475.0 L 483.0 478.0 L 482.0 481.0 L 479.0 484.0 L 472.0 496.0 L 464.0 507.0 L 463.0 510.0 L 459.0 515.0 L 457.0 520.0 L 455.0 522.0 L 449.0 534.0 L 443.0 543.0 L 439.0 552.0 L 437.0 554.0 L 423.0 582.0 L 423.0 585.0 L 436.0 580.0 L 442.0 579.0 L 445.0 577.0 L 448.0 577.0 L 464.0 571.0 L 467.0 571.0 L 470.0 569.0 L 473.0 569.0 L 480.0 566.0 L 494.0 563.0 L 501.0 560.0 L 508.0 559.0 L 512.0 557.0 L 517.0 557.0 L 524.0 554.0 L 528.0 554.0 L 540.0 550.0 L 545.0 550.0 L 553.0 547.0 L 559.0 547.0 L 568.0 544.0 L 573.0 544.0 L 577.0 542.0 L 589.0 541.0 L 598.0 538.0 L 609.0 537.0 L 614.0 535.0 L 627.0 534.0 L 628.0 533.0 L 637.0 532.0 L 638.0 531.0 L 649.0 531.0 L 650.0 530.0 L 660.0 529.0 L 661.0 528.0 L 677.0 528.0 L 678.0 527.0 L 684.0 527.0 L 685.0 526.0 L 691.0 526.0 L 692.0 525.0 L 722.0 525.0 L 722.0 522.0 L 719.0 515.0 L 719.0 511.0 L 717.0 507.0 L 717.0 492.0 L 716.0 491.0 L 716.0 485.0 L 715.0 484.0 L 715.0 474.0 L 717.0 468.0 L 717.0 455.0 L 718.0 454.0 L 718.0 449.0 L 720.0 445.0 L 720.0 439.0 L 721.0 438.0 L 725.0 419.0 L 727.0 415.0 L 727.0 412.0 L 729.0 408.0 L 729.0 405.0 L 731.0 402.0 L 731.0 399.0 L 736.0 388.0 L 736.0 385.0 L 738.0 382.0 L 738.0 380.0 L 740.0 377.0 L 744.0 365.0 L 747.0 360.0 L 748.0 355.0 L 753.0 346.0 L 756.0 337.0 L 764.0 321.0 L 766.0 319.0 L 766.0 317.0 L 768.0 315.0 L 780.0 291.0 L 785.0 284.0 L 788.0 277.0 L 795.0 267.0 L 800.0 257.0 L 804.0 252.0 L 806.0 247.0 L 831.0 209.0 L 854.0 178.0 L 876.0 151.0 L 879.0 146.0 L 902.0 119.0 L 912.0 109.0 L 918.0 101.0 L 943.0 76.0 L 943.0 75.0 L 949.0 69.0 L 950.0 69.0 L 952.0 66.0 L 962.0 58.0 Z
-M 883.0 189.0 L 856.0 225.0 L 851.0 234.0 L 838.0 253.0 L 836.0 258.0 L 826.0 274.0 L 823.0 281.0 L 821.0 283.0 L 804.0 318.0 L 802.0 325.0 L 799.0 330.0 L 799.0 332.0 L 796.0 337.0 L 795.0 342.0 L 789.0 355.0 L 787.0 363.0 L 785.0 366.0 L 783.0 374.0 L 781.0 377.0 L 781.0 380.0 L 779.0 383.0 L 779.0 386.0 L 777.0 389.0 L 776.0 395.0 L 773.0 402.0 L 772.0 409.0 L 770.0 413.0 L 770.0 417.0 L 767.0 425.0 L 767.0 429.0 L 765.0 433.0 L 764.0 443.0 L 762.0 447.0 L 762.0 454.0 L 761.0 455.0 L 761.0 460.0 L 760.0 461.0 L 759.0 473.0 L 787.0 491.0 L 802.0 502.0 L 827.0 523.0 L 849.0 545.0 L 852.0 546.0 L 858.0 546.0 L 859.0 547.0 L 865.0 547.0 L 866.0 548.0 L 871.0 548.0 L 876.0 550.0 L 883.0 550.0 L 892.0 553.0 L 903.0 554.0 L 911.0 557.0 L 917.0 557.0 L 921.0 559.0 L 932.0 560.0 L 940.0 563.0 L 945.0 563.0 L 953.0 566.0 L 958.0 566.0 L 961.0 568.0 L 966.0 568.0 L 969.0 570.0 L 974.0 570.0 L 980.0 573.0 L 984.0 573.0 L 987.0 575.0 L 991.0 575.0 L 998.0 578.0 L 1005.0 579.0 L 1028.0 587.0 L 1033.0 587.0 L 1033.0 585.0 L 1030.0 584.0 L 1018.0 576.0 L 978.0 546.0 L 941.0 510.0 L 925.0 489.0 L 915.0 474.0 L 913.0 469.0 L 909.0 464.0 L 894.0 435.0 L 894.0 433.0 L 892.0 431.0 L 891.0 426.0 L 887.0 418.0 L 886.0 413.0 L 884.0 410.0 L 881.0 401.0 L 881.0 398.0 L 879.0 395.0 L 879.0 391.0 L 876.0 384.0 L 876.0 381.0 L 874.0 376.0 L 874.0 372.0 L 871.0 364.0 L 871.0 358.0 L 870.0 357.0 L 870.0 352.0 L 869.0 351.0 L 869.0 346.0 L 868.0 345.0 L 868.0 317.0 L 867.0 316.0 L 868.0 263.0 L 870.0 258.0 L 871.0 243.0 L 872.0 242.0 L 872.0 238.0 L 874.0 233.0 L 874.0 227.0 L 875.0 226.0 L 875.0 223.0 L 878.0 214.0 L 878.0 210.0 L 882.0 199.0 L 882.0 196.0 L 884.0 193.0 L 884.0 189.0 Z
-M 1052.0 261.0 L 1052.0 265.0 L 1056.0 272.0 L 1056.0 274.0 L 1059.0 279.0 L 1061.0 286.0 L 1065.0 293.0 L 1067.0 300.0 L 1071.0 307.0 L 1071.0 309.0 L 1080.0 328.0 L 1080.0 330.0 L 1085.0 340.0 L 1087.0 347.0 L 1093.0 359.0 L 1094.0 364.0 L 1098.0 371.0 L 1102.0 383.0 L 1106.0 390.0 L 1110.0 402.0 L 1121.0 426.0 L 1122.0 431.0 L 1125.0 436.0 L 1127.0 443.0 L 1130.0 448.0 L 1130.0 450.0 L 1133.0 455.0 L 1135.0 462.0 L 1146.0 486.0 L 1150.0 498.0 L 1152.0 500.0 L 1197.0 500.0 L 1199.0 499.0 L 1199.0 497.0 L 1204.0 487.0 L 1204.0 485.0 L 1206.0 482.0 L 1210.0 470.0 L 1213.0 465.0 L 1213.0 463.0 L 1215.0 460.0 L 1215.0 458.0 L 1217.0 455.0 L 1221.0 443.0 L 1224.0 438.0 L 1224.0 436.0 L 1227.0 431.0 L 1229.0 424.0 L 1233.0 417.0 L 1233.0 415.0 L 1236.0 410.0 L 1238.0 403.0 L 1248.0 382.0 L 1251.0 373.0 L 1255.0 366.0 L 1257.0 359.0 L 1261.0 352.0 L 1261.0 350.0 L 1264.0 345.0 L 1264.0 343.0 L 1267.0 338.0 L 1267.0 336.0 L 1270.0 331.0 L 1270.0 329.0 L 1273.0 324.0 L 1273.0 322.0 L 1276.0 317.0 L 1279.0 308.0 L 1284.0 299.0 L 1286.0 292.0 L 1294.0 276.0 L 1296.0 269.0 L 1299.0 264.0 L 1299.0 261.0 L 1255.0 261.0 L 1254.0 262.0 L 1251.0 271.0 L 1249.0 274.0 L 1249.0 276.0 L 1247.0 279.0 L 1247.0 281.0 L 1244.0 286.0 L 1242.0 293.0 L 1234.0 310.0 L 1233.0 315.0 L 1225.0 331.0 L 1225.0 333.0 L 1217.0 350.0 L 1217.0 352.0 L 1215.0 354.0 L 1215.0 356.0 L 1209.0 368.0 L 1205.0 380.0 L 1198.0 394.0 L 1198.0 396.0 L 1190.0 413.0 L 1186.0 425.0 L 1177.0 444.0 L 1175.0 444.0 L 1172.0 439.0 L 1172.0 437.0 L 1166.0 425.0 L 1165.0 420.0 L 1163.0 418.0 L 1163.0 416.0 L 1160.0 411.0 L 1158.0 404.0 L 1155.0 399.0 L 1155.0 397.0 L 1151.0 390.0 L 1149.0 383.0 L 1143.0 371.0 L 1140.0 361.0 L 1134.0 349.0 L 1134.0 347.0 L 1127.0 332.0 L 1122.0 317.0 L 1119.0 312.0 L 1119.0 310.0 L 1117.0 307.0 L 1117.0 305.0 L 1112.0 295.0 L 1112.0 293.0 L 1110.0 290.0 L 1110.0 288.0 L 1108.0 285.0 L 1108.0 283.0 L 1106.0 280.0 L 1106.0 278.0 L 1103.0 273.0 L 1103.0 271.0 L 1098.0 261.0 Z
-M 1413.0 255.0 L 1405.0 258.0 L 1401.0 258.0 L 1394.0 261.0 L 1391.0 261.0 L 1366.0 274.0 L 1355.0 282.0 L 1340.0 297.0 L 1332.0 309.0 L 1329.0 316.0 L 1327.0 318.0 L 1327.0 320.0 L 1325.0 322.0 L 1325.0 324.0 L 1321.0 332.0 L 1318.0 346.0 L 1317.0 347.0 L 1317.0 350.0 L 1316.0 351.0 L 1316.0 354.0 L 1315.0 355.0 L 1315.0 363.0 L 1314.0 364.0 L 1314.0 386.0 L 1315.0 387.0 L 1315.0 400.0 L 1316.0 401.0 L 1316.0 405.0 L 1317.0 406.0 L 1319.0 417.0 L 1322.0 426.0 L 1325.0 431.0 L 1325.0 433.0 L 1332.0 447.0 L 1341.0 460.0 L 1359.0 478.0 L 1374.0 488.0 L 1388.0 495.0 L 1393.0 496.0 L 1399.0 499.0 L 1402.0 499.0 L 1410.0 502.0 L 1415.0 502.0 L 1420.0 504.0 L 1425.0 504.0 L 1426.0 505.0 L 1456.0 505.0 L 1457.0 504.0 L 1464.0 504.0 L 1469.0 502.0 L 1479.0 501.0 L 1497.0 495.0 L 1513.0 487.0 L 1521.0 481.0 L 1524.0 480.0 L 1538.0 467.0 L 1538.0 465.0 L 1520.0 447.0 L 1513.0 438.0 L 1509.0 440.0 L 1504.0 445.0 L 1491.0 454.0 L 1479.0 460.0 L 1473.0 462.0 L 1470.0 462.0 L 1469.0 463.0 L 1466.0 463.0 L 1465.0 464.0 L 1459.0 464.0 L 1458.0 465.0 L 1431.0 465.0 L 1430.0 464.0 L 1423.0 464.0 L 1416.0 461.0 L 1413.0 461.0 L 1408.0 458.0 L 1402.0 456.0 L 1388.0 446.0 L 1376.0 433.0 L 1372.0 427.0 L 1366.0 414.0 L 1365.0 408.0 L 1363.0 404.0 L 1362.0 392.0 L 1363.0 391.0 L 1551.0 391.0 L 1552.0 390.0 L 1552.0 365.0 L 1551.0 364.0 L 1551.0 351.0 L 1549.0 346.0 L 1548.0 335.0 L 1545.0 328.0 L 1544.0 322.0 L 1541.0 317.0 L 1541.0 315.0 L 1532.0 299.0 L 1525.0 290.0 L 1515.0 280.0 L 1500.0 269.0 L 1481.0 260.0 L 1475.0 258.0 L 1471.0 258.0 L 1463.0 255.0 L 1456.0 255.0 L 1455.0 254.0 L 1450.0 254.0 L 1449.0 253.0 L 1427.0 253.0 L 1421.0 255.0 Z
-M 1362.0 354.0 L 1363.0 353.0 L 1364.0 343.0 L 1366.0 339.0 L 1366.0 336.0 L 1370.0 327.0 L 1376.0 318.0 L 1387.0 307.0 L 1397.0 300.0 L 1405.0 296.0 L 1417.0 292.0 L 1423.0 292.0 L 1424.0 291.0 L 1430.0 291.0 L 1431.0 290.0 L 1445.0 290.0 L 1446.0 291.0 L 1459.0 292.0 L 1474.0 298.0 L 1484.0 305.0 L 1493.0 315.0 L 1501.0 329.0 L 1502.0 335.0 L 1504.0 338.0 L 1505.0 349.0 L 1506.0 350.0 L 1506.0 355.0 L 1505.0 356.0 L 1364.0 356.0 Z
-M 1606.0 148.0 L 1606.0 458.0 L 1608.0 461.0 L 1609.0 470.0 L 1613.0 479.0 L 1617.0 485.0 L 1628.0 495.0 L 1636.0 499.0 L 1646.0 501.0 L 1647.0 502.0 L 1674.0 502.0 L 1675.0 501.0 L 1683.0 501.0 L 1684.0 500.0 L 1684.0 468.0 L 1683.0 467.0 L 1680.0 467.0 L 1679.0 468.0 L 1670.0 468.0 L 1669.0 467.0 L 1665.0 467.0 L 1664.0 466.0 L 1658.0 465.0 L 1652.0 458.0 L 1649.0 450.0 L 1649.0 148.0 Z
-M 1724.0 280.0 L 1720.0 285.0 L 1741.0 311.0 L 1752.0 304.0 L 1764.0 298.0 L 1779.0 293.0 L 1783.0 293.0 L 1784.0 292.0 L 1792.0 292.0 L 1793.0 291.0 L 1799.0 291.0 L 1800.0 290.0 L 1821.0 290.0 L 1822.0 291.0 L 1835.0 292.0 L 1844.0 295.0 L 1854.0 301.0 L 1862.0 309.0 L 1866.0 317.0 L 1866.0 319.0 L 1869.0 325.0 L 1870.0 351.0 L 1869.0 352.0 L 1814.0 352.0 L 1813.0 353.0 L 1802.0 353.0 L 1801.0 354.0 L 1795.0 354.0 L 1794.0 355.0 L 1789.0 355.0 L 1788.0 356.0 L 1782.0 356.0 L 1777.0 358.0 L 1772.0 358.0 L 1768.0 360.0 L 1765.0 360.0 L 1753.0 364.0 L 1735.0 373.0 L 1727.0 379.0 L 1720.0 386.0 L 1714.0 394.0 L 1706.0 412.0 L 1706.0 418.0 L 1705.0 419.0 L 1705.0 449.0 L 1707.0 452.0 L 1707.0 455.0 L 1710.0 464.0 L 1719.0 478.0 L 1725.0 484.0 L 1736.0 492.0 L 1745.0 497.0 L 1750.0 498.0 L 1753.0 500.0 L 1759.0 501.0 L 1760.0 502.0 L 1765.0 502.0 L 1774.0 505.0 L 1800.0 505.0 L 1801.0 504.0 L 1806.0 504.0 L 1811.0 502.0 L 1816.0 502.0 L 1820.0 500.0 L 1826.0 499.0 L 1834.0 495.0 L 1836.0 495.0 L 1852.0 485.0 L 1866.0 471.0 L 1870.0 465.0 L 1871.0 466.0 L 1871.0 499.0 L 1872.0 500.0 L 1911.0 500.0 L 1912.0 499.0 L 1912.0 322.0 L 1910.0 319.0 L 1909.0 310.0 L 1907.0 306.0 L 1907.0 303.0 L 1904.0 298.0 L 1903.0 294.0 L 1896.0 283.0 L 1883.0 271.0 L 1875.0 267.0 L 1873.0 265.0 L 1871.0 265.0 L 1864.0 261.0 L 1858.0 260.0 L 1855.0 258.0 L 1851.0 258.0 L 1850.0 257.0 L 1843.0 256.0 L 1842.0 255.0 L 1831.0 255.0 L 1830.0 254.0 L 1825.0 254.0 L 1824.0 253.0 L 1799.0 253.0 L 1798.0 254.0 L 1784.0 255.0 L 1783.0 256.0 L 1778.0 256.0 L 1774.0 258.0 L 1766.0 259.0 L 1757.0 262.0 L 1754.0 264.0 L 1752.0 264.0 L 1736.0 272.0 Z
-M 1870.0 384.0 L 1869.0 414.0 L 1868.0 415.0 L 1867.0 424.0 L 1865.0 427.0 L 1864.0 432.0 L 1857.0 443.0 L 1847.0 453.0 L 1836.0 460.0 L 1834.0 460.0 L 1829.0 463.0 L 1823.0 465.0 L 1820.0 465.0 L 1815.0 467.0 L 1809.0 467.0 L 1808.0 468.0 L 1780.0 467.0 L 1765.0 461.0 L 1757.0 454.0 L 1753.0 448.0 L 1752.0 443.0 L 1750.0 440.0 L 1750.0 421.0 L 1752.0 415.0 L 1756.0 408.0 L 1764.0 400.0 L 1770.0 396.0 L 1778.0 392.0 L 1787.0 389.0 L 1798.0 388.0 L 1799.0 387.0 L 1804.0 387.0 L 1805.0 386.0 L 1828.0 386.0 L 1829.0 385.0 L 1835.0 385.0 L 1836.0 384.0 L 1842.0 384.0 L 1843.0 383.0 L 1869.0 383.0 Z" fill-rule="evenodd"/></svg></span>
+    <a class="nav-brand" href="#top">
+      <span class="nav-logo">
+        <svg class="sail" viewBox="418 48 620 544" fill="#127A5B" fill-rule="evenodd" aria-hidden="true"><path d="M 962 56 L 958 56 L 949 62 L 938 67 L 931 72 L 926 74 L 924 76 L 917 79 L 915 81 L 900 89 L 895 93 L 887 97 L 847 123 L 844 126 L 831 134 L 816 146 L 812 148 L 741 204 L 734 211 L 727 216 L 719 224 L 694 245 L 645 292 L 644 292 L 605 332 L 605 333 L 565 375 L 558 384 L 549 393 L 542 403 L 536 409 L 532 415 L 511 440 L 509 444 L 504 449 L 492 465 L 486 475 L 483 478 L 482 481 L 479 484 L 472 496 L 464 507 L 463 510 L 459 515 L 457 520 L 455 522 L 449 534 L 443 543 L 439 552 L 437 554 L 423 582 L 423 585 L 436 580 L 442 579 L 445 577 L 448 577 L 464 571 L 467 571 L 470 569 L 473 569 L 480 566 L 494 563 L 501 560 L 508 559 L 512 557 L 517 557 L 524 554 L 528 554 L 540 550 L 545 550 L 553 547 L 559 547 L 568 544 L 573 544 L 577 542 L 589 541 L 598 538 L 609 537 L 614 535 L 627 534 L 628 533 L 637 532 L 638 531 L 649 531 L 650 530 L 660 529 L 661 528 L 677 528 L 678 527 L 684 527 L 685 526 L 691 526 L 692 525 L 722 525 L 722 522 L 719 515 L 719 511 L 717 507 L 717 492 L 716 491 L 716 485 L 715 484 L 715 474 L 717 468 L 717 455 L 718 454 L 718 449 L 720 445 L 720 439 L 721 438 L 725 419 L 727 415 L 727 412 L 729 408 L 729 405 L 731 402 L 731 399 L 736 388 L 736 385 L 738 382 L 738 380 L 740 377 L 744 365 L 747 360 L 748 355 L 753 346 L 756 337 L 764 321 L 766 319 L 766 317 L 768 315 L 780 291 L 785 284 L 788 277 L 795 267 L 800 257 L 804 252 L 806 247 L 831 209 L 854 178 L 876 151 L 879 146 L 902 119 L 912 109 L 918 101 L 943 76 L 943 75 L 949 69 L 950 69 L 952 66 L 962 58 Z M 883 189 L 856 225 L 851 234 L 838 253 L 836 258 L 826 274 L 823 281 L 821 283 L 804 318 L 802 325 L 799 330 L 799 332 L 796 337 L 795 342 L 789 355 L 787 363 L 785 366 L 783 374 L 781 377 L 781 380 L 779 383 L 779 386 L 777 389 L 776 395 L 773 402 L 772 409 L 770 413 L 770 417 L 767 425 L 767 429 L 765 433 L 764 443 L 762 447 L 762 454 L 761 455 L 761 460 L 760 461 L 759 473 L 787 491 L 802 502 L 827 523 L 849 545 L 852 546 L 858 546 L 859 547 L 865 547 L 866 548 L 871 548 L 876 550 L 883 550 L 892 553 L 903 554 L 911 557 L 917 557 L 921 559 L 932 560 L 940 563 L 945 563 L 953 566 L 958 566 L 961 568 L 966 568 L 969 570 L 974 570 L 980 573 L 984 573 L 987 575 L 991 575 L 998 578 L 1005 579 L 1028 587 L 1033 587 L 1033 585 L 1030 584 L 1018 576 L 978 546 L 941 510 L 925 489 L 915 474 L 913 469 L 909 464 L 894 435 L 894 433 L 892 431 L 891 426 L 887 418 L 886 413 L 884 410 L 881 401 L 881 398 L 879 395 L 879 391 L 876 384 L 876 381 L 874 376 L 874 372 L 871 364 L 871 358 L 870 357 L 870 352 L 869 351 L 869 346 L 868 345 L 868 317 L 867 316 L 868 263 L 870 258 L 871 243 L 872 242 L 872 238 L 874 233 L 874 227 L 875 226 L 875 223 L 878 214 L 878 210 L 882 199 L 882 196 L 884 193 L 884 189 Z"/></svg>
+        Vela
+      </span>
       <span class="nav-badge">ORDER 2222</span>
-    </div>
-    <div class="nav-center">
-      <button class="nav-item" data-route="#product">Product</button>
-      <button class="nav-item" data-route="#solutions">Solutions</button>
-      <button class="nav-item" data-route="#resources">Resources</button>
+    </a>
+    <div class="nav-links">
+      <a href="#platform">Platform</a>
+      <a href="#how">How it works</a>
+      <a href="#markets">Markets</a>
+      <a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
-      <a href="/app.html" class="nav-cta" style="text-decoration:none">Launch app →</a>
+      <a class="nav-link-sub" href="/app.html" target="_blank">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="/app.html" target="_blank"><span class="dot"></span>Launch app</a>
     </div>
   </div>
 </nav>
 
-<div id="app"></div>
+<!-- ── HERO ── -->
+<header id="top">
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-inner">
+    <span class="pill"><span class="dot"></span>Hardware-agnostic dispatch · FERC Order 2222</span>
+    <h1>The neutral dispatch<br>layer for <span class="green">every fleet.</span></h1>
+    <p class="hero-sub">Co-optimization is locked inside hardware ecosystems or built for 20-person trading desks. Vela couples market revenue, live battery degradation, and your contractual constraints in one explainable solve, then hands the schedule to whatever EMS you already run.</p>
+    <div class="hero-btns">
+      <a class="btn btn-green" href="/app.html" target="_blank">Launch the app →</a>
+      <a class="btn btn-ghost" href="#demo">Watch the 2-min demo</a>
+    </div>
+    <div class="hero-meta">Shadow mode onboards in 48 hours · No live dispatch, no regulatory exposure</div>
+
+    <div class="logo-strip">
+      <div class="logo-strip-label">Operating across the markets that matter</div>
+      <div class="logo-row">
+        <span class="iso-chip"><span class="live"></span>ERCOT</span>
+        <span class="iso-chip"><span class="live"></span>CAISO</span>
+        <span class="iso-chip"><span class="live"></span>PJM</span>
+        <span class="iso-chip soon"><span class="live"></span>NYISO <span class="yr">2026</span></span>
+        <span class="iso-chip soon"><span class="live"></span>MISO <span class="yr">2027</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- hero video -->
+  <div class="wrap" id="demo">
+    <div class="hero-video">
+      <div class="browser">
+        <div class="browser-bar">
+          <div class="browser-dots"><i></i><i></i><i></i></div>
+          <div class="browser-url"><span>app.vela.energy / Command</span></div>
+        </div>
+        <video id="heroVideo" controls playsinline preload="metadata" poster="">
+          <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/quicktime">
+          <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+</section>
+</header>
+
+<!-- ── TRUST / STATS ── -->
+<div class="trust">
+  <div class="wrap">
+    <div class="trust-label">What shadow mode has surfaced across live portfolios</div>
+    <div class="trust-stats">
+      <div class="tstat"><div class="v" data-count="364" data-suffix="MW">0<span>MW</span></div><div class="l">Assets under management</div></div>
+      <div class="tstat"><div class="v" data-count="2.4" data-prefix="$" data-suffix="M" data-dec="1">$0<span>M</span></div><div class="l">Revenue recovered in shadow mode</div></div>
+      <div class="tstat"><div class="v" data-count="44" data-suffix="%">0<span>%</span></div><div class="l">Average uplift vs. threshold dispatch</div></div>
+      <div class="tstat"><div class="v" data-count="48" data-suffix="hr">0<span>hr</span></div><div class="l">Time to first shadow-mode bid</div></div>
+    </div>
+  </div>
+</div>
+<!-- ── PROOF ── -->
+<section class="band">
+  <div class="wrap">
+    <div class="proof-card">
+      <div class="proof-left">
+        <div class="eyebrow">Shadow mode · Verified</div>
+        <h2><span class="pct">+44%</span> over threshold dispatch, proven before a single live dispatch.</h2>
+        <p>The ancillary services row is the one to watch: $3,190 found from zero, a program the existing strategy was never enrolled in. Degradation-aware stack optimization finds the slack that static thresholds can't see. Thirty days, no dispatch risk, no regulatory exposure. The table is what Vela would have earned.</p>
+        <a class="btn btn-ghost btn-sm" href="/landing/panel-2-shadow.html" target="_blank" style="margin-top:24px">View the shadow-mode panel →</a>
+      </div>
+      <div class="proof-right">
+        <div class="ptable">
+          <div class="pth"><div>Revenue stream</div><div>Agent</div><div>Baseline</div><div>Delta</div></div>
+          <div class="ptr"><div class="stream">Energy arbitrage</div><div>$12,840</div><div>$9,210</div><div class="delta">+39%</div></div>
+          <div class="ptr"><div class="stream">Demand response</div><div>$5,620</div><div>$5,100</div><div class="delta">+10%</div></div>
+          <div class="ptr new"><div class="stream">Ancillary services<span class="newtag">NEW</span></div><div>$3,190</div><div class="zero">$0</div><div class="delta">—</div></div>
+          <div class="ptr"><div class="stream">Capacity revenue</div><div>$2,410</div><div>$2,410</div><div>—</div></div>
+          <div class="ptr total"><div class="stream">Total (30 days)</div><div>$24,060</div><div>$16,720</div><div class="delta">+44%</div></div>
+        </div>
+        <div class="proof-note">Shadow mode · no live dispatch · no regulatory exposure</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PLATFORM / MODULES ── -->
+<section class="band tint" id="platform">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow center">Platform</div>
+      <h2 class="h2">Three modules.<br>One continuous loop.</h2>
+      <p class="lead">Each panel runs the real engine. Open any one to step through the full interactive experience.</p>
+    </div>
+    <div class="sc-grid">
+      <div class="sc-card">
+        <div class="sc-top">
+          <div class="sc-num">01 · Bid intelligence</div>
+          <div class="sc-name">Dispatch Queue</div>
+          <div class="sc-desc">Generated bid recommendations with full rationale: LMP spike probability, degradation cost, constraint audit. Approve or decline in one keystroke.</div>
+        </div>
+        <div class="sc-shot">
+          <div class="sc-shot-bar"><i></i><i></i><i></i></div>
+          <div class="sc-frame"><iframe src="/landing/panel-1-bid.html" scrolling="no" tabindex="-1" aria-hidden="true" loading="lazy"></iframe></div>
+        </div>
+        <div class="sc-bot">
+          <div class="sc-tags"><span class="sc-tag">MILP</span><span class="sc-tag">SOC FLOOR</span><span class="sc-tag">AUTO-APPROVE</span></div>
+          <a class="sc-open" href="/landing/panel-1-bid.html" target="_blank">Open →</a>
+        </div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-top">
+          <div class="sc-num">02 · Shadow mode</div>
+          <div class="sc-name">30-Day P&amp;L Proof</div>
+          <div class="sc-desc">Run alongside your existing system. Vela shows what it would have done, side by side. Flip the switch only when you trust the numbers.</div>
+        </div>
+        <div class="sc-shot">
+          <div class="sc-shot-bar"><i></i><i></i><i></i></div>
+          <div class="sc-frame"><iframe src="/landing/panel-2-shadow.html" scrolling="no" tabindex="-1" aria-hidden="true" loading="lazy"></iframe></div>
+        </div>
+        <div class="sc-bot">
+          <div class="sc-tags"><span class="sc-tag">BACKTEST</span><span class="sc-tag">ATTRIBUTION</span><span class="sc-tag">NO RISK</span></div>
+          <a class="sc-open" href="/landing/panel-2-shadow.html" target="_blank">Open →</a>
+        </div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-top">
+          <div class="sc-num">03 · Settlement</div>
+          <div class="sc-name">Reconciliation</div>
+          <div class="sc-desc">Verify delivery against commitments to the 15-minute interval. Attribute revenue per asset and reconcile against ISO settlement statements.</div>
+        </div>
+        <div class="sc-shot">
+          <div class="sc-shot-bar"><i></i><i></i><i></i></div>
+          <div class="sc-frame"><iframe src="/landing/panel-3-settlement.html" scrolling="no" tabindex="-1" aria-hidden="true" loading="lazy"></iframe></div>
+        </div>
+        <div class="sc-bot">
+          <div class="sc-tags"><span class="sc-tag">ISO RECON</span><span class="sc-tag">PER-ASSET</span><span class="sc-tag">AUDIT LOG</span></div>
+          <a class="sc-open" href="/landing/panel-3-settlement.html" target="_blank">Open →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ── DIFFERENTIATORS ── -->
+<section class="band" id="features">
+  <div class="wrap">
+    <div class="det-split">
+      <div class="det-left">
+        <div class="eyebrow">Why Vela</div>
+        <h2>Each piece exists somewhere. The combination doesn't.</h2>
+        <p>Fleet co-optimization isn't new (PCI, AutoGrid, Tesla) but it's locked inside a hardware vendor or built for desks with traders. Vela sits in the gap: hardware-agnostic, mid-market, live degradation state, full transparency in the solve.</p>
+        <p>Vela never touches your hardware. It reads any asset (battery, EV depot, HVAC, load) and hands a schedule to your existing EMS. The lack of hardware is the moat.</p>
+        <div class="det-protocols">
+          <span class="det-proto">SunSpec Modbus</span>
+          <span class="det-proto">DNP3</span>
+          <span class="det-proto">IEEE 2030.5</span>
+          <span class="det-proto">OpenADR 2.0</span>
+          <span class="det-proto">OCPP 2.0.1</span>
+        </div>
+      </div>
+      <div class="det-items">
+        <div class="det-item">
+          <div class="det-num">01</div>
+          <div>
+            <div class="det-name">Fleet-relative degradation arbitrage</div>
+            <div class="det-desc">Degradation is a live per-asset state (cycles, capacity fade, age) that couples assets in the solve. If Battery A is 87% through warranty and B is fresh, Vela cycles B harder today, even when A fits the price better. That edge compounds across a fleet; incumbents optimize revenue, not wear.</div>
+          </div>
+        </div>
+        <div class="det-item">
+          <div class="det-num">02</div>
+          <div>
+            <div class="det-name">Neutral execution: no hardware skin in the game</div>
+            <div class="det-desc">Fluence's software sells Fluence boxes; Tesla's optimizer serves Tesla. A truly neutral decision layer can only come from a company with no hardware to defend. Vela reads any asset via protocol adapters and outputs schedules; your EMS executes. Operators don't rip out controls, they add a brain on top.</div>
+          </div>
+        </div>
+        <div class="det-item">
+          <div class="det-num">03</div>
+          <div>
+            <div class="det-name">Explainability via shadow prices</div>
+            <div class="det-desc">Vela reads the dual variables of the binding constraints and surfaces them in plain language: which limit drove the call, the unconstrained play, and the dollar cost of each. Operators who see the trade-off trust the tool; those who can't override it, and that destroys the value.</div>
+          </div>
+        </div>
+        <div class="det-item">
+          <div class="det-num">04</div>
+          <div>
+            <div class="det-name">Risk-aware dispatch (CVaR), not point forecasts</div>
+            <div class="det-desc">Forecasts are distributions, not numbers. Vela runs a CVaR constraint at a tunable tail percentile: max expected revenue with a floor on the bad-but-plausible case. Point forecasts go occasionally catastrophic; tail-risk control is standard in finance, rare in DER dispatch.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="band tint" id="how">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow center">The loop</div>
+      <h2 class="h2">Observe. Reason. Act.<br>Repeat every 15 minutes.</h2>
+      <p class="lead">Six stages, one continuous cycle. Every iteration compounds the advantage.</p>
+    </div>
+    <div class="how-steps">
+      <div class="how-step"><div class="step-num">01</div><div class="step-name">Observe</div><div class="step-desc">Ingest asset telemetry, market prices, weather forecasts, and grid signals in real time. Every data point feeds the next decision.</div></div>
+      <div class="how-step"><div class="step-num">02</div><div class="step-name">Forecast</div><div class="step-desc">Predict LMP spikes, load curves, and opt-out risk across a 4-hour horizon using wind-ramp signals and ORDC overlays.</div></div>
+      <div class="how-step"><div class="step-num">03</div><div class="step-name">Reason</div><div class="step-desc">Weigh energy arbitrage, demand response, ancillary services, degradation cost, backup reserve, and customer constraints simultaneously.</div></div>
+      <div class="how-step"><div class="step-num">04</div><div class="step-name">Act</div><div class="step-desc">Generate bids, dispatch assets, auto-approve low-risk decisions, and route high-risk ones to the human queue with full rationale.</div></div>
+      <div class="how-step"><div class="step-num">05</div><div class="step-name">Measure</div><div class="step-desc">Verify delivery against commitments to the interval. Attribute revenue per asset. Flag underperformance with root-cause analysis.</div></div>
+      <div class="how-step"><div class="step-num">06</div><div class="step-name">Learn</div><div class="step-desc">Update strategy models on settlement outcomes. Every cycle sharpens the next. The advantage compounds automatically.</div></div>
+    </div>
+  </div>
+</section>
+<!-- ── USE CASES ── -->
+<section class="band" id="usecases">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Who it's for</div>
+      <h2 class="h2">Built for operators,<br>not trading desks.</h2>
+    </div>
+    <div class="uc-grid">
+      <div class="uc-card">
+        <div class="uc-num">VPP Operators</div>
+        <div class="uc-name">Your DERMS dispatches. Vela decides what to bid.</div>
+        <div class="uc-desc">Threshold-based dispatch leaves ancillary revenue uncaptured most hours. Vela solves the full revenue stack simultaneously (energy arbitrage, spinning reserve, DR, and capacity) every 15 minutes, using real-time LMP signals and your constraint set.</div>
+        <div class="uc-bullets">
+          <div class="uc-b">Per-interval stack optimization across all enrolled programs</div>
+          <div class="uc-b">Shadow-mode validation before any live dispatch</div>
+          <div class="uc-b">Human approval queue with full bid rationale</div>
+        </div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-num">Aggregators</div>
+        <div class="uc-name">Each customer has different constraints. Vela handles all of them.</div>
+        <div class="uc-desc">Managing per-customer opt-out windows, SOC floors, and ISO-specific enrollment rules across a mixed fleet is an ops problem that doesn't scale with headcount. Vela encodes those constraints and runs the bidding layer so your team stays on the relationship side.</div>
+        <div class="uc-bullets">
+          <div class="uc-b">Per-asset constraint configuration</div>
+          <div class="uc-b">Auditable P&amp;L reporting by customer</div>
+          <div class="uc-b">Works with your existing SCADA or DERMS</div>
+        </div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-num">C&amp;I Asset Owners</div>
+        <div class="uc-name">You bought the battery for demand-charge savings. Vela adds a second stream.</div>
+        <div class="uc-desc">Wholesale market participation has been inaccessible to most C&amp;I sites: too complex, too much risk. Vela runs in shadow mode first, proving the incremental P&amp;L before going live. Works with any behind-the-meter battery, regardless of vendor.</div>
+        <div class="uc-bullets">
+          <div class="uc-b">Shadow mode first, no dispatch risk day one</div>
+          <div class="uc-b">Stacks on top of your existing demand-charge program</div>
+          <div class="uc-b">Hardware-agnostic, any BESS vendor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARKETS ── -->
+<section class="band tint" id="markets">
+  <div class="wrap">
+    <div class="mkt-layout">
+      <div class="mkt-left">
+        <div class="eyebrow">ISO coverage</div>
+        <h2>Five markets.<br>One agent.</h2>
+        <p>FERC Order 2222 unlocks wholesale market access for distributed energy aggregations across every U.S. ISO. We're already integrated where it counts.</p>
+        <div class="mkt-note">CAISO GA · Nov 2024 · NYISO Q4 2026 · PJM Feb 2028 · MISO 2027–29</div>
+      </div>
+      <div class="mkt-grid">
+        <div class="mkt-item"><div class="mkt-name">ERCOT</div><div class="mkt-detail">Real-time &amp; day-ahead · ADER pilot</div><div class="mkt-badge">LIVE</div></div>
+        <div class="mkt-item"><div class="mkt-name">CAISO</div><div class="mkt-detail">DA + RT + ancillary · Order 2222 GA</div><div class="mkt-badge">LIVE</div></div>
+        <div class="mkt-item"><div class="mkt-name">PJM</div><div class="mkt-detail">Capacity + regulation · Integration ready</div><div class="mkt-badge">LIVE</div></div>
+        <div class="mkt-item soon"><div class="mkt-name">NYISO</div><div class="mkt-detail">Targeting Q4 2026 rollout</div><div class="mkt-badge soon">2026</div></div>
+        <div class="mkt-item soon"><div class="mkt-name">MISO</div><div class="mkt-detail">Phased rollout 2027–2029</div><div class="mkt-badge soon">2027</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow center">FAQ</div>
+      <h2 class="h2">Questions operators ask.</h2>
+    </div>
+    <div class="faq">
+      <div class="faq-item">
+        <button class="faq-q">Does Vela control my hardware?<span class="ic"></span></button>
+        <div class="faq-a"><p>No. Vela is a decision layer, not a control system. It reads asset state through a protocol-adapter layer (SunSpec, DNP3, IEEE 2030.5, OpenADR, OCPP) and outputs a recommended schedule. Your existing EMS or DERMS executes it. Nothing about your control stack changes.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What is shadow mode, exactly?<span class="ic"></span></button>
+        <div class="faq-a"><p>Vela runs the full solve every interval against live market and asset data, but never dispatches. It logs what it would have bid and reconciles that against your actual results, so you see the dollar delta with zero dispatch risk and zero regulatory exposure before going live. Most operators see their first P&amp;L comparison within a week.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How is this different from my DERMS or a trading desk?<span class="ic"></span></button>
+        <div class="faq-a"><p>A DERMS dispatches against thresholds; it doesn't co-optimize the full revenue stack against live degradation and tail risk. A trading desk does, but costs 20 headcount and is built for utility-scale. Vela is the mid-market intersection: hardware-agnostic co-optimization with the bidding and explainability layer built in.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Why can I trust the recommendations?<span class="ic"></span></button>
+        <div class="faq-a"><p>Every solve surfaces its binding constraints and their shadow prices in plain language: which limit drove the decision, what the unconstrained play would have been, and the exact dollar cost of each active constraint. You approve or decline with the full rationale attached. It's a co-pilot you can audit, not a black box.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How long does onboarding take?<span class="ic"></span></button>
+        <div class="faq-a"><p>Shadow mode onboards in about 48 hours once we have read access to your asset telemetry and market enrollment. No hardware changes, no dispatch. You're watching the delta within the week.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ── -->
+<section class="band">
+  <div class="wrap">
+    <div class="cta-band">
+      <div class="cta-inner">
+        <span class="cta-tag">Shadow mode · no dispatch risk on day one</span>
+        <h2>The grid clears<br>in <span class="em">15 minutes.</span></h2>
+        <p>Shadow mode onboards in 48 hours. You'll see your first P&amp;L comparison within the week. No dispatch, no exposure, just the delta.</p>
+        <div class="cta-btns">
+          <a class="btn btn-on-green" href="/app.html" target="_blank">Launch the app →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer id="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="foot-logo">
+          <svg class="sail" viewBox="418 48 620 544" width="18" height="18" fill="#127A5B" fill-rule="evenodd" aria-hidden="true"><path d="M 962 56 L 958 56 L 949 62 L 938 67 L 931 72 L 926 74 L 924 76 L 917 79 L 915 81 L 900 89 L 895 93 L 887 97 L 847 123 L 844 126 L 831 134 L 816 146 L 812 148 L 741 204 L 734 211 L 727 216 L 719 224 L 694 245 L 645 292 L 644 292 L 605 332 L 605 333 L 565 375 L 558 384 L 549 393 L 542 403 L 536 409 L 532 415 L 511 440 L 509 444 L 504 449 L 492 465 L 486 475 L 483 478 L 482 481 L 479 484 L 472 496 L 464 507 L 463 510 L 459 515 L 457 520 L 455 522 L 449 534 L 443 543 L 439 552 L 437 554 L 423 582 L 423 585 L 436 580 L 442 579 L 445 577 L 448 577 L 464 571 L 467 571 L 470 569 L 473 569 L 480 566 L 494 563 L 501 560 L 508 559 L 512 557 L 517 557 L 524 554 L 528 554 L 540 550 L 545 550 L 553 547 L 559 547 L 568 544 L 573 544 L 577 542 L 589 541 L 598 538 L 609 537 L 614 535 L 627 534 L 628 533 L 637 532 L 638 531 L 649 531 L 650 530 L 660 529 L 661 528 L 677 528 L 678 527 L 684 527 L 685 526 L 691 526 L 692 525 L 722 525 L 722 522 L 719 515 L 719 511 L 717 507 L 717 492 L 716 491 L 716 485 L 715 484 L 715 474 L 717 468 L 717 455 L 718 454 L 718 449 L 720 445 L 720 439 L 721 438 L 725 419 L 727 415 L 727 412 L 729 408 L 729 405 L 731 402 L 731 399 L 736 388 L 736 385 L 738 382 L 738 380 L 740 377 L 744 365 L 747 360 L 748 355 L 753 346 L 756 337 L 764 321 L 766 319 L 766 317 L 768 315 L 780 291 L 785 284 L 788 277 L 795 267 L 800 257 L 804 252 L 806 247 L 831 209 L 854 178 L 876 151 L 879 146 L 902 119 L 912 109 L 918 101 L 943 76 L 943 75 L 949 69 L 950 69 L 952 66 L 962 58 Z M 883 189 L 856 225 L 851 234 L 838 253 L 836 258 L 826 274 L 823 281 L 821 283 L 804 318 L 802 325 L 799 330 L 799 332 L 796 337 L 795 342 L 789 355 L 787 363 L 785 366 L 783 374 L 781 377 L 781 380 L 779 383 L 779 386 L 777 389 L 776 395 L 773 402 L 772 409 L 770 413 L 770 417 L 767 425 L 767 429 L 765 433 L 764 443 L 762 447 L 762 454 L 761 455 L 761 460 L 760 461 L 759 473 L 787 491 L 802 502 L 827 523 L 849 545 L 852 546 L 858 546 L 859 547 L 865 547 L 866 548 L 871 548 L 876 550 L 883 550 L 892 553 L 903 554 L 911 557 L 917 557 L 921 559 L 932 560 L 940 563 L 945 563 L 953 566 L 958 566 L 961 568 L 966 568 L 969 570 L 974 570 L 980 573 L 984 573 L 987 575 L 991 575 L 998 578 L 1005 579 L 1028 587 L 1033 587 L 1033 585 L 1030 584 L 1018 576 L 978 546 L 941 510 L 925 489 L 915 474 L 913 469 L 909 464 L 894 435 L 894 433 L 892 431 L 891 426 L 887 418 L 886 413 L 884 410 L 881 401 L 881 398 L 879 395 L 879 391 L 876 384 L 876 381 L 874 376 L 874 372 L 871 364 L 871 358 L 870 357 L 870 352 L 869 351 L 869 346 L 868 345 L 868 317 L 867 316 L 868 263 L 870 258 L 871 243 L 872 242 L 872 238 L 874 233 L 874 227 L 875 226 L 875 223 L 878 214 L 878 210 L 882 199 L 882 196 L 884 193 L 884 189 Z"/></svg>
+          Vela
+        </span>
+        <div class="foot-tagline">The neutral dispatch layer for FERC Order 2222 markets. Hardware-agnostic, explainable, mid-market.</div>
+        <div class="foot-copy">© 2026 Vela Energy Intelligence, Inc.</div>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Platform</div>
+        <a href="#platform">Dispatch Queue</a>
+        <a href="/landing/panel-2-shadow.html" target="_blank">Shadow Mode P&amp;L</a>
+        <a href="/landing/panel-3-settlement.html" target="_blank">Settlement</a>
+        <a href="/app.html" target="_blank">Live demo</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Markets</div>
+        <a href="#markets">ERCOT</a>
+        <a href="#markets">CAISO</a>
+        <a href="#markets">PJM</a>
+        <a href="#markets">NYISO (2026)</a>
+        <a href="#markets">MISO (2027)</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Use cases</div>
+        <a href="#usecases">VPP Operators</a>
+        <a href="#usecases">Aggregators</a>
+        <a href="#usecases">C&amp;I Asset Owners</a>
+        <a href="#how">How it works</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-col-title">Compliance</div>
+        <a href="#">FERC Order 2222</a>
+        <a href="#">NERC CIP Framework</a>
+        <a href="#">Audit-ready logs</a>
+        <a href="#">Shadow-mode policy</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>ERCOT · CAISO · PJM · NYISO · MISO</span>
+      <span>Built for FERC Order 2222 market participation. Not financial advice.</span>
+    </div>
+  </div>
+</footer>
 
 <script>
-(function () {
-  // ============ STATE & CLEANUP ============
-  let _rafId = null;
-  let _intervals = [];
-  let _timeouts = [];
-  let _listeners = [];
-  let _renderer = null;
-  let _observers = [];
-  let _chart = null;
-
-  function trackTimeout(t) { _timeouts.push(t); return t; }
-  function trackInterval(i) { _intervals.push(i); return i; }
-  function trackListener(target, event, fn) {
-    target.addEventListener(event, fn);
-    _listeners.push([target, event, fn]);
+(function(){
+  // ── ticker ──
+  var items=[
+    ['mkt','ERCOT RT','$184/MWh','up','▲2.3%'],
+    ['mkt','CAISO DA','$92/MWh','dn','▼0.8%'],
+    ['mkt','PJM RT','$67/MWh','up','▲1.1%'],
+    ['mkt','NYISO DA','$78/MWh','up','▲3.4%'],
+    ['mkt','MISO RT','$54/MWh','dn','▼0.5%'],
+    ['lbl','BESS SOC AVG','71%','',''],
+    ['lbl','ACTIVE ASSETS','24','',''],
+    ['lbl','NEXT DISPATCH','11:55 PDT','up','']
+  ];
+  function buildTicks(){
+    return items.map(function(it){
+      var c=it[0]==='mkt'?'mkt':'lbl';
+      var tail=it[3]?'<span class="'+it[3]+'">'+it[4]+'</span>':'';
+      return '<span class="tick"><span class="'+c+'">'+it[1]+'</span><span class="val">'+it[2]+'</span>'+tail+'</span>';
+    }).join('');
   }
-  function trackObserver(o) { _observers.push(o); return o; }
+  var track=document.getElementById('tickerTrack');
+  if(track){ var html=buildTicks(); track.innerHTML=html+html; }
 
-  function tearDown() {
-    if (_rafId) cancelAnimationFrame(_rafId);
-    _rafId = null;
-    _intervals.forEach(clearInterval);
-    _timeouts.forEach(clearTimeout);
-    _listeners.forEach(([t, e, f]) => t.removeEventListener(e, f));
-    _observers.forEach((o) => o.disconnect());
-    _intervals = []; _timeouts = []; _listeners = []; _observers = [];
-    if (_renderer) {
-      try { _renderer.dispose(); } catch(e){}
-      _renderer = null;
+  // ── nav scroll state ──
+  var nav=document.getElementById('nav');
+  function onScroll(){ if(window.scrollY>20){nav.classList.add('scrolled');}else{nav.classList.remove('scrolled');} }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+  // ── stat count-up ──
+  function animate(el){
+    var target=parseFloat(el.getAttribute('data-count'));
+    var dec=parseInt(el.getAttribute('data-dec')||'0',10);
+    var pre=el.getAttribute('data-prefix')||'';
+    var suf=el.getAttribute('data-suffix')||'';
+    var start=null,dur=1300;
+    function step(ts){
+      if(!start)start=ts;
+      var p=Math.min((ts-start)/dur,1);
+      var eased=1-Math.pow(1-p,3);
+      var val=(target*eased).toFixed(dec);
+      el.innerHTML=pre+val+(suf?'<span>'+suf+'</span>':'');
+      if(p<1)requestAnimationFrame(step);
     }
-    if (_chart) {
-      try { _chart.destroy(); } catch(e){}
-      _chart = null;
-    }
-    document.querySelectorAll('.bid-label').forEach((el) => el.remove());
+    requestAnimationFrame(step);
   }
-
-  // ============ ROUTING ============
-  const routes = {
-    '#home': renderHome,
-    '#product': renderProduct,
-    '#solutions': renderSolutions,
-    '#resources': renderResources
-  };
-
-  window.navigate = function (hash) {
-    if (window.location.hash === hash) {
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    } else {
-      window.location.hash = hash;
-    }
-  };
-
-  function handleHashChange() {
-    const hash = window.location.hash || '#home';
-    const render = routes[hash] || routes['#home'];
-    const app = document.getElementById('app');
-
-    app.style.opacity = '0';
-    app.style.transition = 'opacity 150ms ease';
-
-    setTimeout(() => {
-      tearDown();
-      app.innerHTML = '';
-      render(app);
-      updateActiveNav();
-      app.style.opacity = '1';
-      window.scrollTo(0, 0);
-      initPageAnimations(hash);
-    }, 150);
-  }
-
-  window.addEventListener('hashchange', handleHashChange);
-
-  function updateActiveNav() {
-    const hash = window.location.hash || '#home';
-    document.querySelectorAll('.nav-item').forEach((el) => {
-      el.classList.toggle('active', el.dataset.route === hash);
-    });
-    document.getElementById('mainNav').classList.toggle('home-active', hash === '#home' || !hash);
-  }
-
-  // nav CTA is now a plain <a href="/app.html"> — no JS needed
-
-  // ============ DROPDOWNS ============
-  function setupNav() {
-    document.querySelectorAll('.nav-item').forEach((trigger) => {
-      trigger.addEventListener('click', () => {
-        if (trigger.dataset.route) navigate(trigger.dataset.route);
-      });
-    });
-  }
-
-  setupNav();
-
-  // ============ HOME PAGE ============
-  function renderHome(app) {
-    const today = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-    app.innerHTML = `
-      <section class="hero-editorial">
-        <div class="he-noise"></div>
-        <div class="he-container">
-
-          <div class="he-header">
-            <div>
-              <div class="he-eyebrow">ERCOT &middot; REAL-TIME INTELLIGENCE &middot; ${today}</div>
-              <h1 class="he-headline">The grid clears.<br><em>Vela positions</em><br>your portfolio first.</h1>
-            </div>
-            <div class="he-right">
-              <p class="he-sub">Most BESS operators run a static price floor — discharge if LMP &gt; $X. That misses ancillary enrollment and ignores battery degradation entirely. Vela runs a MILP solve every 15 minutes, co-optimizing energy, ancillary services, and DR against live LMP signals, real SOC state, and your actual constraint set.</p>
-              <div class="he-ctas">
-                <a class="he-btn he-btn-primary" href="/app.html" style="text-decoration:none">Try the demo →</a>
-                <a class="he-btn he-btn-secondary" onclick="navigate('#product')">See how it works</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="he-video-wrap">
-            <video id="heroVideo" controls playsinline preload="metadata">
-              <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/quicktime">
-              <source src="https://vela-landing-page-six.vercel.app/demo.mov" type="video/mp4">
-            </video>
-          </div>
-
-          <div class="he-report-wrap">
-            <div class="metrics-card">
-              <div>
-                <div class="metrics-tag">SHADOW MODE · VERIFIED</div>
-                <h3 class="metrics-headline"><span class="pct">44%</span> more revenue. Proven in shadow mode before a single live dispatch.</h3>
-                <p class="metrics-sub">Run alongside your existing system. We show you what we would have done. You flip the switch when you trust the numbers.</p>
-              </div>
-              <div class="compare-table">
-                <div class="ct-header">
-                  <div>Revenue stream</div><div>Agent</div><div>Baseline</div><div>Delta</div>
-                </div>
-                <div class="ct-row"><div>Energy arbitrage</div><div>$12,840</div><div>$9,210</div><div class="delta delta-val" data-target="39">+0%</div></div>
-                <div class="ct-row"><div>Demand response</div><div>$5,620</div><div>$5,100</div><div class="delta delta-val" data-target="10">+0%</div></div>
-                <div class="ct-row"><div>Ancillary services</div><div>$3,190</div><div>$0</div><div><span class="new-tag">NEW</span></div></div>
-                <div class="ct-row"><div>Capacity revenue</div><div>$2,410</div><div>$2,410</div><div class="dash">—</div></div>
-                <div class="ct-row total"><div>TOTAL</div><div>$24,060</div><div>$16,720</div><div class="delta delta-val" data-target="44">+0%</div></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="he-dashboard" style="display:none">
-            <div class="he-tabs">
-              <button class="he-tab active" data-tab="revenue">Revenue Stack</button>
-              <button class="he-tab" data-tab="dispatch">Dispatch Plan</button>
-              <button class="he-tab" data-tab="risk">Risk Controls</button>
-              <button class="he-tab" data-tab="fleet">Asset Fleet</button>
-            </div>
-
-            <div class="he-panel active" id="tab-revenue">
-              <div class="he-chart-header">
-                <span class="he-chart-title">24-HOUR REVENUE STACK · ERCOT · ${today}</span>
-                <span class="he-chart-total" id="heTotalRev">$4,381</span>
-              </div>
-              <div class="he-chart-wrap">
-                <canvas id="heRevenueChart"></canvas>
-              </div>
-              <div class="he-chart-legend">
-                <div class="he-legend-item"><div class="he-legend-dot" style="background:#1A7A5E"></div>Energy Arb.</div>
-                <div class="he-legend-item"><div class="he-legend-dot" style="background:#4DAA88"></div>Demand Response</div>
-                <div class="he-legend-item"><div class="he-legend-dot" style="background:#C17B2E"></div>Ancillary</div>
-                <div class="he-legend-item"><div class="he-legend-dot" style="background:#8B9E75"></div>Capacity</div>
-                <div class="he-legend-item"><div class="he-legend-dot" style="background:#D4B89A"></div>Freq. Reg.</div>
-              </div>
-            </div>
-
-            <div class="he-panel" id="tab-dispatch">
-              <table class="he-dispatch-table">
-                <thead><tr>
-                  <th>Time (CT)</th><th>Asset</th><th>Product</th><th>MW</th><th>Floor</th><th>Est. Rev.</th><th>Status</th>
-                </tr></thead>
-                <tbody>
-                  ${[
-                    ['06:00–07:00','Meridian Warehouse','ERCOT RT · Energy','2.8 MW','$45/MWh','$210','dispatched'],
-                    ['09:00–10:00','FleetCo Depot 4','ERCOT · Demand Resp.','0.8 MW','$52/MWh','$185','dispatched'],
-                    ['12:00–13:00','Riverton Cold Store','ERCOT · Ancillary','1.1 MW','$38/MWh','$140','approved'],
-                    ['14:00–16:00','Meridian Warehouse','ERCOT RT · Energy','3.4 MW','$92/MWh','$1,870','approved'],
-                    ['15:00–17:00','NorthPark Mfg.','ERCOT · Demand Resp.','2.4 MW','$78/MWh','$624','pending'],
-                    ['16:00–18:00','FleetCo Depot 4','ERCOT · Ancillary','0.8 MW','$55/MWh','$290','pending'],
-                    ['17:00–19:00','Riverton Cold Store','ERCOT RT · Energy','1.1 MW','$115/MWh','$840','queued'],
-                    ['19:00–20:00','Meridian Warehouse','ERCOT · Ancillary','1.8 MW','$44/MWh','$265','queued'],
-                  ].map(([t,a,p,mw,fl,rv,st]) => `
-                  <tr>
-                    <td style="color:rgba(26,26,20,0.42);font-size:10px">${t}</td>
-                    <td class="he-td-asset">${a}</td>
-                    <td>${p}</td>
-                    <td>${mw}</td>
-                    <td style="color:#1A7A5E">${fl}</td>
-                    <td style="color:#1A1A14;font-weight:500">${rv}</td>
-                    <td><span class="he-sp ${st}">${st.toUpperCase()}</span></td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="he-panel" id="tab-risk">
-              <div class="he-risk-grid">
-                <div class="he-risk-col">
-                  <div class="he-risk-col-head">Operator Limits</div>
-                  ${[
-                    ['SOC FLOOR','20% — all assets','ok'],
-                    ['CYCLE CAP','2 / day','ok'],
-                    ['BACKUP RESERVE','4 hours','ok'],
-                    ['DEGRAD. LIMIT','$4.50 / cycle max','ok'],
-                    ['POSITION LIMIT','8.4 MW total','ok'],
-                  ].map(([k,v,c]) => `<div class="he-risk-row"><span class="he-risk-k">${k}</span><span class="he-risk-v ${c}">${v}</span></div>`).join('')}
-                </div>
-                <div class="he-risk-col">
-                  <div class="he-risk-col-head">Market Flags</div>
-                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">CUSTOMER OPT-OUTS</div><div class="he-flag-val">3 active — Riverton, NorthPark, FleetCo</div><div class="he-flag-sub">Excluded from 16:00–18:00 window</div></div></div>
-                  <div class="he-flag"><div class="he-flag-dot warn"></div><div><div class="he-flag-title">WEATHER FLAG</div><div class="he-flag-val">Wind ramp −1.2 GW forecast @ 16:00</div><div class="he-flag-sub">LMP spike probability elevated → 78%</div></div></div>
-                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">ERCOT ORDC</div><div class="he-flag-val">Operating reserve demand curve active</div><div class="he-flag-sub">RTOLCAP $5,000/MWh ceiling in effect</div></div></div>
-                  <div class="he-flag"><div class="he-flag-dot ok"></div><div><div class="he-flag-title">SETTLEMENT PERIOD</div><div class="he-flag-val">3 events pending reconciliation</div><div class="he-flag-sub">May 8 · 96.4% avg. performance</div></div></div>
-                </div>
-                <div class="he-risk-col">
-                  <div class="he-risk-col-head">Agent Status</div>
-                  ${[
-                    ['CYCLE COUNT','847 today','ok'],
-                    ['NEXT WINDOW','13 min','ok'],
-                    ['AUTO-APPROVED','6 bids','ok'],
-                    ['HUMAN REVIEW','2 bids','warn'],
-                    ['CONSTRAINT HITS','0 violations','ok'],
-                  ].map(([k,v,c]) => `<div class="he-risk-row"><span class="he-risk-k">${k}</span><span class="he-risk-v ${c}">${v}</span></div>`).join('')}
-                </div>
-              </div>
-            </div>
-
-            <div class="he-panel" id="tab-fleet">
-              <div class="he-fleet-grid">
-                ${[
-                  {n:'Meridian Warehouse',t:'BATTERY · 4.0 MW',soc:71,st:'dispatched',rev:'$2,080'},
-                  {n:'Riverton Cold Store',t:'HVAC FLEX · 1.2 MW',soc:100,st:'online',rev:'$325'},
-                  {n:'NorthPark Mfg.',t:'BATTERY · 3.0 MW',soc:54,st:'online',rev:'$890'},
-                  {n:'FleetCo Depot 4',t:'EV FLEET · 1.0 MW',soc:83,st:'online',rev:'$475'},
-                  {n:'Garland Solar+',t:'BATTERY · 2.0 MW',soc:91,st:'online',rev:'$210'},
-                  {n:'Austin Micro VPP',t:'MULTI-ASSET · 5.0 MW',soc:62,st:'standby',rev:'$0'},
-                  {n:'Cedar Park Fleet',t:'EV FLEET · 1.5 MW',soc:78,st:'standby',rev:'$0'},
-                  {n:'Pflugerville Batt.',t:'BATTERY · 2.5 MW',soc:44,st:'dispatched',rev:'$1,240'},
-                ].map(a => `
-                <div class="he-asset-card">
-                  <div class="he-asset-dot ${a.st}"></div>
-                  <div class="he-asset-name">${a.n}</div>
-                  <div class="he-asset-type">${a.t}</div>
-                  <div class="he-asset-soc-track"><div class="he-asset-soc-fill${a.soc<30?' low':''}" style="width:${a.soc}%"></div></div>
-                  <div class="he-asset-nums">
-                    <div class="he-asset-num"><div class="he-asset-num-k">SOC</div><div class="he-asset-num-v">${a.soc}%</div></div>
-                    <div class="he-asset-num"><div class="he-asset-num-k">TODAY</div><div class="he-asset-num-v">${a.rev}</div></div>
-                  </div>
-                </div>`).join('')}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="container">
-          <div class="section-head">
-            <div><div class="section-eyebrow"><span class="num">// 01</span><span>The agent loop</span></div></div>
-            <div>
-              <h2 class="section-title">The observe → reason → act loop.</h2>
-              <p class="section-subtitle" style="margin-top:14px">SIX STAGES · ONE CONTINUOUS CYCLE</p>
-            </div>
-          </div>
-          <div class="stages-grid">
-            ${[
-              ['01','Observe','Pull asset telemetry, ISO LMP signals, weather forecasts, and ORDC data every 15 minutes.'],
-              ['02','Forecast','Model LMP distribution over a 4-hour horizon using wind ramp signals and historical basis. Output is a price distribution, not a point estimate.'],
-              ['03','Solve','Run the MILP: co-optimize energy, ancillary, and DR bids against SOC constraints, degradation cost, cycle caps, and customer opt-out windows.'],
-              ['04','Act','Queue bids for human approval or auto-approve within defined risk thresholds. Rationale attached to every recommendation.'],
-              ['05','Measure','Reconcile committed vs. delivered at the 15-minute interval. Per-asset attribution. Flag shortfalls with root cause before ISO settlement.'],
-              ['06','Update','Feed settlement outcomes back into the forecast model. Missed forecasts from this interval tighten the next one.']
-            ].map(([n,name,desc]) => `
-              <div class="stage-card">
-                <div class="stage-num">${n}</div>
-                <div class="stage-name">${name}</div>
-                <div class="stage-desc">${desc}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </section>
-      <hr class="rule"/>
-
-      <section class="section">
-        <div class="container">
-          <div class="section-head">
-            <div><div class="section-eyebrow"><span class="num">// 02</span><span>Platform</span></div></div>
-            <div>
-              <h2 class="section-title">What most dispatch software gets wrong.</h2>
-              <p class="section-subtitle" style="margin-top:14px">HARDWARE · EXPLAINABILITY · CONSTRAINTS</p>
-            </div>
-          </div>
-          <div class="features-grid">
-            <div class="feature-col">
-              <div class="feature-icon"><div class="icon-rings"></div></div>
-              <div class="feature-name">Not tied to a hardware vendor</div>
-              <p class="feature-desc">Fluence optimizes Fluence batteries. Tesla's stack runs inside Tesla's ecosystem. A neutral dispatch layer has to talk to everything — SunSpec Modbus, DNP3, OpenADR 2.0, IEEE 2030.5, OCPP 2.0.1. Vela reads from any asset and hands the schedule to whatever EMS you already run.</p>
-              <a class="feature-link" onclick="navigate('#product')">learn more <span>→</span></a>
-            </div>
-            <div class="feature-col">
-              <div class="feature-icon"><div class="icon-bars"><span data-h="55"></span><span data-h="80"></span><span data-h="35"></span><span data-h="100"></span></div></div>
-              <div class="feature-name">Shows its work</div>
-              <p class="feature-desc">After each solve, Vela reads the dual variables of the binding constraints and surfaces them in plain language — which constraint was the binding one, what the unconstrained optimum would have been, the dollar cost of each active limit. Operators who can see the trade-off use the tool. Operators who can't, override it.</p>
-              <a class="feature-link" href="/app.html" style="text-decoration:none">try it live <span>→</span></a>
-            </div>
-            <div class="feature-col">
-              <div class="feature-icon"><div class="icon-lock"></div></div>
-              <div class="feature-name">Constraints in the objective, not after it</div>
-              <p class="feature-desc">SOC floors, cycle caps, backup reserve windows, degradation budgets — encoded directly into the MILP objective, not checked as a post-hoc override. If a constraint is active, you see it in the rationale. If it's violated, the solve didn't produce a valid bid.</p>
-              <a class="feature-link" onclick="navigate('#product')">learn more <span>→</span></a>
-            </div>
-          </div>
-        </div>
-      </section>
-      <hr class="rule"/>
-
-      <section class="section markets-section">
-        <div class="container">
-          <div class="section-eyebrow" style="justify-content:center"><span class="num">// 03</span><span>Coverage</span></div>
-          <h2 class="section-title">Five ISOs. One bidding engine.</h2>
-          <p class="section-subtitle">ISO/RTO COVERAGE · FERC ORDER 2222 COMPLIANT</p>
-          <div class="pills">
-            <span class="pill">ERCOT</span><span class="pill">CAISO</span><span class="pill">PJM</span><span class="pill">NYISO</span><span class="pill">MISO</span>
-          </div>
-          <p class="markets-note">FERC Order 2222 unlocks wholesale market access for distributed energy aggregations across every U.S. ISO. CAISO completed its rollout in 2024. NYISO targets 2026, with PJM following in 2028 and MISO phasing in between 2027 and 2029. We're already integrated where it counts.</p>
-        </div>
-      </section>
-
-      <section class="cta-block" id="cta">
-        <div class="container">
-          <h2>Start with shadow mode.</h2>
-          <p>Onboard in 48 hours. First P&amp;L comparison within the week — no dispatch, no regulatory exposure.</p>
-          <a class="cta cta-primary" href="/app.html" style="text-decoration:none">Open the app <span class="arrow">→</span></a>
-        </div>
-      </section>
-
-      <footer class="site-footer">
-        <div class="footer-inner">
-          <div class="nav-logo"><svg width="15" height="15" viewBox="418 48 620 544" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M 962.0 56.0 L 958.0 56.0 L 949.0 62.0 L 938.0 67.0 L 931.0 72.0 L 926.0 74.0 L 924.0 76.0 L 917.0 79.0 L 915.0 81.0 L 900.0 89.0 L 895.0 93.0 L 887.0 97.0 L 847.0 123.0 L 844.0 126.0 L 831.0 134.0 L 816.0 146.0 L 812.0 148.0 L 741.0 204.0 L 734.0 211.0 L 727.0 216.0 L 719.0 224.0 L 694.0 245.0 L 645.0 292.0 L 644.0 292.0 L 605.0 332.0 L 605.0 333.0 L 565.0 375.0 L 558.0 384.0 L 549.0 393.0 L 542.0 403.0 L 536.0 409.0 L 532.0 415.0 L 511.0 440.0 L 509.0 444.0 L 504.0 449.0 L 492.0 465.0 L 486.0 475.0 L 483.0 478.0 L 482.0 481.0 L 479.0 484.0 L 472.0 496.0 L 464.0 507.0 L 463.0 510.0 L 459.0 515.0 L 457.0 520.0 L 455.0 522.0 L 449.0 534.0 L 443.0 543.0 L 439.0 552.0 L 437.0 554.0 L 423.0 582.0 L 423.0 585.0 L 436.0 580.0 L 442.0 579.0 L 445.0 577.0 L 448.0 577.0 L 464.0 571.0 L 467.0 571.0 L 470.0 569.0 L 473.0 569.0 L 480.0 566.0 L 494.0 563.0 L 501.0 560.0 L 508.0 559.0 L 512.0 557.0 L 517.0 557.0 L 524.0 554.0 L 528.0 554.0 L 540.0 550.0 L 545.0 550.0 L 553.0 547.0 L 559.0 547.0 L 568.0 544.0 L 573.0 544.0 L 577.0 542.0 L 589.0 541.0 L 598.0 538.0 L 609.0 537.0 L 614.0 535.0 L 627.0 534.0 L 628.0 533.0 L 637.0 532.0 L 638.0 531.0 L 649.0 531.0 L 650.0 530.0 L 660.0 529.0 L 661.0 528.0 L 677.0 528.0 L 678.0 527.0 L 684.0 527.0 L 685.0 526.0 L 691.0 526.0 L 692.0 525.0 L 722.0 525.0 L 722.0 522.0 L 719.0 515.0 L 719.0 511.0 L 717.0 507.0 L 717.0 492.0 L 716.0 491.0 L 716.0 485.0 L 715.0 484.0 L 715.0 474.0 L 717.0 468.0 L 717.0 455.0 L 718.0 454.0 L 718.0 449.0 L 720.0 445.0 L 720.0 439.0 L 721.0 438.0 L 725.0 419.0 L 727.0 415.0 L 727.0 412.0 L 729.0 408.0 L 729.0 405.0 L 731.0 402.0 L 731.0 399.0 L 736.0 388.0 L 736.0 385.0 L 738.0 382.0 L 738.0 380.0 L 740.0 377.0 L 744.0 365.0 L 747.0 360.0 L 748.0 355.0 L 753.0 346.0 L 756.0 337.0 L 764.0 321.0 L 766.0 319.0 L 766.0 317.0 L 768.0 315.0 L 780.0 291.0 L 785.0 284.0 L 788.0 277.0 L 795.0 267.0 L 800.0 257.0 L 804.0 252.0 L 806.0 247.0 L 831.0 209.0 L 854.0 178.0 L 876.0 151.0 L 879.0 146.0 L 902.0 119.0 L 912.0 109.0 L 918.0 101.0 L 943.0 76.0 L 943.0 75.0 L 949.0 69.0 L 950.0 69.0 L 952.0 66.0 L 962.0 58.0 Z
-M 883.0 189.0 L 856.0 225.0 L 851.0 234.0 L 838.0 253.0 L 836.0 258.0 L 826.0 274.0 L 823.0 281.0 L 821.0 283.0 L 804.0 318.0 L 802.0 325.0 L 799.0 330.0 L 799.0 332.0 L 796.0 337.0 L 795.0 342.0 L 789.0 355.0 L 787.0 363.0 L 785.0 366.0 L 783.0 374.0 L 781.0 377.0 L 781.0 380.0 L 779.0 383.0 L 779.0 386.0 L 777.0 389.0 L 776.0 395.0 L 773.0 402.0 L 772.0 409.0 L 770.0 413.0 L 770.0 417.0 L 767.0 425.0 L 767.0 429.0 L 765.0 433.0 L 764.0 443.0 L 762.0 447.0 L 762.0 454.0 L 761.0 455.0 L 761.0 460.0 L 760.0 461.0 L 759.0 473.0 L 787.0 491.0 L 802.0 502.0 L 827.0 523.0 L 849.0 545.0 L 852.0 546.0 L 858.0 546.0 L 859.0 547.0 L 865.0 547.0 L 866.0 548.0 L 871.0 548.0 L 876.0 550.0 L 883.0 550.0 L 892.0 553.0 L 903.0 554.0 L 911.0 557.0 L 917.0 557.0 L 921.0 559.0 L 932.0 560.0 L 940.0 563.0 L 945.0 563.0 L 953.0 566.0 L 958.0 566.0 L 961.0 568.0 L 966.0 568.0 L 969.0 570.0 L 974.0 570.0 L 980.0 573.0 L 984.0 573.0 L 987.0 575.0 L 991.0 575.0 L 998.0 578.0 L 1005.0 579.0 L 1028.0 587.0 L 1033.0 587.0 L 1033.0 585.0 L 1030.0 584.0 L 1018.0 576.0 L 978.0 546.0 L 941.0 510.0 L 925.0 489.0 L 915.0 474.0 L 913.0 469.0 L 909.0 464.0 L 894.0 435.0 L 894.0 433.0 L 892.0 431.0 L 891.0 426.0 L 887.0 418.0 L 886.0 413.0 L 884.0 410.0 L 881.0 401.0 L 881.0 398.0 L 879.0 395.0 L 879.0 391.0 L 876.0 384.0 L 876.0 381.0 L 874.0 376.0 L 874.0 372.0 L 871.0 364.0 L 871.0 358.0 L 870.0 357.0 L 870.0 352.0 L 869.0 351.0 L 869.0 346.0 L 868.0 345.0 L 868.0 317.0 L 867.0 316.0 L 868.0 263.0 L 870.0 258.0 L 871.0 243.0 L 872.0 242.0 L 872.0 238.0 L 874.0 233.0 L 874.0 227.0 L 875.0 226.0 L 875.0 223.0 L 878.0 214.0 L 878.0 210.0 L 882.0 199.0 L 882.0 196.0 L 884.0 193.0 L 884.0 189.0 Z" fill-rule="evenodd"/></svg> Vela</div>
-          <div class="footer-center">© 2026 Vela</div>
-          <div class="footer-right">Built for grid operators.</div>
-        </div>
-      </footer>
-    `;
-  }
-
-  // ============ HERO DASHBOARD ============
-  function initHeroDashboard() {
-    // Tab switching
-    const tabs = document.querySelectorAll('.he-tab');
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const target = tab.dataset.tab;
-        document.querySelectorAll('.he-tab').forEach((t) => t.classList.remove('active'));
-        document.querySelectorAll('.he-panel').forEach((p) => p.classList.remove('active'));
-        tab.classList.add('active');
-        const panel = document.getElementById('tab-' + target);
-        if (panel) panel.classList.add('active');
-        if (target === 'revenue') {
-          trackTimeout(setTimeout(() => initRevenueChart(true), 0));
-        }
-      });
-    });
-    trackTimeout(setTimeout(initRevenueChart, 80));
-  }
-
-  function initRevenueChart(rerender) {
-    const canvas = document.getElementById('heRevenueChart');
-    if (!canvas || typeof Chart === 'undefined') return;
-
-    if (_chart) { try { _chart.destroy(); } catch(e){} _chart = null; }
-
-    const labels = Array.from({length:24}, (_,i) => i + ':00');
-    const datasets = [
-      { label:'Energy Arb.',     data:[0,0,0,0,0,0,80,120,160,140,100,80,60,80,200,380,420,360,240,160,120,60,20,0],   backgroundColor:'#1A7A5E', borderRadius:2, borderSkipped:false },
-      { label:'Demand Response', data:[0,0,0,0,0,0,40,80,60,40,30,20,30,60,120,180,200,160,120,80,40,20,0,0],         backgroundColor:'#4DAA88', borderRadius:2, borderSkipped:false },
-      { label:'Ancillary',       data:[20,20,20,20,20,20,30,40,60,80,60,40,30,40,80,140,160,140,100,60,40,30,20,20],  backgroundColor:'#C17B2E', borderRadius:2, borderSkipped:false },
-      { label:'Capacity',        data:[30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30],      backgroundColor:'#8B9E75', borderRadius:2, borderSkipped:false },
-      { label:'Freq. Reg.',      data:[10,10,10,8,8,10,12,15,18,20,18,16,14,16,24,35,40,38,30,22,16,12,10,10],        backgroundColor:'#D4B89A', borderRadius:2, borderSkipped:false },
-    ];
-
-    _chart = new Chart(canvas, {
-      type: 'bar',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {
-          duration: rerender ? 400 : 900,
-          delay: rerender ? 0 : (ctx) => ctx.dataIndex * 16,
-          easing: 'easeOutQuart',
-          onComplete: () => addChartMarkers(),
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(26,26,20,0.92)',
-            titleFont: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:10 },
-            bodyFont:  { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:10 },
-            titleColor: 'rgba(240,237,230,0.55)',
-            bodyColor:  '#F0EDE6',
-            borderColor: 'rgba(26,26,20,0.2)',
-            borderWidth: 1, padding: 10, cornerRadius: 4,
-            callbacks: {
-              title: (items) => items[0].label,
-              label: (item) => ` ${item.dataset.label}: $${item.raw}`,
-            }
-          }
-        },
-        scales: {
-          x: {
-            stacked: true,
-            grid: { display: false },
-            border: { display: false },
-            ticks: {
-              font: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:9 },
-              color: 'rgba(26,26,20,0.32)',
-              maxTicksLimit: 12, maxRotation: 0,
-            }
-          },
-          y: {
-            stacked: true,
-            grid: { color: 'rgba(26,26,20,0.055)' },
-            border: { display: false },
-            ticks: {
-              font: { family:"'IBM Plex Mono','IBM Plex Mono',monospace", size:9 },
-              color: 'rgba(26,26,20,0.32)',
-              callback: (v) => '$' + v,
-              maxTicksLimit: 6,
-            }
-          }
-        }
-      }
-    });
-  }
-
-  function addChartMarkers() {
-    if (!_chart) return;
-    const wrap = document.querySelector('.he-chart-wrap');
-    if (!wrap) return;
-    wrap.querySelectorAll('.he-marker-line').forEach((el) => el.remove());
-    const ca = _chart.chartArea;
-    if (!ca) return;
-    const w = ca.right - ca.left;
-    [{idx:14, label:'PEAK'}, {idx:17, label:'EVENING'}].forEach(({idx, label}) => {
-      const x = ca.left + (idx / 24) * w;
-      const line = document.createElement('div');
-      line.className = 'he-marker-line';
-      line.style.cssText = `left:${x}px;top:${ca.top}px;height:${ca.bottom - ca.top}px`;
-      const sp = document.createElement('span');
-      sp.textContent = label;
-      line.appendChild(sp);
-      wrap.appendChild(line);
-    });
-  }
-
-  // ============ PRODUCT PAGE ============
-  function inlineBidCard() {
-    return `
-      <div class="inline-panel">
-        <div class="ip-chrome">
-          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
-          <div class="ip-url">vela.io/dispatch/queue</div>
-        </div>
-        <div class="ip-status">
-          <div class="l">DISPATCH QUEUE</div>
-          <div class="r"><span class="pulse"></span><span>Cycle 847 · 14:33 CT</span></div>
-        </div>
-        <div class="ip-body">
-          <div class="ip-bid">
-            <div class="ip-bid-head">
-              <div class="ip-bid-asset">
-                <div class="name">Meridian Warehouse · Battery</div>
-                <div class="market">ERCOT RT · 15:00–17:00 CT</div>
-              </div>
-              <div class="ip-bid-meta">
-                <span class="ip-risk">MED RISK</span>
-                <span class="ip-spec">3.4 MW · $92/MWh</span>
-              </div>
-            </div>
-            <div class="ip-rev">
-              <span class="label">EXPECTED REVENUE</span>
-              <span class="val">$1,870 <span>/event</span></span>
-            </div>
-            <div class="ip-rationale">
-              LMP spike probability <span class="em">78%</span> at 16:00. Battery 7 excluded — degradation cost <span class="am">$4.20/cycle</span> exceeds spread below $85.
-            </div>
-            <div class="ip-tags-wrap">
-              <div class="ip-tags-label">CONSTRAINTS APPLIED</div>
-              <div class="ip-tags">
-                <span class="ip-tag">SOC ≥ 20%</span>
-                <span class="ip-tag">Backup 4h</span>
-                <span class="ip-tag">Max 1 cyc/day</span>
-              </div>
-            </div>
-            <div class="ip-actions">
-              <span class="meta">Alternatives: 3</span>
-              <div class="btns">
-                <button class="ip-btn decline">DECLINE</button>
-                <button class="ip-btn approve">APPROVE</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function inlineShadowCard() {
-    return `
-      <div class="inline-panel">
-        <div class="ip-chrome">
-          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
-          <div class="ip-url">vela.io/portfolio/shadow-mode</div>
-        </div>
-        <div class="ip-status">
-          <div class="l">SHADOW MODE · 30D</div>
-          <div class="r">Agent vs. baseline · ERCOT</div>
-        </div>
-        <div class="ip-body">
-          <div class="ip-metric-row">
-            <div class="ip-metric"><div class="l">AGENT</div><div class="v">$24,060</div><div class="s">30-day</div></div>
-            <div class="ip-metric"><div class="l">BASELINE</div><div class="v dim">$16,720</div><div class="s">current</div></div>
-            <div class="ip-metric"><div class="l">DELTA</div><div class="v up">+$7,340</div><div class="s up">+44%</div></div>
-          </div>
-          <div class="ip-table">
-            <div class="ip-tr h"><div>Stream</div><div>Agent</div><div>Baseline</div><div>Δ</div></div>
-            <div class="ip-tr"><div class="stream">Energy arb.</div><div class="ag">$12,840</div><div class="ba">$9,210</div><div class="dl">+39%</div></div>
-            <div class="ip-tr"><div class="stream">Demand resp.</div><div class="ag">$5,620</div><div class="ba">$5,100</div><div class="dl">+10%</div></div>
-            <div class="ip-tr"><div class="stream">Ancillary</div><div class="ag">$3,190</div><div class="ba">$0</div><div><span class="ip-new">NEW</span></div></div>
-            <div class="ip-tr"><div class="stream">Capacity</div><div class="ag">$2,410</div><div class="ba">$2,410</div><div style="color:#9A9A90">—</div></div>
-            <div class="ip-tr tot"><div class="stream">Total</div><div class="ag">$24,060</div><div class="ba">$16,720</div><div class="dl">+44%</div></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function inlineSettlementCard() {
-    return `
-      <div class="inline-panel">
-        <div class="ip-chrome">
-          <div class="ip-dots"><span class="ip-dot r"></span><span class="ip-dot y"></span><span class="ip-dot g"></span></div>
-          <div class="ip-url">vela.io/settlement/2026-05-07</div>
-        </div>
-        <div class="ip-status">
-          <div class="l">SETTLEMENT · MAY 7 2026</div>
-          <div class="r"><span style="color:#1A7A5E">RECONCILED</span></div>
-        </div>
-        <div class="ip-body">
-          <div class="ip-metric-row">
-            <div class="ip-metric"><div class="l">COMMITTED</div><div class="v">8.4 MW</div><div class="s">DA position</div></div>
-            <div class="ip-metric"><div class="l">DELIVERED</div><div class="v dim">8.1 MW</div><div class="s">verified</div></div>
-            <div class="ip-metric"><div class="l">PERF</div><div class="v" style="color:#EF9F27">96.4%</div><div class="s" style="color:#EF9F27">−0.3 MW</div></div>
-          </div>
-          <div class="ip-bar"><div class="ip-bar-d"></div><div class="ip-bar-s"></div></div>
-          <div class="ip-bar-labels"><span class="l">8.1 MW delivered</span><span class="r">0.3 MW shortfall</span></div>
-          <div style="margin-top:14px">
-            <div class="ip-asset-row h"><div>Asset</div><div>Committed</div><div>Performance</div><div>Status</div></div>
-            <div class="ip-asset-row">
-              <div><div class="a-name">Meridian Warehouse</div><div class="a-sub">Battery · Site 1</div></div>
-              <div>3.4 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
-            </div>
-            <div class="ip-asset-row">
-              <div><div class="a-name">Riverton Cold Store</div><div class="a-sub">HVAC · Site 2</div></div>
-              <div>1.1 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
-            </div>
-            <div class="ip-asset-row flag">
-              <div><div class="a-name">NorthPark Mfg</div><div class="a-sub">Battery · Site 3</div></div>
-              <div>2.4 MW</div><div class="perf-down">87.5%</div><div><span class="ip-status-pill warn">UNDER</span></div>
-            </div>
-            <div class="ip-asset-row">
-              <div><div class="a-name">FleetCo Depot 4</div><div class="a-sub">EV Fleet · Site 4</div></div>
-              <div>0.8 MW</div><div class="perf-up">100%</div><div><span class="ip-status-pill ok">SETTLED</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderProduct(app) {
-    app.innerHTML = `
-      <div class="page">
-        <div class="page-inner">
-          <div class="page-hero">
-            <div class="eyebrow product-anim">PRODUCT</div>
-            <h1 class="page-headline product-anim">Three modules.<br/>One continuous loop.</h1>
-            <p class="page-subhead product-anim">Each module solves a real problem on its own. Together they close the loop from market signal to settlement reconciliation.</p>
-          </div>
-
-          <div class="feature-row" id="prow1">
-            <div>
-              <div class="module-label">01 / BID INTELLIGENCE</div>
-              <h2 class="module-headline">What to bid, and why — every 15 minutes.</h2>
-              <p class="module-body">Static price thresholds miss ancillary enrollment and ignore degradation cost entirely. Vela runs a MILP solve each dispatch window: energy, ancillary services, and DR co-optimized against your current SOC, degradation state, cycle cap, and customer constraints. The output is a bid recommendation with the binding constraints listed.</p>
-              <ul class="module-bullets">
-                <li>Co-optimizes energy, ancillary, DR, capacity, and frequency regulation</li>
-                <li>Degradation enters the objective as a per-asset cost, not a post-hoc override</li>
-                <li>Human approval queue with constraint rationale attached</li>
-                <li>Configurable auto-approve threshold by risk level</li>
-              </ul>
-            </div>
-            <div>${inlineBidCard()}</div>
-          </div>
-
-          <hr style="border:none;border-top:0.5px solid rgba(26,122,94,0.08);"/>
-
-          <div class="feature-row reverse" id="prow2">
-            <div>${inlineShadowCard()}</div>
-            <div>
-              <div class="module-label">02 / SHADOW MODE</div>
-              <h2 class="module-headline">See what you'd have earned before going live.</h2>
-              <p class="module-body">Run alongside your existing strategy for 30 days. Vela shows exactly what it would have bid, what it would have earned, and which programs your current setup isn't enrolled in. No live dispatch, no ISO exposure, no regulatory risk.</p>
-              <ul class="module-bullets">
-                <li>Day-by-day P&amp;L comparison against your current dispatch</li>
-                <li>Identifies uncaptured ancillary and capacity programs</li>
-                <li>Runs against live ISO market data, not backtested averages</li>
-                <li>Switch to live dispatch when you're satisfied with the numbers</li>
-              </ul>
-            </div>
-          </div>
-
-          <hr style="border:none;border-top:0.5px solid rgba(26,122,94,0.08);"/>
-
-          <div class="feature-row" id="prow3">
-            <div>
-              <div class="module-label">03 / SETTLEMENT LAYER</div>
-              <h2 class="module-headline">Reconcile committed vs. delivered at the interval level.</h2>
-              <p class="module-body">Every dispatch event produces a verified settlement record: committed vs. metered at the 15-minute interval, per-asset performance attribution, penalty detection, and root cause flagging for any shortfall before the ISO settles. Useful for customer billing and ISO audit response.</p>
-              <ul class="module-bullets">
-                <li>15-minute interval meter verification</li>
-                <li>Per-asset performance and revenue attribution</li>
-                <li>Automated penalty detection and root cause</li>
-                <li>Customer-facing revenue reports</li>
-              </ul>
-            </div>
-            <div>${inlineSettlementCard()}</div>
-          </div>
-
-          <div class="cta-block" id="cta">
-            <h2>Ready to run shadow mode?</h2>
-            <p>Onboard in 48 hours. No dispatch risk on day one.</p>
-            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ============ SOLUTIONS PAGE ============
-  function painGrid(rows) {
-    return `
-      <div class="pain-grid">
-        <div class="ph">WITHOUT VELA</div>
-        <div class="ph">WITH VELA</div>
-        ${rows.map(([p, s]) => `
-          <div class="pain-row pain">${p}</div>
-          <div class="pain-row sol">${s}</div>
-        `).join('')}
-      </div>
-    `;
-  }
-
-  function renderSolutions(app) {
-    app.innerHTML = `
-      <div class="page">
-        <div class="page-inner">
-          <div class="page-hero">
-            <div class="eyebrow sol-anim">SOLUTIONS</div>
-            <h1 class="page-headline sol-anim">The dispatch layer<br/>for VPP operators.</h1>
-            <p class="page-subhead sol-anim">Vela is for teams that already know what LMP, ORDC, and ancillary co-optimization mean. If you need a primer on how the grid works, this isn't the right fit.</p>
-          </div>
-
-          <div class="solution-card">
-            <div class="seg-label">VPP OPERATORS</div>
-            <h2 class="sol-headline">Your DERMS dispatches. Vela decides what to bid.</h2>
-            <p class="sol-body">Your SCADA or DERMS executes the dispatch schedule. Vela generates the bids — running a MILP solve every 15 minutes across energy, capacity, ancillary services, and DR against live LMP signals and your asset constraint set.</p>
-            ${painGrid([
-              ['Static price threshold: discharge if LMP > $X', 'MILP solve: co-optimize energy, ancillary, DR, and degradation cost per interval'],
-              ['Manual ancillary enrollment, often missed entirely', 'Automated identification and enrollment across all eligible programs'],
-              ['Offline backtesting against monthly averages', 'Live shadow mode running against real ISO data before any dispatch'],
-              ['Spreadsheet settlement, errors caught weeks late', 'Per-asset reconciliation at the 15-minute interval, before ISO settlement']
-            ])}
-          </div>
-
-          <div class="solution-card">
-            <div class="seg-label">AGGREGATORS</div>
-            <h2 class="sol-headline">40 assets across 3 ISOs isn't a spreadsheet problem.</h2>
-            <p class="sol-body">Each customer brings a different constraint set. Each market has different bidding rules. Each asset class has a different protocol. Operators who try to manage this manually end up with one person per market and a reconciliation backlog that's always two weeks behind.</p>
-            <p class="sol-body">Vela handles constraint enforcement, bidding logic, and settlement reconciliation across all of it through one interface. You focus on acquiring the next customer, not operating the current ones.</p>
-            ${painGrid([
-              ['Per-customer constraint management in spreadsheets', 'Constraint set encoded per asset — enforced in every solve, every interval'],
-              ['ISO-specific bidding logic rebuilt for each new market', 'Single interface across ERCOT, CAISO, PJM, NYISO, MISO'],
-              ['Performance shortfalls caught weeks later at ISO settlement', 'Pre-dispatch constraint validation; per-interval reconciliation before ISO settles'],
-              ['No asset-level revenue visibility for customer reporting', 'Per-asset P&L attribution with customer-facing settlement statements'],
-              ['Ancillary programs missed without in-house market expertise', 'Automated program identification and enrollment across all eligible markets'],
-              ['Each new asset type requires new integration work', 'SunSpec Modbus, DNP3, OpenADR, OCPP — natively supported']
-            ])}
-          </div>
-
-          <div class="stats-row">
-            <div><div class="stat-num">5 ISOs</div><div class="stat-lbl">ERCOT · CAISO · PJM · NYISO · MISO</div></div>
-            <div><div class="stat-num">Any hardware</div><div class="stat-lbl">OPENADR · IEEE 2030.5 · MODBUS · OCPP</div></div>
-            <div><div class="stat-num">48hr onboarding</div><div class="stat-lbl">SHADOW MODE START · NO DISPATCH RISK</div></div>
-          </div>
-
-          <div class="cta-block">
-            <h2>See what your current setup is leaving behind.</h2>
-            <p>30-minute call. We'll run a shadow mode comparison against your last 30 days of dispatch data.</p>
-            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ============ RESOURCES PAGE ============
-  function renderResources(app) {
-    app.innerHTML = `
-      <div class="page">
-        <div class="page-inner">
-          <div class="page-hero">
-            <div class="eyebrow res-anim">RESOURCES</div>
-            <h1 class="page-headline res-anim">Technical docs<br/>and market context.</h1>
-            <p class="page-subhead res-anim">API reference, architecture notes, and FERC 2222 rollout timelines. Written for people already operating in ISO markets.</p>
-          </div>
-
-          <div class="resource-grid">
-            <div class="resource-card">
-              <div class="res-label">DOCS</div>
-              <div class="res-title">API Reference</div>
-              <div class="res-body">REST API for asset onboarding, constraint configuration, bid retrieval, and settlement data. OpenAPI spec available.</div>
-              <div class="res-tags"><span class="res-tag">REST API</span><span class="res-tag">WebSocket feeds</span><span class="res-tag">OpenAPI 3.0</span></div>
-              <a class="res-link">View docs <span>→</span></a>
-            </div>
-
-            <div class="resource-card">
-              <div class="res-label">TECHNICAL</div>
-              <div class="res-title">How the dispatch loop works</div>
-              <div class="res-body">MILP formulation, constraint encoding, dual variable extraction for rationale generation, and how settlement outcomes feed back into the forecast model.</div>
-              <div class="res-tags"><span class="res-tag">LangGraph</span><span class="res-tag">MCP</span><span class="res-tag">Reinforcement learning</span></div>
-              <a class="res-link">Read architecture <span>→</span></a>
-            </div>
-
-            <div class="resource-card">
-              <div class="res-label">REGULATORY</div>
-              <div class="res-title">FERC Order 2222 — ISO rollout timeline</div>
-              <div class="res-body">CAISO live Nov 2024. NYISO targeting Q4 2026. PJM pushed to Feb 2028. MISO 2027–29. SPP requesting delay to 2030. ERCOT runs separate ADER pilot.</div>
-              <div class="res-tags"><span class="res-tag">FERC 2222</span><span class="res-tag">ISO/RTO</span><span class="res-tag">Compliance</span></div>
-              <a class="res-link">Read guide <span>→</span></a>
-            </div>
-
-            <div class="resource-card">
-              <div class="res-label">CHANGELOG</div>
-              <div class="res-title">What's shipped</div>
-              <div class="timeline">
-                <div class="tl-entry"><div class="tl-date">May 2026</div><div class="tl-title">Shadow mode GA</div><div class="tl-desc">30-day P&L proof available for all asset types</div></div>
-                <div class="tl-entry"><div class="tl-date">Apr 2026</div><div class="tl-title">CAISO market support</div><div class="tl-desc">Day-ahead and real-time bidding for California assets</div></div>
-                <div class="tl-entry"><div class="tl-date">Mar 2026</div><div class="tl-title">Constraint language interface</div><div class="tl-desc">Plain English operator constraints now supported</div></div>
-                <div class="tl-entry"><div class="tl-date">Feb 2026</div><div class="tl-title">Private beta</div><div class="tl-desc">First 5 VPP operators onboarded</div></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="cta-block">
-            <h2>Ready to integrate?</h2>
-            <p>Start with shadow mode. API access available on request.</p>
-            <a class="cta cta-primary" href="/app.html" style="text-decoration:none" style="opacity:1;transform:none">Request access <span class="arrow">→</span></a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ============ PAGE ANIMATIONS ============
-  function initPageAnimations(hash) {
-    if (hash === '#home' || !hash) {
-      initHomeAnimations();
-    } else if (hash === '#product') {
-      anime({ targets: '.product-anim', translateY: [20, 0], opacity: [0, 1],
-        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            anime({ targets: entry.target.children, translateY: [24, 0], opacity: [0, 1],
-              delay: anime.stagger(120), duration: 700, easing: 'easeOutExpo' });
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.15 });
-      trackObserver(io);
-      ['prow1', 'prow2', 'prow3'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) io.observe(el);
-      });
-    } else if (hash === '#solutions') {
-      anime({ targets: '.sol-anim', translateY: [20, 0], opacity: [0, 1],
-        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
-      anime({ targets: '.solution-card', translateY: [20, 0], opacity: [0, 1],
-        delay: anime.stagger(100, { start: 300 }), duration: 700, easing: 'easeOutExpo' });
-      anime({ targets: '.pain-row', translateX: [-8, 0], opacity: [0, 1],
-        delay: anime.stagger(40, { start: 600 }), duration: 500, easing: 'easeOutQuad' });
-    } else if (hash === '#resources') {
-      anime({ targets: '.res-anim', translateY: [20, 0], opacity: [0, 1],
-        delay: anime.stagger(80), duration: 700, easing: 'easeOutExpo' });
-      anime({ targets: '.resource-card', scale: [0.97, 1], opacity: [0, 1],
-        delay: anime.stagger(80, { start: 300 }), duration: 600, easing: 'easeOutExpo' });
-    }
-  }
-
-  function initHomeAnimations() {
-    if (!document.querySelector('.hero-editorial')) return;
-
-    const tl = anime.timeline({ autoplay: true });
-    tl.add({
-      targets: '.he-eyebrow', opacity: [0, 1], translateY: [8, 0],
-      duration: 600, easing: 'easeOutQuad'
-    });
-    tl.add({
-      targets: '.he-headline', opacity: [0, 1], translateY: [22, 0],
-      duration: 800, easing: 'easeOutExpo'
-    }, '-=300');
-    tl.add({
-      targets: '.he-sub', opacity: [0, 1], translateY: [14, 0],
-      duration: 700, easing: 'easeOutQuad'
-    }, '-=500');
-    tl.add({
-      targets: '.he-ctas', opacity: [0, 1],
-      duration: 600, easing: 'easeOutQuad'
-    }, '-=400');
-    tl.add({
-      targets: '.he-video-wrap', opacity: [0, 1], translateY: [18, 0],
-      duration: 700, easing: 'easeOutExpo'
-    }, '-=200');
-
-    const stagesIO = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          anime({ targets: '.stage-card', translateY: [30, 0], opacity: [0, 1],
-            duration: 700, delay: anime.stagger(80), easing: 'easeOutExpo' });
-          stagesIO.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    const stagesGrid = document.querySelector('.stages-grid');
-    if (stagesGrid) stagesIO.observe(stagesGrid);
-    trackObserver(stagesIO);
-
-    const metricsIO = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          anime({ targets: '.compare-table .ct-row > div', translateX: [-20, 0], opacity: [0, 1],
-            duration: 600, delay: anime.stagger(60), easing: 'easeOutQuad' });
-          document.querySelectorAll('.delta-val').forEach((el) => {
-            const target = parseFloat(el.dataset.target);
-            const obj = { v: 0 };
-            anime({ targets: obj, v: target, round: 1, duration: 1400, delay: 400, easing: 'easeOutExpo',
-              update: () => { el.textContent = '+' + Math.round(obj.v) + '%'; }
-            });
-          });
-          metricsIO.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.2 });
-    const metricsCard = document.querySelector('.metrics-card');
-    if (metricsCard) metricsIO.observe(metricsCard);
-    trackObserver(metricsIO);
-
-    const featuresIO = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          anime({ targets: '.feature-col', scale: [0.96, 1], opacity: [0, 1],
-            duration: 700, delay: anime.stagger(120), easing: 'easeOutExpo' });
-          document.querySelectorAll('.icon-bars span').forEach((bar, i) => {
-            trackTimeout(setTimeout(() => { bar.style.height = bar.dataset.h + '%'; }, 400 + i * 80));
-          });
-          featuresIO.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.2 });
-    const featuresGrid = document.querySelector('.features-grid');
-    if (featuresGrid) featuresIO.observe(featuresGrid);
-    trackObserver(featuresIO);
-  }
-
-  // ============ BOOTSTRAP ============
-  if (!window.location.hash) {
-    window.location.hash = '#home';
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ animate(e.target); io.unobserve(e.target); } });
+    },{threshold:.4});
+    document.querySelectorAll('[data-count]').forEach(function(el){ io.observe(el); });
   } else {
-    handleHashChange();
+    document.querySelectorAll('[data-count]').forEach(animate);
   }
+
+  // ── faq accordion ──
+  document.querySelectorAll('.faq-q').forEach(function(q){
+    q.addEventListener('click',function(){
+      var item=q.parentElement, a=q.nextElementSibling, open=item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(o){ o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight=null; });
+      if(!open){ item.classList.add('open'); a.style.maxHeight=a.scrollHeight+'px'; }
+    });
+  });
 })();
 </script>
 </body>
