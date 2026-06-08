@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, AsyncGenerator
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Date,
     DateTime,
     Float,
     Index,
@@ -167,6 +168,55 @@ class EventLogModel(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class ExtractedAssetModel(Base):
+    """
+    Asset records onboarded via the m39_extraction PDF/contract pipeline.
+
+    Kept distinct from :class:`AssetModel` (the live operational registry keyed on
+    ``site_id``/``capacity_mw``) because onboarding extractions carry warranty and
+    commercial-due-diligence fields and may exist before the asset is fully
+    provisioned. Both tables share the operator-facing ``asset_id`` string, so
+    telemetry that updates ``soh_pct`` here can key on the same identifier.
+    """
+    __tablename__ = "extracted_assets"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    asset_id: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    asset_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    rated_mw: Mapped[float] = mapped_column(Float, nullable=False)
+    rated_mwh: Mapped[float | None] = mapped_column(Float, nullable=True)
+    iso_node: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    qse_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    chemistry: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    warranty_cycles: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    warranty_years: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    capacity_guarantee_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    commissioned_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    soh_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class ObligationModel(Base):
+    """Commercial obligation extracted from a contract document (m39_extraction)."""
+    __tablename__ = "obligations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    obligation_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    committed_mw: Mapped[float] = mapped_column(Float, nullable=False)
+    delivery_windows: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    penalty_linear_per_mwh: Mapped[float | None] = mapped_column(Float, nullable=True)
+    penalty_escalation_threshold_mwh: Mapped[float | None] = mapped_column(Float, nullable=True)
+    penalty_escalation_multiplier: Mapped[float | None] = mapped_column(Float, nullable=True)
+    contract_start: Mapped[date | None] = mapped_column(Date, nullable=True)
+    contract_end: Mapped[date | None] = mapped_column(Date, nullable=True)
+    extra_metadata: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
 
 # --- Engine Factory ---
