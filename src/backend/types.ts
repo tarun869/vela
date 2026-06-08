@@ -47,6 +47,31 @@ export type IntegrationSource = {
   health: 'healthy' | 'limited' | 'delayed'
 }
 
+export type VppConnectorCategory =
+  | 'Battery storage'
+  | 'Solar'
+  | 'EV charging'
+  | 'Smart thermostat'
+  | 'Smart panel'
+  | 'Backup generator'
+  | 'VPP / DERMS platform'
+
+export type VppConnector = {
+  id: string
+  name: string
+  category: VppConnectorCategory
+  protocol: string
+  status: 'connected' | 'available' | 'beta'
+  sites: number
+  capacityMw: number
+  /** Brand color used for the logo tile background. */
+  brand: string
+  /** Optional darker brand accent for the wordmark text. */
+  brandInk?: string
+  /** Short monogram rendered inside the logo tile. */
+  mark: string
+}
+
 export type IntegrationStandard = {
   id: string
   name: string

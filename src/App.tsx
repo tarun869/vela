@@ -59,6 +59,7 @@ import {
   marketSignals,
   objectiveWeights,
   telemetrySamples,
+  vppConnectors,
 } from './backend/mockData'
 import { buildDecisionCandidates, portfolioStats } from './backend/decisionModel'
 import { buildDispatchPlan } from './backend/dispatchPlan'
@@ -74,6 +75,7 @@ type PageId = 'command' | 'portfolio' | 'markets' | 'coordination' | 'model' | '
 
 const primaryItems: Array<{ id: PageId; label: string; icon: typeof Network }> = [
   { id: 'command', label: 'Command', icon: Network },
+  { id: 'integrations', label: 'Integrations', icon: ShieldCheck },
   { id: 'portfolio', label: 'Portfolio', icon: DatabaseZap },
   { id: 'markets', label: 'Markets', icon: LineChart },
 ]
@@ -81,7 +83,6 @@ const primaryItems: Array<{ id: PageId; label: string; icon: typeof Network }> =
 const secondaryItems: Array<{ id: PageId; label: string; icon: typeof Network }> = [
   { id: 'coordination', label: 'Coordination', icon: ClipboardCheck },
   { id: 'model', label: 'Model', icon: SlidersHorizontal },
-  { id: 'integrations', label: 'Integrations', icon: ShieldCheck },
   { id: 'runlog', label: 'Run log', icon: FileText },
 ]
 
@@ -1421,9 +1422,32 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
   )
 }
 
+function ConnectorLogo({ connector }: { connector: typeof vppConnectors[number] }) {
+  return (
+    <span
+      className="connector-logo"
+      style={{ background: connector.brand, color: connector.brandInk ?? '#ffffff' }}
+      aria-hidden
+    >
+      {connector.mark}
+    </span>
+  )
+}
+
 function IntegrationsPage() {
   const [expandedAdapter, setExpandedAdapter] = useState<string | null>(null)
   const [healthFilter, setHealthFilter] = useState<'all' | 'healthy' | 'limited' | 'delayed'>('all')
+  const [connectorFilter, setConnectorFilter] = useState<'all' | 'connected' | 'available' | 'beta'>('all')
+
+  const filteredConnectors = useMemo(() =>
+    connectorFilter === 'all' ? vppConnectors : vppConnectors.filter(c => c.status === connectorFilter),
+    [connectorFilter])
+
+  const connectedConnectors = useMemo(() => vppConnectors.filter(c => c.status === 'connected'), [])
+  const linkedSites = useMemo(() => connectedConnectors.reduce((sum, c) => sum + c.sites, 0), [connectedConnectors])
+  const orchestratedMw = useMemo(
+    () => connectedConnectors.reduce((sum, c) => sum + c.capacityMw, 0),
+    [connectedConnectors])
 
   const filteredSources = useMemo(() =>
     healthFilter === 'all' ? integrationSources : integrationSources.filter(s => s.health === healthFilter),
@@ -1450,6 +1474,63 @@ function IntegrationsPage() {
   return (
     <>
       <PageHeader eyebrow="Data fabric" title="Integrations" meta={`${coverage.confidence}% adapter confidence`} />
+
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <p className="label">Connected DER & VPP platforms</p>
+            <h2>Federating today's siloed vendor clouds into one fleet</h2>
+          </div>
+          <span className="live-indicator">
+            {connectedConnectors.length} connected · {orchestratedMw.toFixed(1)} MW
+          </span>
+        </div>
+        <div className="adapter-summary connector-summary">
+          <span><b>{connectedConnectors.length}</b><em>Connected</em></span>
+          <span><b>{linkedSites.toLocaleString()}</b><em>Linked sites</em></span>
+          <span><b>{orchestratedMw.toFixed(1)}</b><em>MW orchestrated</em></span>
+          <span><b>{vppConnectors.length}</b><em>Total connectors</em></span>
+        </div>
+        <div className="opt-bar">
+          <span className="opt-label">Status</span>
+          {(['all', 'connected', 'available', 'beta'] as const).map(s => (
+            <button key={s} className={`opt-pill${connectorFilter === s ? ' active' : ''}`}
+              onClick={() => setConnectorFilter(s)}>{s === 'all' ? 'All' : s}</button>
+          ))}
+          <span className="opt-label" style={{ marginLeft: 'auto' }}>{filteredConnectors.length} platforms</span>
+        </div>
+        <div className="connector-grid">
+          {filteredConnectors.map((connector) => (
+            <article className={`connector-card ${connector.status}`} key={connector.id}>
+              <div className="connector-card-head">
+                <ConnectorLogo connector={connector} />
+                <div className="connector-card-title">
+                  <strong>{connector.name}</strong>
+                  <span>{connector.category}</span>
+                </div>
+                <em className={`connector-status ${connector.status}`}>{connector.status}</em>
+              </div>
+              <p className="connector-protocol">{connector.protocol}</p>
+              <div className="connector-meta">
+                {connector.status === 'connected' ? (
+                  <>
+                    <span><b>{connector.sites.toLocaleString()}</b> sites</span>
+                    <span><b>{connector.capacityMw.toFixed(1)}</b> MW</span>
+                  </>
+                ) : (
+                  <span className="connector-cta">
+                    {connector.status === 'beta' ? 'Early access' : 'Ready to connect'}
+                  </span>
+                )}
+              </div>
+            </article>
+          ))}
+          {filteredConnectors.length === 0 && (
+            <p style={{ color: 'var(--muted)', fontSize: 12, padding: '8px 0' }}>No platforms match the selected status.</p>
+          )}
+        </div>
+      </section>
+
       <section className="integration-layout">
         <section className="panel">
           <div className="panel-head">

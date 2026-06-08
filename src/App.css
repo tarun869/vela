@@ -476,10 +476,10 @@ h3 {
 .run-summary span,
 .replay-summary span {
   min-height: 56px;
-  padding: 9px;
+  padding: 10px 11px;
   border: 1px solid var(--line);
-  border-radius: 7px;
-  background: #fbfcfb;
+  border-radius: 8px;
+  background: #f6f9fc;
 }
 
 .tradeoff-grid b,
@@ -1133,6 +1133,13 @@ h3 {
 
 .asset-title strong {
   font-weight: 600;
+  font-size: 13.5px;
+}
+
+.asset-title span {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 11.5px;
 }
 
 .asset-table-row b {
@@ -1654,7 +1661,7 @@ h3 {
   position:absolute; top:calc(100% + 5px); left:0; z-index:60;
   min-width:190px; padding:4px; border:1px solid var(--strong-line);
   border-radius:9px; background:var(--surface);
-  box-shadow:0 12px 32px rgba(26,42,36,.14); display:grid; gap:1px;
+  box-shadow:0 8px 20px rgba(26,42,36,.08); display:grid; gap:1px;
 }
 .metric-menu button {
   display:flex; align-items:center; gap:8px; width:100%; padding:7px 9px;
@@ -1672,7 +1679,7 @@ h3 {
   display:grid; place-items:center; width:42px; height:42px;
   border:1px solid var(--strong-line); border-radius:12px;
   color:var(--ink); background:var(--surface);
-  box-shadow:0 8px 24px rgba(26,42,36,.14); transition:all .15s;
+  box-shadow:0 4px 14px rgba(26,42,36,.08); transition:all .15s;
 }
 .settings-fab:hover { border-color:var(--green); color:var(--green); transform:scale(1.06); }
 .settings-fab.open { border-color:var(--green); color:var(--green); background:var(--green-soft); }
@@ -1680,7 +1687,7 @@ h3 {
 .settings-panel {
   position:fixed; bottom:72px; right:22px; z-index:90; width:256px;
   padding:14px; border:1px solid var(--strong-line); border-radius:12px;
-  background:var(--surface); box-shadow:0 16px 40px rgba(26,42,36,.15); display:grid; gap:14px;
+  background:var(--surface); box-shadow:0 10px 28px rgba(26,42,36,.09); display:grid; gap:14px;
 }
 .settings-section { display:grid; gap:7px; }
 .settings-title { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted-2); }
@@ -1765,6 +1772,7 @@ h3 {
   .quality-grid,
   .sensitivity-grid,
   .owner-grid,
+  .connector-summary,
   .bid-block-grid {
     grid-template-columns: 1fr;
   }
@@ -1885,5 +1893,133 @@ h3 {
 .search-clear {
   border: none; background: none; cursor: pointer; color: var(--muted);
   padding: 0; display: flex; align-items: center;
+}
+
+/* Connected DER & VPP platforms */
+.connector-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.connector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.connector-card {
+  display: grid;
+  gap: 9px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.connector-card:hover {
+  border-color: var(--strong-line);
+  box-shadow: 0 8px 22px rgba(26, 42, 36, 0.07);
+  transform: translateY(-1px);
+}
+
+.connector-card.available,
+.connector-card.beta {
+  background: #fbfcfe;
+}
+
+.connector-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.connector-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.connector-card-title {
+  min-width: 0;
+}
+
+.connector-card-title strong {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connector-card-title span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.connector-status {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.connector-status.connected {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.connector-status.available {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.connector-status.beta {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.connector-protocol {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.connector-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.connector-meta b {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.connector-cta {
+  color: var(--blue);
+  font-weight: 600;
 }
 .search-clear:hover { color: var(--ink); }

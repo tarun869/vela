@@ -8,7 +8,7 @@
 <meta name="description" content="Vela couples market revenue, live battery degradation, and your constraints in one explainable MILP solve, then hands the schedule to whatever EMS you already run." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#F6F8FC;
@@ -29,8 +29,8 @@
   --amber:#C47C1C;
   --up:#1B9E6E;
   --dn:#C2543F;
-  --sans:'Inter',sans-serif;
-  --mono:'IBM Plex Mono',monospace;
+  --sans:'Geist',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:'Geist Mono',ui-monospace,monospace;
   --maxw:1140px;
   --r:14px;
   --r-lg:20px;
@@ -44,8 +44,6 @@ body{
   background-color:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:400;
   line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   overflow-x:hidden;
-  background-image:radial-gradient(rgba(26,116,216,0.045) 1px,transparent 1.4px);
-  background-size:26px 26px;
 }
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -187,6 +185,9 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
 /* ── section frame ── */
 section.band{padding:96px 0;position:relative}
 .band.tint{background:var(--bg-soft)}
+.band.tint-deep{background:var(--bg-tint)}
+/* hairline split between adjoining sections */
+.band.split-top{border-top:1px solid var(--line)}
 .section-head{max-width:680px}
 .section-head.center{margin:0 auto;text-align:center}
 .section-head h2{margin-top:16px}
@@ -369,7 +370,6 @@ section.band{padding:96px 0;position:relative}
     </a>
     <div class="nav-links">
       <a href="#platform">Platform</a>
-      <a href="#how">How it works</a>
       <a href="#markets">Markets</a>
       <a href="#faq">FAQ</a>
     </div>
@@ -585,26 +585,8 @@ section.band{padding:96px 0;position:relative}
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="band tint" id="how">
-  <div class="wrap">
-    <div class="section-head center">
-      <div class="eyebrow center">The loop</div>
-      <h2 class="h2">Observe. Reason. Act.<br>Repeat every 15 minutes.</h2>
-      <p class="lead">Six stages, one continuous cycle. Every iteration compounds the advantage.</p>
-    </div>
-    <div class="how-steps">
-      <div class="how-step"><div class="step-num">01</div><div class="step-name">Observe</div><div class="step-desc">Ingest asset telemetry, market prices, weather forecasts, and grid signals in real time. Every data point feeds the next decision.</div></div>
-      <div class="how-step"><div class="step-num">02</div><div class="step-name">Forecast</div><div class="step-desc">Predict LMP spikes, load curves, and opt-out risk across a 4-hour horizon using wind-ramp signals and ORDC overlays.</div></div>
-      <div class="how-step"><div class="step-num">03</div><div class="step-name">Reason</div><div class="step-desc">Weigh energy arbitrage, demand response, ancillary services, degradation cost, backup reserve, and customer constraints simultaneously.</div></div>
-      <div class="how-step"><div class="step-num">04</div><div class="step-name">Act</div><div class="step-desc">Generate bids, dispatch assets, auto-approve low-risk decisions, and route high-risk ones to the human queue with full rationale.</div></div>
-      <div class="how-step"><div class="step-num">05</div><div class="step-name">Measure</div><div class="step-desc">Verify delivery against commitments to the interval. Attribute revenue per asset. Flag underperformance with root-cause analysis.</div></div>
-      <div class="how-step"><div class="step-num">06</div><div class="step-name">Learn</div><div class="step-desc">Update strategy models on settlement outcomes. Every cycle sharpens the next. The advantage compounds automatically.</div></div>
-    </div>
-  </div>
-</section>
 <!-- ── USE CASES ── -->
-<section class="band" id="usecases">
+<section class="band tint-deep split-top" id="usecases">
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow">Who it's for</div>
@@ -746,7 +728,6 @@ section.band{padding:96px 0;position:relative}
         <a href="#usecases">VPP Operators</a>
         <a href="#usecases">Aggregators</a>
         <a href="#usecases">C&amp;I Asset Owners</a>
-        <a href="#how">How it works</a>
       </div>
       <div class="foot-col">
         <div class="foot-col-title">Compliance</div>
