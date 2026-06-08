@@ -138,6 +138,11 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
 
 /* ── hero ── */
 #hero{position:relative;padding:170px 0 60px;text-align:center;overflow:hidden}
+#hero::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(26,116,216,0.06) 1px,transparent 1.5px);
+  background-size:24px 24px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%)}
 .hero-bg{position:absolute;inset:0;pointer-events:none;z-index:0}
 .hero-bg::before{content:'';position:absolute;inset:0;
   background:radial-gradient(ellipse 60% 50% at 50% -8%,var(--green-tint) 0%,transparent 60%)}
