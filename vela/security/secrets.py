@@ -92,3 +92,8 @@ def get_jwt_secret() -> str:
 
 def get_redis_url() -> str:
     return str(os.getenv("REDIS_URL") or get_secret("vela/redis", "url") or "redis://localhost:6379/0")
+
+
+def get_anthropic_api_key() -> str:
+    """Anthropic API key for Claude-backed extraction/generation (m38_rag, m39_extraction)."""
+    return str(os.getenv("ANTHROPIC_API_KEY") or get_secret("vela/anthropic", "api_key"))

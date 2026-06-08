@@ -1,0 +1,68 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 948 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+50 760 Td
+(Vela Onboarding - Asset Portfolio & Commercial Obligations) Tj
+T*
+() Tj
+T*
+(ASSET PORTFOLIO) Tj
+T*
+(Asset BESS-001 is a battery energy storage system rated at 50 MW / 200 MWh.) Tj
+T*
+(BESS-001 uses LFP chemistry, settles at ERCOT node HB_HOUSTON via QSE Vela Energy.) Tj
+T*
+(BESS-001 carries a 10 year / 6000 cycle warranty with an 80% capacity guarantee.) Tj
+T*
+(BESS-001 was commissioned on 2024-03-15.) Tj
+T*
+() Tj
+T*
+(Asset SOLAR-014 is a solar PV plant rated at 25 MW.) Tj
+T*
+(SOLAR-014 interconnects at CAISO node SP15 and was commissioned 2023-11-01.) Tj
+T*
+() Tj
+T*
+(COMMERCIAL OBLIGATIONS) Tj
+T*
+(Seller commits 40 MW of capacity on weekdays from hour 14 to hour 20.) Tj
+T*
+(Contract term runs from 2025-01-01 through 2027-12-31.) Tj
+T*
+(Shortfall penalty is $150 per MWh; beyond 100 MWh of shortfall the penalty) Tj
+T*
+(may be escalated by a factor of up to 2x at the buyer's reasonable discretion.) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001240 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1310
+%%EOF

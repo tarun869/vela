@@ -1882,3 +1882,194 @@ h3 {
   padding: 0; display: flex; align-items: center;
 }
 .search-clear:hover { color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEMO FLOW — shared utilities
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Spinner animation for Loader2 and RefreshCw */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 0.9s linear infinite; }
+
+/* ── Onboard page layout ─────────────────────────────────────────── */
+
+.demo-onboard-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  padding: 0 0 24px;
+}
+
+.demo-upload-col { display: flex; flex-direction: column; gap: 12px; }
+.demo-results-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* Drop zones */
+.demo-dropzone {
+  border: 1.5px dashed var(--line);
+  border-radius: 8px;
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+  outline: none;
+}
+.demo-dropzone:hover,
+.demo-dropzone.over {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.demo-dropzone.filled { border-color: var(--green); background: var(--green-soft); }
+.demo-dropzone-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; color: var(--muted); text-align: center;
+}
+.demo-dropzone-empty strong { font-size: 13px; color: var(--ink); }
+.demo-dropzone-empty span { font-size: 12px; }
+.demo-dropzone-filled { display: flex; align-items: center; gap: 10px; }
+.demo-dropzone-filled strong { font-size: 13px; }
+
+/* Table row highlights */
+.demo-row-warn { background: var(--amber-soft) !important; }
+.demo-row-amber { background: color-mix(in srgb, var(--amber-soft) 60%, var(--surface)) !important; }
+
+/* Review drawer (slide-in from right) */
+.demo-drawer-backdrop {
+  position: fixed; inset: 0; background: rgba(18, 22, 21, 0.3);
+  z-index: 200; display: flex; justify-content: flex-end;
+}
+.demo-drawer {
+  width: 380px; max-width: 90vw; background: var(--surface);
+  height: 100%; box-shadow: var(--shadow); display: flex; flex-direction: column;
+  animation: slideInRight 0.2s ease;
+}
+.demo-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+}
+.demo-drawer-head strong { font-size: 14px; }
+.demo-drawer-body { padding: 16px; flex: 1; overflow-y: auto; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Primary btn override for demo pages */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: none; border-radius: 7px;
+  background: var(--green); color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.btn:hover:not(:disabled) { opacity: 0.87; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Fleet page ──────────────────────────────────────────────────── */
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* SOC progress bar */
+.soc-bar {
+  height: 6px; border-radius: 4px; background: var(--line);
+  overflow: hidden; margin-bottom: 2px;
+}
+.soc-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+/* Status badge */
+.demo-status-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.07em;
+  padding: 2px 6px; border-radius: 4px;
+}
+.demo-status-badge[data-status="simulated"] {
+  color: var(--green); background: var(--green-soft);
+}
+.demo-status-badge[data-status="connected"] {
+  color: var(--blue); background: var(--blue-soft);
+}
+.demo-status-badge[data-status="error"] {
+  color: var(--red); background: var(--red-soft);
+}
+
+/* Alarm badge with pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+.demo-alarm-badge {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; background: var(--red-soft); color: var(--red);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* Price strip */
+.price-strip {
+  padding: 14px 16px !important;
+  margin-bottom: 10px;
+}
+
+/* ── Dispatch page ───────────────────────────────────────────────── */
+
+.dispatch-col-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr 280px;
+  gap: 16px;
+  min-height: 0;
+  padding-bottom: 24px;
+  transition: box-shadow 0.15s;
+}
+
+/* Spike flash: red ring around the entire dispatch screen */
+@keyframes flash-border {
+  0%   { box-shadow: inset 0 0 0 3px var(--red); }
+  80%  { box-shadow: inset 0 0 0 3px var(--red); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+.spike-flash { animation: flash-border 2s ease forwards; }
+
+.dispatch-left  { display: flex; flex-direction: column; min-width: 0; }
+.dispatch-center{ display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dispatch-right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* Alert feed */
+.alert-feed {
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 4px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alert-card {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--line);
+  background: var(--surface);
+  animation: slideInAlert 0.25s ease;
+}
+
+@keyframes slideInAlert {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.alert-card--spike { border-left-color: var(--red); background: var(--red-soft); }
+.alert-card--spike.approved { border-left-color: var(--green); background: var(--green-soft); }
+.alert-card--obligation { border-left-color: var(--amber); background: var(--amber-soft); }
+.alert-card--dispatch { border-left-color: var(--line); }
+
+/* ── Settlement page ─────────────────────────────────────────────── */
+
+.hero-card {
+  padding: 20px 24px !important;
+  border-left: 4px solid var(--green);
+  margin-bottom: 0;
+}

@@ -23,9 +23,14 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   SunMedium,
+  Upload,
   X,
   Zap,
 } from 'lucide-react'
+import { OnboardPage } from './pages/OnboardPage'
+import { FleetPage } from './pages/FleetPage'
+import { DispatchPage } from './pages/DispatchPage'
+import { SettlementDemoPage } from './pages/SettlementDemoPage'
 import {
   Area,
   AreaChart,
@@ -70,7 +75,10 @@ import { buildSettlementProjection } from './backend/settlement'
 import { buildReadinessFindings, readinessScore } from './backend/validation'
 import type { ActionType, Asset, AssetType, DecisionCandidate } from './backend/types'
 
-type PageId = 'command' | 'portfolio' | 'markets' | 'coordination' | 'model' | 'integrations' | 'runlog'
+type PageId =
+  | 'command' | 'portfolio' | 'markets'
+  | 'coordination' | 'model' | 'integrations' | 'runlog'
+  | 'onboard' | 'fleet' | 'dispatch' | 'settlement-demo'
 
 const primaryItems: Array<{ id: PageId; label: string; icon: typeof Network }> = [
   { id: 'command', label: 'Command', icon: Network },
@@ -85,7 +93,14 @@ const secondaryItems: Array<{ id: PageId; label: string; icon: typeof Network }>
   { id: 'runlog', label: 'Run log', icon: FileText },
 ]
 
-const pageItems = [...primaryItems, ...secondaryItems]
+const demoItems: Array<{ id: PageId; label: string; icon: typeof Network }> = [
+  { id: 'onboard', label: 'Onboard', icon: Upload },
+  { id: 'fleet', label: 'Fleet', icon: BatteryCharging },
+  { id: 'dispatch', label: 'Dispatch', icon: Zap },
+  { id: 'settlement-demo', label: 'Settlement', icon: CircleDollarSign },
+]
+
+const pageItems = [...primaryItems, ...secondaryItems, ...demoItems]
 
 const assetIcons: Record<AssetType, typeof BatteryCharging> = {
   Battery: BatteryCharging,
@@ -1818,6 +1833,7 @@ function App() {
   const [density, setDensity] = useState<Density>('comfortable')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [analyticsCollapsed, setAnalyticsCollapsed] = useState(false)
+  const [demoCollapsed, setDemoCollapsed] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
 
   const secondaryBadge: Partial<Record<PageId, { text: string; warn?: boolean }>> = {
@@ -1907,6 +1923,33 @@ function App() {
               </button>
             )
           })}
+
+          <div className="nav-section">
+            <span className="nav-section-label">Demo</span>
+            <button
+              className="nav-section-toggle"
+              type="button"
+              title={demoCollapsed ? 'Expand' : 'Collapse'}
+              onClick={() => setDemoCollapsed(c => !c)}
+            >
+              <ChevronDown size={11} style={{ transform: demoCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform .2s' }} />
+            </button>
+          </div>
+
+          {!demoCollapsed && demoItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                className={activePage === item.id ? 'active' : ''}
+                key={item.id}
+                type="button"
+                onClick={() => setActivePage(item.id)}
+              >
+                <Icon size={17} />
+                <span className="nav-item-label">{item.label}</span>
+              </button>
+            )
+          })}
         </nav>
 
         <div className="operator-card">
@@ -1932,6 +1975,10 @@ function App() {
         {activePage === 'model' && <ModelPage selectedDecision={selectedDecision} />}
         {activePage === 'integrations' && <IntegrationsPage />}
         {activePage === 'runlog' && <RunLogPage />}
+        {activePage === 'onboard' && <OnboardPage goToPage={id => setActivePage(id as PageId)} />}
+        {activePage === 'fleet' && <FleetPage goToPage={id => setActivePage(id as PageId)} />}
+        {activePage === 'dispatch' && <DispatchPage />}
+        {activePage === 'settlement-demo' && <SettlementDemoPage />}
       </section>
 
       {/* Floating settings */}

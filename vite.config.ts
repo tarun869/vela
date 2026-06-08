@@ -5,6 +5,12 @@ import { resolve } from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000',
+      '/ws': { target: 'ws://localhost:8000', ws: true },
+    },
+  },
   build: {
     rollupOptions: {
       input: {

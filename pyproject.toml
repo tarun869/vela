@@ -33,6 +33,10 @@ dependencies = [
     "cryptography>=42.0",
     "grpcio>=1.63",
     "protobuf>=4.25",
+    "anthropic>=0.92",
+    "python-multipart>=0.0.9",
+    "pymodbus>=3.6",
+    "websockets>=12.0",
 ]
 
 [project.optional-dependencies]
@@ -64,3 +68,6 @@ strict = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: tests that call live external services (e.g. Anthropic API)",
+]
