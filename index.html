@@ -233,6 +233,12 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
 .browser-url{flex:1;display:flex;justify-content:center}
 .browser-url span{font-family:var(--mono);font-size:11.5px;color:var(--faint);background:var(--bg-soft);border:1px solid var(--line-soft);padding:4px 16px;border-radius:7px;letter-spacing:.02em}
 .hero-video video{width:100%;display:block;background:#0B100D;aspect-ratio:16/9;object-fit:cover}
+.video-wrap{position:relative;cursor:pointer}
+.video-play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.28);transition:background .2s}
+.video-play-btn:hover{background:rgba(0,0,0,.18)}
+.video-play-btn svg{width:64px;height:64px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));transition:transform .15s}
+.video-play-btn:hover svg{transform:scale(1.08)}
+.video-play-btn.hidden{display:none}
 
 /* ── section frame ── */
 section.band{padding:96px 0;position:relative}
@@ -530,9 +536,18 @@ section.band{padding:96px 0;position:relative}
           <div class="browser-dots"><i></i><i></i><i></i></div>
           <div class="browser-url"><span>app.vela.energy / Command</span></div>
         </div>
-        <video id="heroVideo" controls playsinline preload="metadata" poster="">
-          <source src="/demo.mp4" type="video/mp4">
-        </video>
+        <div class="video-wrap" id="videoWrap">
+          <video id="heroVideo" playsinline preload="auto">
+            <source src="/demo.mp4" type="video/mp4">
+          </video>
+          <div class="video-play-btn" id="videoPlayBtn">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="rgba(255,255,255,0.15)"/>
+              <circle cx="40" cy="40" r="36" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+              <polygon points="32,24 60,40 32,56" fill="white"/>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -898,6 +913,23 @@ section.band{padding:96px 0;position:relative}
     document.querySelectorAll('[data-count]').forEach(function(el){ io.observe(el); });
   } else {
     document.querySelectorAll('[data-count]').forEach(animate);
+  }
+
+  // ── hero video click-to-play ──
+  var heroVideo = document.getElementById('heroVideo');
+  var playBtn   = document.getElementById('videoPlayBtn');
+  var videoWrap = document.getElementById('videoWrap');
+  if (heroVideo && playBtn) {
+    videoWrap.addEventListener('click', function() {
+      if (heroVideo.paused) {
+        heroVideo.play().catch(function(err) { console.warn('play() rejected:', err); });
+      } else {
+        heroVideo.pause();
+      }
+    });
+    heroVideo.addEventListener('play',  function() { playBtn.classList.add('hidden'); });
+    heroVideo.addEventListener('pause', function() { playBtn.classList.remove('hidden'); });
+    heroVideo.addEventListener('ended', function() { playBtn.classList.remove('hidden'); heroVideo.currentTime = 0; });
   }
 
   // ── faq accordion ──
