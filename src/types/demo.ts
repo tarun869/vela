@@ -78,6 +78,8 @@ export type AssetTelemetry = {
   soh_pct: number
   alarm: string | null
   connection_status: ConnectionStatus
+  rated_mw: number
+  rated_mwh: number | null
 }
 
 export type PriceTick = {
@@ -96,6 +98,15 @@ export type DemoAssetIn = {
   rated_mw: number
   rated_mwh: number | null
   chemistry: Chemistry | null
+}
+
+// Market commitment sent to /api/v1/dispatch/start (matches ObligationIn).
+export type ObligationIn = {
+  obligation_type: ObligationType
+  committed_mw: number
+  start_hour: number
+  end_hour: number
+  penalty_linear_per_mwh: number | null
 }
 
 // ── m41_optimizer ─────────────────────────────────────────────────────────────

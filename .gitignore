@@ -35,3 +35,6 @@ venv/
 *.sln
 *.sw?
 .DS_Store
+
+# Generated tooling artifacts
+graphify-out/

@@ -1,503 +1,577 @@
-import { useState, useRef, useCallback } from 'react'
+import { useRef, useState } from 'react'
 import {
-  FileText,
-  Upload,
-  Loader2,
-  CheckCircle2,
+  Activity,
   AlertTriangle,
-  ChevronRight,
-  X,
+  ArrowLeft,
+  ArrowRight,
+  BatteryCharging,
+  Building2,
+  CheckCircle2,
+  CircleDollarSign,
+  ClipboardPaste,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Gauge,
+  Layers,
+  Loader2,
+  ShieldCheck,
+  SunMedium,
+  Target,
+  Trash2,
+  TrendingUp,
+  Upload,
+  Wind,
+  Zap,
 } from 'lucide-react'
-import type {
-  DemoAssetIn,
-  DemoAssetType,
-  Chemistry,
-  ExtractionReview,
-  ExtractedAsset,
-  ExtractedObligation,
-} from '../types/demo'
-import { extractPortfolio, startDemoFleet } from '../services/demoApi'
+import type { DemoAssetType } from '../types/demo'
+import { extractPortfolio } from '../services/demoApi'
+import { ReportStage } from './OnboardReport'
+import {
+  analyzePortfolio,
+  type ParsedAsset,
+  type PortfolioReport,
+} from '../backend/onboardAnalysis'
+import {
+  parsePortfolioFile,
+  parsePortfolioText,
+  SAMPLE_PORTFOLIOS,
+  TEMPLATE_CSV,
+  type ImportResult,
+} from '../backend/portfolioImport'
 
 type PageId = string
 
-const CONFIDENCE_THRESHOLD = 0.85
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-  return `${(n / 1024 / 1024).toFixed(1)} MB`
+const ASSET_ICON: Record<DemoAssetType, typeof BatteryCharging> = {
+  BESS: BatteryCharging,
+  Solar: SunMedium,
+  Wind: Wind,
+  EV_Fleet: Zap,
+  Flex_Load: Activity,
 }
 
-function confidenceBadge(conf: number) {
-  const pct = Math.round(conf * 100)
-  const color = conf >= CONFIDENCE_THRESHOLD ? 'var(--green)' : 'var(--amber)'
-  return (
-    <span
-      style={{
-        fontSize: 11,
-        fontWeight: 600,
-        color,
-        background: conf >= CONFIDENCE_THRESHOLD ? 'var(--green-soft)' : 'var(--amber-soft)',
-        padding: '1px 6px',
-        borderRadius: 4,
-      }}
-    >
-      {pct}%
-    </span>
-  )
-}
+const ASSET_TYPES: DemoAssetType[] = ['BESS', 'Solar', 'Wind', 'EV_Fleet', 'Flex_Load']
 
-type DrawerItem =
-  | { kind: 'asset'; item: ExtractedAsset; idx: number }
-  | { kind: 'obligation'; item: ExtractedObligation; idx: number }
-
-function DropZone({
-  label,
-  hint,
-  file,
-  onFile,
-}: {
-  label: string
-  hint: string
-  file: File | null
-  onFile: (f: File) => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [over, setOver] = useState(false)
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      setOver(false)
-      const f = e.dataTransfer.files[0]
-      if (f && f.type === 'application/pdf') onFile(f)
-    },
-    [onFile],
-  )
-
-  return (
-    <div
-      className={`demo-dropzone${over ? ' over' : ''}${file ? ' filled' : ''}`}
-      onDragOver={e => { e.preventDefault(); setOver(true) }}
-      onDragLeave={() => setOver(false)}
-      onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept="application/pdf"
-        style={{ display: 'none' }}
-        onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f) }}
-      />
-      {file ? (
-        <div className="demo-dropzone-filled">
-          <FileText size={20} color="var(--green)" />
-          <div>
-            <strong>{file.name}</strong>
-            <span style={{ fontSize: 11, color: 'var(--muted)', display: 'block' }}>
-              {formatBytes(file.size)}
-            </span>
-          </div>
-          <CheckCircle2 size={16} color="var(--green)" style={{ marginLeft: 'auto' }} />
-        </div>
-      ) : (
-        <div className="demo-dropzone-empty">
-          <Upload size={20} color="var(--muted)" />
-          <strong>{label}</strong>
-          <span>{hint}</span>
-        </div>
-      )}
-    </div>
-  )
-}
+type Stage = 'upload' | 'review' | 'report'
 
 export function OnboardPage({ goToPage }: { goToPage: (id: PageId) => void }) {
-  const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
-  const [contractFile, setContractFile] = useState<File | null>(null)
-  const [extracting, setExtracting] = useState(false)
-  const [extractError, setExtractError] = useState<string | null>(null)
-  const [review, setReview] = useState<ExtractionReview | null>(null)
-  const [drawer, setDrawer] = useState<DrawerItem | null>(null)
-  const [editValues, setEditValues] = useState<Record<string, string>>({})
-  const [confirmedKeys, setConfirmedKeys] = useState<Set<string>>(new Set())
-  const [connecting, setConnecting] = useState(false)
+  const [stage, setStage] = useState<Stage>('upload')
+  const [parsed, setParsed] = useState<ParsedAsset[]>([])
+  const [importMeta, setImportMeta] = useState<ImportResult | null>(null)
+  const [pasteText, setPasteText] = useState('')
+  const [busy, setBusy] = useState<string | null>(null)
+  const [report, setReport] = useState<PortfolioReport | null>(null)
+  const [over, setOver] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
-  const files = [portfolioFile, contractFile].filter((f): f is File => f !== null)
-  const canExtract = files.length > 0 && !extracting
+  const ingest = (res: ImportResult) => {
+    if (res.assets.length === 0) {
+      setImportMeta(res)
+      setBusy(null)
+      return
+    }
+    setParsed(res.assets)
+    setImportMeta(res)
+    setStage('review')
+    setBusy(null)
+  }
 
-  const handleExtract = async () => {
-    setExtracting(true)
-    setExtractError(null)
+  const handleFile = async (file: File) => {
+    setBusy(`Reading ${file.name}…`)
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
     try {
-      const result = await extractPortfolio(files)
-      setReview(result)
+      if (isPdf) {
+        // Try the Claude extraction backend; fall back to a friendly note.
+        try {
+          const review = await extractPortfolio([file])
+          const assets: ParsedAsset[] = review.result.assets.map((a) => ({
+            asset_id: a.asset_id,
+            asset_type: a.asset_type,
+            rated_mw: a.rated_mw,
+            rated_mwh: a.rated_mwh,
+            chemistry: a.chemistry,
+            region: a.iso_node ?? 'Imported',
+            commissioned_year: a.commissioned_date ? Number(a.commissioned_date.slice(0, 4)) || null : null,
+            confidence: a.confidence,
+          }))
+          ingest({
+            assets,
+            warnings: review.result.extraction_warnings ?? [],
+            detectedColumns: {},
+            source: file.name,
+          })
+        } catch {
+          setImportMeta({
+            assets: [],
+            warnings: [
+              `Couldn't reach the document-extraction service for "${file.name}". Paste the asset list below or load a sample portfolio to continue the assessment.`,
+            ],
+            detectedColumns: {},
+            source: file.name,
+          })
+          setBusy(null)
+        }
+      } else {
+        ingest(await parsePortfolioFile(file))
+      }
     } catch (err) {
-      setExtractError(err instanceof Error ? err.message : 'Extraction failed')
-    } finally {
-      setExtracting(false)
+      setImportMeta({
+        assets: [],
+        warnings: [`Failed to read file: ${err instanceof Error ? err.message : 'unknown error'}`],
+        detectedColumns: {},
+        source: file.name,
+      })
+      setBusy(null)
     }
   }
 
-  const flaggedAssets = review?.result.assets.filter(a => a.confidence < CONFIDENCE_THRESHOLD) ?? []
-  const flaggedObligations = review?.result.obligations.filter(o => o.ambiguous_language !== null) ?? []
-  const totalFlagged = flaggedAssets.length + flaggedObligations.length
-  const allReviewed = confirmedKeys.size >= totalFlagged
-
-  const confirmKey = (key: string) => {
-    setConfirmedKeys(prev => new Set([...prev, key]))
-    setDrawer(null)
+  const runAssessment = () => {
+    setBusy('Modeling revenue across market products…')
+    // Small timeout so the loading state reads as real work during the demo.
+    window.setTimeout(() => {
+      setReport(analyzePortfolio(parsed))
+      setStage('report')
+      setBusy(null)
+    }, 650)
   }
 
-  const handleConnect = async () => {
-    if (!review) return
-    setConnecting(true)
-    try {
-      const demoAssets: DemoAssetIn[] = review.result.assets.map(a => ({
-        asset_id: a.asset_id,
-        asset_type: a.asset_type as DemoAssetType,
-        rated_mw: a.rated_mw,
-        rated_mwh: a.rated_mwh,
-        chemistry: (a.chemistry ?? null) as Chemistry | null,
-      }))
-      await startDemoFleet(demoAssets)
-      goToPage('fleet')
-    } catch (err) {
-      setExtractError(err instanceof Error ? err.message : 'Fleet connect failed')
-    } finally {
-      setConnecting(false)
-    }
+  const restart = () => {
+    setParsed([])
+    setImportMeta(null)
+    setReport(null)
+    setPasteText('')
+    setStage('upload')
   }
 
   return (
     <>
-      <div className="page-header">
-        <div>
-          <p className="label" style={{ fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em', color: 'var(--muted)' }}>Demo flow · Step 1 of 4</p>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Onboard portfolio</h1>
-        </div>
-      </div>
+      <OnboardHeader stage={stage} />
+      {busy && (
+        <section className="panel onboard-busy">
+          <Loader2 size={15} className="spin" /> {busy}
+        </section>
+      )}
 
-      <div className="demo-onboard-layout">
-        {/* ── Left: upload panel ── */}
-        <div className="demo-upload-col">
-          <section className="panel">
-            <div className="panel-head">
-              <div>
-                <p className="label">Upload documents</p>
-                <h2>Portfolio &amp; contracts</h2>
-              </div>
-            </div>
+      {stage === 'upload' && (
+        <UploadStage
+          over={over}
+          setOver={setOver}
+          fileRef={fileRef}
+          onFile={handleFile}
+          pasteText={pasteText}
+          setPasteText={setPasteText}
+          onPaste={() => ingest(parsePortfolioText(pasteText))}
+          onSample={(assets, name) =>
+            ingest({ assets, warnings: [], detectedColumns: {}, source: name })
+          }
+          warnings={importMeta?.warnings ?? []}
+        />
+      )}
 
-            <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <DropZone
-                label="Asset Portfolio"
-                hint="Interconnection agreement or asset register PDF"
-                file={portfolioFile}
-                onFile={setPortfolioFile}
-              />
-              <DropZone
-                label="Contracts &amp; Obligations"
-                hint="Commercial obligations or capacity contract PDF"
-                file={contractFile}
-                onFile={setContractFile}
-              />
+      {stage === 'review' && (
+        <ReviewStage
+          parsed={parsed}
+          setParsed={setParsed}
+          meta={importMeta}
+          onBack={restart}
+          onRun={runAssessment}
+        />
+      )}
 
-              {extractError && (
-                <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>
-                  <AlertTriangle size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  {extractError}
-                </p>
-              )}
-
-              <button
-                className="btn"
-                disabled={!canExtract}
-                onClick={() => { void handleExtract() }}
-                style={{ marginTop: 4 }}
-              >
-                {extracting ? (
-                  <>
-                    <Loader2 size={15} className="spin" />
-                    Reading documents…
-                  </>
-                ) : (
-                  'Extract with Vela'
-                )}
-              </button>
-            </div>
-          </section>
-
-          {review && (
-            <section className="panel" style={{ marginTop: 0 }}>
-              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p className="label" style={{ margin: 0 }}>
-                  {review.result.assets.length} assets · {review.result.obligations.length} obligations
-                  {totalFlagged > 0 && (
-                    <span style={{ color: 'var(--amber)', marginLeft: 8 }}>
-                      · {totalFlagged - confirmedKeys.size} fields need review
-                    </span>
-                  )}
-                  {totalFlagged === 0 && (
-                    <span style={{ color: 'var(--green)', marginLeft: 8 }}>· All fields look good</span>
-                  )}
-                </p>
-                <button
-                  className="btn"
-                  disabled={!allReviewed || connecting}
-                  onClick={() => { void handleConnect() }}
-                >
-                  {connecting ? (
-                    <><Loader2 size={15} className="spin" /> Connecting…</>
-                  ) : (
-                    <>Connect Fleet <ChevronRight size={14} /></>
-                  )}
-                </button>
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* ── Right: results ── */}
-        {review && (
-          <div className="demo-results-col">
-            {review.result.assets.length > 0 && (
-              <section className="panel">
-                <div className="panel-head">
-                  <div>
-                    <p className="label">Extracted assets</p>
-                    <h2>{review.result.assets.length} assets found</h2>
-                  </div>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="roster-table">
-                    <thead>
-                      <tr>
-                        <th>Asset ID</th>
-                        <th>Type</th>
-                        <th>MW</th>
-                        <th>MWh</th>
-                        <th>Node</th>
-                        <th>Chemistry</th>
-                        <th>Warranty</th>
-                        <th>Confidence</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {review.result.assets.map((asset, idx) => {
-                        const key = `asset-${idx}`
-                        const flagged = asset.confidence < CONFIDENCE_THRESHOLD
-                        const confirmed = confirmedKeys.has(key)
-                        return (
-                          <tr
-                            key={key}
-                            className={flagged && !confirmed ? 'demo-row-warn' : ''}
-                            style={{ cursor: flagged ? 'pointer' : 'default' }}
-                            onClick={() => flagged && setDrawer({ kind: 'asset', item: asset, idx })}
-                          >
-                            <td><strong>{asset.asset_id}</strong></td>
-                            <td>{asset.asset_type}</td>
-                            <td>{asset.rated_mw}</td>
-                            <td>{asset.rated_mwh ?? '—'}</td>
-                            <td>{asset.iso_node ?? '—'}</td>
-                            <td>{asset.chemistry ?? '—'}</td>
-                            <td>{asset.warranty_cycles != null ? `${asset.warranty_cycles} cy` : '—'}</td>
-                            <td>{confidenceBadge(asset.confidence)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
-
-            {review.result.obligations.length > 0 && (
-              <section className="panel">
-                <div className="panel-head">
-                  <div>
-                    <p className="label">Extracted obligations</p>
-                    <h2>{review.result.obligations.length} obligations found</h2>
-                  </div>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="roster-table">
-                    <thead>
-                      <tr>
-                        <th>Type</th>
-                        <th>Committed MW</th>
-                        <th>Window</th>
-                        <th>Penalty Rate</th>
-                        <th>Confidence</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {review.result.obligations.map((obl, idx) => {
-                        const key = `obl-${idx}`
-                        const flagged = obl.ambiguous_language !== null
-                        const confirmed = confirmedKeys.has(key)
-                        const window = obl.delivery_windows[0]
-                        return (
-                          <tr
-                            key={key}
-                            className={flagged && !confirmed ? 'demo-row-amber' : ''}
-                            style={{ cursor: flagged ? 'pointer' : 'default' }}
-                            onClick={() => flagged && setDrawer({ kind: 'obligation', item: obl, idx })}
-                          >
-                            <td><strong>{obl.obligation_type}</strong></td>
-                            <td>{obl.committed_mw} MW</td>
-                            <td>
-                              {window
-                                ? `${window.start_hour}:00–${window.end_hour}:00`
-                                : '—'}
-                            </td>
-                            <td>
-                              {obl.penalty_linear_per_mwh != null
-                                ? `$${obl.penalty_linear_per_mwh}/MWh`
-                                : '—'}
-                            </td>
-                            <td>{confidenceBadge(obl.confidence)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
-
-            {review.result.extraction_warnings.length > 0 && (
-              <section className="panel">
-                <div style={{ padding: '12px 16px' }}>
-                  {review.result.extraction_warnings.map((w, i) => (
-                    <p key={i} style={{ fontSize: 12, color: 'var(--amber)', margin: '4px 0' }}>
-                      <AlertTriangle size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                      {w}
-                    </p>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Review drawer ── */}
-      {drawer && (
-        <div className="demo-drawer-backdrop" onClick={() => setDrawer(null)}>
-          <div className="demo-drawer" onClick={e => e.stopPropagation()}>
-            <div className="demo-drawer-head">
-              <strong>Review field</strong>
-              <button className="icon-btn" onClick={() => setDrawer(null)}><X size={14} /></button>
-            </div>
-
-            {drawer.kind === 'asset' && (
-              <ReviewDrawerContent
-                title={`Asset: ${drawer.item.asset_id}`}
-                confidence={drawer.item.confidence}
-                sourceText={drawer.item.source_text}
-                fields={[
-                  { label: 'Asset type', value: String(drawer.item.asset_type) },
-                  { label: 'Rated MW', value: String(drawer.item.rated_mw) },
-                  { label: 'Rated MWh', value: String(drawer.item.rated_mwh ?? '') },
-                  { label: 'ISO Node', value: drawer.item.iso_node ?? '' },
-                  { label: 'Chemistry', value: drawer.item.chemistry ?? '' },
-                ]}
-                editValues={editValues}
-                onChange={(field, val) => setEditValues(prev => ({ ...prev, [`asset-${drawer.idx}-${field}`]: val }))}
-                keyPrefix={`asset-${drawer.idx}`}
-                onConfirm={() => confirmKey(`asset-${drawer.idx}`)}
-              />
-            )}
-
-            {drawer.kind === 'obligation' && (
-              <ReviewDrawerContent
-                title={`Obligation: ${drawer.item.obligation_type}`}
-                confidence={drawer.item.confidence}
-                sourceText={drawer.item.source_text}
-                ambiguous={drawer.item.ambiguous_language}
-                fields={[
-                  { label: 'Committed MW', value: String(drawer.item.committed_mw) },
-                  { label: 'Penalty rate', value: drawer.item.penalty_linear_per_mwh != null ? String(drawer.item.penalty_linear_per_mwh) : '' },
-                ]}
-                editValues={editValues}
-                onChange={(field, val) => setEditValues(prev => ({ ...prev, [`obl-${drawer.idx}-${field}`]: val }))}
-                keyPrefix={`obl-${drawer.idx}`}
-                onConfirm={() => confirmKey(`obl-${drawer.idx}`)}
-              />
-            )}
-          </div>
-        </div>
+      {stage === 'report' && report && (
+        <ReportStage report={report} parsed={parsed} onBack={() => setStage('review')} goToPage={goToPage} />
       )}
     </>
   )
 }
 
-function ReviewDrawerContent({
-  title,
-  confidence,
-  sourceText,
-  ambiguous,
-  fields,
-  editValues,
-  onChange,
-  keyPrefix,
-  onConfirm,
+// ── Header with progress ────────────────────────────────────────────────────────
+
+function OnboardHeader({ stage }: { stage: Stage }) {
+  const steps: { id: Stage; label: string }[] = [
+    { id: 'upload', label: 'Import portfolio' },
+    { id: 'review', label: 'Review assets' },
+    { id: 'report', label: 'Revenue assessment' },
+  ]
+  const idx = steps.findIndex((s) => s.id === stage)
+  return (
+    <div className="page-header onboard-header">
+      <div>
+        <p className="demo-eyebrow">Vela onboarding</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '2px 0 0' }}>DER portfolio assessment</h1>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '4px 0 0', maxWidth: 600 }}>
+          Upload the spreadsheet, interconnection PDF, or asset list you already keep today. Vela
+          reads it, models what the fleet could earn across every market product, and scores how
+          ready it is to participate — no integration required to get the number.
+        </p>
+      </div>
+      <ol className="onboard-steps">
+        {steps.map((s, i) => (
+          <li key={s.id} className={i === idx ? 'active' : i < idx ? 'done' : ''}>
+            <span className="onboard-step-dot">{i < idx ? <CheckCircle2 size={13} /> : i + 1}</span>
+            {s.label}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+// ── Stage 1: upload ─────────────────────────────────────────────────────────────
+
+function UploadStage({
+  over,
+  setOver,
+  fileRef,
+  onFile,
+  pasteText,
+  setPasteText,
+  onPaste,
+  onSample,
+  warnings,
 }: {
-  title: string
-  confidence: number
-  sourceText: string | null
-  ambiguous?: string | null
-  fields: { label: string; value: string }[]
-  editValues: Record<string, string>
-  onChange: (field: string, val: string) => void
-  keyPrefix: string
-  onConfirm: () => void
+  over: boolean
+  setOver: (v: boolean) => void
+  fileRef: React.RefObject<HTMLInputElement | null>
+  onFile: (f: File) => void
+  pasteText: string
+  setPasteText: (v: string) => void
+  onPaste: () => void
+  onSample: (assets: ParsedAsset[], name: string) => void
+  warnings: string[]
+}) {
+  const downloadTemplate = () => {
+    const blob = new Blob([TEMPLATE_CSV], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'vela-portfolio-template.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="onboard-upload-grid">
+      <div className="onboard-upload-main">
+        <section
+          className={`demo-dropzone onboard-drop${over ? ' over' : ''}`}
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setOver(true)
+          }}
+          onDragLeave={() => setOver(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setOver(false)
+            const f = e.dataTransfer.files?.[0]
+            if (f) onFile(f)
+          }}
+        >
+          <div className="onboard-drop-inner">
+            <div className="onboard-drop-icon">
+              <Upload size={26} />
+            </div>
+            <strong>Drop your portfolio file here</strong>
+            <span>or click to browse — CSV, Excel export, TXT, or interconnection PDF</span>
+            <div className="onboard-fmt-row">
+              <span className="onboard-fmt"><FileSpreadsheet size={12} /> CSV / XLSX</span>
+              <span className="onboard-fmt"><FileText size={12} /> PDF</span>
+              <span className="onboard-fmt"><ClipboardPaste size={12} /> Pasted list</span>
+            </div>
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,.txt,.tsv,.pdf,application/pdf,text/csv,text/plain"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) onFile(f)
+              e.target.value = ''
+            }}
+          />
+        </section>
+
+        {warnings.length > 0 && (
+          <section className="panel onboard-warnbox">
+            {warnings.map((w, i) => (
+              <p key={i}>
+                <AlertTriangle size={13} /> {w}
+              </p>
+            ))}
+          </section>
+        )}
+
+        <section className="panel onboard-paste-panel">
+          <div className="panel-head">
+            <div>
+              <p className="label">No file handy?</p>
+              <h2>Paste your asset list</h2>
+            </div>
+            <button className="onboard-import" onClick={downloadTemplate}>
+              <Download size={13} /> CSV template
+            </button>
+          </div>
+          <div style={{ padding: '0 16px 16px' }}>
+            <textarea
+              className="onboard-textarea"
+              placeholder={
+                'Paste rows like:\nHornsdale Reserve, BESS, 50 MW, 100 MWh, LFP, CAISO NP15\nTopaz Solar Farm, Solar, 45 MW, , , CAISO SP15\nRoscoe Wind, Wind, 110 MW, , , ERCOT West'
+              }
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              rows={6}
+            />
+            <button className="btn" disabled={pasteText.trim().length === 0} onClick={onPaste} style={{ marginTop: 10 }}>
+              Parse list <ArrowRight size={15} />
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <aside className="onboard-upload-side">
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <p className="label">Start fast</p>
+              <h2>Load a sample portfolio</h2>
+            </div>
+          </div>
+          <div className="onboard-samples">
+            {SAMPLE_PORTFOLIOS.map((s) => {
+              const mw = s.assets.reduce((a, x) => a + x.rated_mw, 0)
+              return (
+                <button key={s.id} className="onboard-sample-card" onClick={() => onSample(s.assets, s.name)}>
+                  <div className="onboard-sample-head">
+                    <strong>{s.name}</strong>
+                    <span className="onboard-iso-chip">{s.iso}</span>
+                  </div>
+                  <p>{s.blurb}</p>
+                  <div className="onboard-sample-meta">
+                    <span>{s.assets.length} assets</span>
+                    <span>{mw.toFixed(0)} MW</span>
+                    <ArrowRight size={13} />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="panel onboard-trust">
+          <div className="panel-head">
+            <div>
+              <p className="label">What you get back</p>
+              <h2>In one pass</h2>
+            </div>
+          </div>
+          <ul className="onboard-trust-list">
+            <li><CircleDollarSign size={14} /> Stacked annual revenue across every eligible market product</li>
+            <li><TrendingUp size={14} /> Uplift vs. what the fleet earns on a single program today</li>
+            <li><ShieldCheck size={14} /> Market-readiness score with the gaps that block enrollment</li>
+            <li><Target size={14} /> Prioritized actions ranked by dollar impact</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  )
+}
+
+// ── Stage 2: review ─────────────────────────────────────────────────────────────
+
+function ReviewStage({
+  parsed,
+  setParsed,
+  meta,
+  onBack,
+  onRun,
+}: {
+  parsed: ParsedAsset[]
+  setParsed: React.Dispatch<React.SetStateAction<ParsedAsset[]>>
+  meta: ImportResult | null
+  onBack: () => void
+  onRun: () => void
+}) {
+  const totalMw = parsed.reduce((s, a) => s + a.rated_mw, 0)
+  const totalMwh = parsed.reduce((s, a) => s + (a.rated_mwh ?? 0), 0)
+  const avgConf = parsed.length ? parsed.reduce((s, a) => s + a.confidence, 0) / parsed.length : 0
+  const lowConf = parsed.filter((a) => a.confidence < 0.75).length
+
+  const update = (i: number, patch: Partial<ParsedAsset>) =>
+    setParsed((prev) => prev.map((a, idx) => (idx === i ? { ...a, ...patch, confidence: Math.max(a.confidence, 0.9) } : a)))
+  const remove = (i: number) => setParsed((prev) => prev.filter((_, idx) => idx !== i))
+
+  return (
+    <>
+      <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <MiniStat icon={Layers} label="Assets parsed" value={String(parsed.length)} sub={meta?.source ?? 'imported'} />
+        <MiniStat icon={BatteryCharging} label="Total power" value={`${totalMw.toFixed(0)} MW`} sub={`${totalMwh.toFixed(0)} MWh storage`} />
+        <MiniStat
+          icon={Gauge}
+          label="Import confidence"
+          value={`${Math.round(avgConf * 100)}%`}
+          sub={lowConf ? `${lowConf} need review` : 'all clear'}
+          warn={lowConf > 0}
+        />
+        <MiniStat
+          icon={Building2}
+          label="Markets"
+          value={String(new Set(parsed.map((a) => a.region.split(' ')[0])).size)}
+          sub={[...new Set(parsed.map((a) => a.region.split(' ')[0]))].slice(0, 3).join(', ')}
+        />
+      </div>
+
+      {meta && (meta.warnings.length > 0 || Object.keys(meta.detectedColumns).length > 0) && (
+        <section className="panel onboard-detect">
+          {Object.keys(meta.detectedColumns).length > 0 && (
+            <p className="onboard-detect-cols">
+              <CheckCircle2 size={13} /> Mapped columns:{' '}
+              {Object.entries(meta.detectedColumns).map(([k, v]) => (
+                <span key={k} className="onboard-col-chip">
+                  {v} → {k}
+                </span>
+              ))}
+            </p>
+          )}
+          {meta.warnings.map((w, i) => (
+            <p key={i} className="onboard-detect-warn">
+              <AlertTriangle size={13} /> {w}
+            </p>
+          ))}
+        </section>
+      )}
+
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <p className="label">Step 2</p>
+            <h2>Review &amp; correct the parsed fleet</h2>
+          </div>
+          <span className="label" style={{ textTransform: 'none', fontWeight: 600 }}>
+            Edit any cell — fixes raise confidence
+          </span>
+        </div>
+        <div style={{ padding: '0 14px 14px', overflowX: 'auto' }}>
+          <table className="roster-table review-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Type</th>
+                <th>MW</th>
+                <th>MWh</th>
+                <th>Region / node</th>
+                <th>Confidence</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {parsed.map((a, i) => {
+                const Icon = ASSET_ICON[a.asset_type]
+                return (
+                  <tr key={`${a.asset_id}-${i}`} className={a.confidence < 0.75 ? 'demo-row-amber' : ''}>
+                    <td>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Icon size={15} color="var(--green)" />
+                        <input
+                          className="review-input"
+                          value={a.asset_id}
+                          onChange={(e) => update(i, { asset_id: e.target.value })}
+                        />
+                      </span>
+                    </td>
+                    <td>
+                      <select
+                        className="review-input review-select"
+                        value={a.asset_type}
+                        onChange={(e) => update(i, { asset_type: e.target.value as DemoAssetType })}
+                      >
+                        {ASSET_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t.replace('_', ' ')}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        className="review-input review-num"
+                        type="number"
+                        value={a.rated_mw}
+                        onChange={(e) => update(i, { rated_mw: Math.max(0, Number(e.target.value)) })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="review-input review-num"
+                        type="number"
+                        placeholder="—"
+                        value={a.rated_mwh ?? ''}
+                        onChange={(e) =>
+                          update(i, { rated_mwh: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="review-input"
+                        value={a.region}
+                        onChange={(e) => update(i, { region: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      <span className={`conf-pill ${a.confidence >= 0.85 ? 'good' : a.confidence >= 0.7 ? 'mid' : 'low'}`}>
+                        {Math.round(a.confidence * 100)}%
+                      </span>
+                    </td>
+                    <td>
+                      <button className="icon-btn" title="Remove" onClick={() => remove(i)}>
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="panel onboard-actionbar">
+        <button className="btn-ghost" onClick={onBack}>
+          <ArrowLeft size={15} /> Start over
+        </button>
+        <button className="btn btn-lg" disabled={parsed.length === 0} onClick={onRun}>
+          Run revenue assessment <ArrowRight size={16} />
+        </button>
+      </section>
+    </>
+  )
+}
+
+function MiniStat({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  warn,
+}: {
+  icon: typeof BatteryCharging
+  label: string
+  value: string
+  sub: string
+  warn?: boolean
 }) {
   return (
-    <div className="demo-drawer-body">
-      <p className="label">{title}</p>
-      <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>Confidence</span>
-        {confidenceBadge(confidence)}
+    <section className="metric-card">
+      <div className="metric-icon" style={warn ? { color: 'var(--amber)' } : undefined}>
+        <Icon size={18} />
       </div>
-
-      {ambiguous && (
-        <div style={{ background: 'var(--amber-soft)', borderRadius: 6, padding: '8px 10px', marginBottom: 12, fontSize: 12, color: 'var(--amber)' }}>
-          <strong>Ambiguous language:</strong> "{ambiguous}"
-        </div>
-      )}
-
-      {sourceText && (
-        <div style={{ background: 'var(--surface-2)', borderRadius: 6, padding: '8px 10px', marginBottom: 12, fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--mono)', lineHeight: 1.5 }}>
-          "{sourceText}"
-        </div>
-      )}
-
-      {fields.map(({ label, value }) => {
-        const fkey = `${keyPrefix}-${label}`
-        return (
-          <div key={fkey} style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{label}</label>
-            <input
-              type="text"
-              defaultValue={editValues[fkey] ?? value}
-              onChange={e => onChange(label, e.target.value)}
-              style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--line)', borderRadius: 5, fontSize: 13, background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' }}
-            />
-          </div>
-        )
-      })}
-
-      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-        <button className="btn" onClick={onConfirm}>Confirm</button>
-        <button className="btn" style={{ background: 'var(--surface-2)', color: 'var(--ink)' }} onClick={onConfirm}>
-          Looks correct
-        </button>
+      <div>
+        <p className="label">{label}</p>
+        <strong>{value}</strong>
+        <span style={warn ? { color: 'var(--amber)' } : undefined}>{sub}</span>
       </div>
-    </div>
+    </section>
   )
 }

@@ -5,6 +5,7 @@ import type {
   FleetDispatchPlan,
   SettlementSummary,
   DispatchRecord,
+  ObligationIn,
 } from '../types/demo'
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -46,11 +47,14 @@ export function getFleetState(): Promise<Record<string, unknown>> {
   return request('/api/v1/fleet/state')
 }
 
-export function startDispatch(interval_seconds = 300): Promise<{ status: string }> {
+export function startDispatch(
+  interval_seconds = 300,
+  obligations: ObligationIn[] = [],
+): Promise<{ status: string; obligations: number }> {
   return request('/api/v1/dispatch/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ interval_seconds }),
+    body: JSON.stringify({ interval_seconds, obligations }),
   })
 }
 

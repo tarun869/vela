@@ -59,6 +59,7 @@ class BESSSimulator(AssetConnector):
         chemistry: str = "LFP",
         tick_interval_seconds: float = 5.0,
         real_time: bool = True,
+        asset_type: str = "BESS",
         clock: Clock | None = None,
         rng: random.Random | None = None,
     ) -> None:
@@ -67,6 +68,7 @@ class BESSSimulator(AssetConnector):
         self.rated_mw = rated_mw
         self.rated_mwh = rated_mwh
         self.chemistry = chemistry
+        self.asset_type = asset_type
         self.tick_interval_seconds = tick_interval_seconds
         self.real_time = real_time
         self._clock = clock or _utc_now
@@ -126,6 +128,9 @@ class BESSSimulator(AssetConnector):
             soh_pct=soh_pct,
             alarm=alarm,
             connection_status="simulated",
+            asset_type=self.asset_type,
+            rated_mw=self.rated_mw,
+            rated_mwh=self.rated_mwh,
         )
 
     async def stream(self) -> AsyncGenerator[AssetTelemetry, None]:
@@ -156,6 +161,8 @@ class SolarSimulator(AssetConnector):
         config = IntegrationConfig(asset_id=asset_id, protocol="simulated", simulate=True)
         super().__init__(asset_id, config)
         self.rated_mw = rated_mw
+        self.rated_mwh = None
+        self.asset_type = "Solar"
         self.tick_interval_seconds = tick_interval_seconds
         self.real_time = real_time
         self._clock = clock or _utc_now
@@ -169,8 +176,8 @@ class SolarSimulator(AssetConnector):
         return None
 
     async def send_dispatch(self, mw: float) -> bool:
-        # Solar can only curtail downward; treat the setpoint as an output cap.
-        self._curtail_mw = _clamp(mw, 0.0, self.rated_mw)
+        # Must-take renewable in demo mode: accept the setpoint but don't curtail
+        # natural output (positive-price window — nothing to curtail for).
         return True
 
     def generation_mw(self, hour: float) -> float:
@@ -180,8 +187,7 @@ class SolarSimulator(AssetConnector):
         irradiance = math.sin(math.pi * (hour - 6.0) / 12.0)
         if irradiance <= 0.0:
             return 0.0
-        output = self.rated_mw * irradiance * (0.85 + 0.15 * self._rng.random())
-        return min(output, self._curtail_mw)
+        return self.rated_mw * irradiance * (0.85 + 0.15 * self._rng.random())
 
     def _build_telemetry(self) -> AssetTelemetry:
         now = self._clock()
@@ -198,6 +204,81 @@ class SolarSimulator(AssetConnector):
             soh_pct=100.0,
             alarm=None,
             connection_status="simulated",
+            asset_type="Solar",
+            rated_mw=self.rated_mw,
+            rated_mwh=None,
+        )
+
+    async def stream(self) -> AsyncGenerator[AssetTelemetry, None]:
+        while True:
+            telemetry = self._build_telemetry()
+            self._mark_telemetry()
+            yield telemetry
+            await asyncio.sleep(self.tick_interval_seconds if self.real_time else 0.0)
+
+
+class WindSimulator(AssetConnector):
+    """Wind generation simulator (generation only; ``power_mw`` >= 0).
+
+    Output follows a slow-varying capacity factor (gusts + diurnal bias) rather
+    than a clean irradiance curve, so it reads visibly different from Solar:
+        cf(t) = clamp(base + diurnal + AR(1) gust noise, 0, 0.95)
+    Dispatch can curtail downward only.
+    """
+
+    def __init__(
+        self,
+        asset_id: str,
+        rated_mw: float,
+        tick_interval_seconds: float = 5.0,
+        real_time: bool = True,
+        clock: Clock | None = None,
+        rng: random.Random | None = None,
+    ) -> None:
+        config = IntegrationConfig(asset_id=asset_id, protocol="simulated", simulate=True)
+        super().__init__(asset_id, config)
+        self.rated_mw = rated_mw
+        self.rated_mwh = None
+        self.asset_type = "Wind"
+        self.tick_interval_seconds = tick_interval_seconds
+        self.real_time = real_time
+        self._clock = clock or _utc_now
+        self._rng = rng or random.Random()
+        self._curtail_mw = rated_mw
+        self._cf = 0.45  # current capacity factor, AR(1) process
+
+    async def connect(self) -> bool:
+        return True
+
+    async def disconnect(self) -> None:
+        return None
+
+    async def send_dispatch(self, mw: float) -> bool:
+        # Must-take renewable in demo mode (see SolarSimulator).
+        return True
+
+    def _build_telemetry(self) -> AssetTelemetry:
+        now = self._clock()
+        hour = now.hour + now.minute / 60.0
+        # Wind tends to pick up overnight/early morning; gentle diurnal bias.
+        diurnal = 0.12 * math.cos(2.0 * math.pi * (hour - 3.0) / 24.0)
+        gust = self._rng.gauss(0.0, 0.06)
+        self._cf = _clamp(0.82 * self._cf + 0.18 * (0.45 + diurnal) + gust, 0.0, 0.95)
+        power = self.rated_mw * self._cf
+        ambient = 18.0 + 6.0 * math.sin(2.0 * math.pi * hour / 24.0)
+        return AssetTelemetry(
+            asset_id=self.asset_id,
+            timestamp=now.isoformat(),
+            soc_pct=0.0,
+            power_mw=round(power, 3),
+            temperature_c=ambient + self._rng.gauss(0.0, 0.3),
+            voltage_v=0.0,
+            soh_pct=100.0,
+            alarm=None,
+            connection_status="simulated",
+            asset_type="Wind",
+            rated_mw=self.rated_mw,
+            rated_mwh=None,
         )
 
     async def stream(self) -> AsyncGenerator[AssetTelemetry, None]:

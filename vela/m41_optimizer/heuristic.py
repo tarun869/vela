@@ -123,8 +123,19 @@ class HeuristicOptimizer(DispatchOptimizer):
     # --- helpers ----------------------------------------------------------
 
     @staticmethod
-    def _available_mw(asset: dict[str, Any]) -> float:
-        """Discharge capacity after thermal derate and SOC-floor lockout."""
+    def _is_generation(asset: dict[str, Any]) -> bool:
+        return asset.get("asset_type") in ("Solar", "Wind")
+
+    @classmethod
+    def _available_mw(cls, asset: dict[str, Any]) -> float:
+        """Dispatchable MW for this interval.
+
+        Renewables are must-take: their availability is whatever they are
+        generating right now (no SOC, no charging). Storage is rated power,
+        gated by the SOC floor and thermal derate.
+        """
+        if cls._is_generation(asset):
+            return max(0.0, float(asset.get("power_mw", 0.0)))
         rated_mw = float(asset.get("rated_mw", 10.0))
         if float(asset.get("soc_pct", 50.0)) <= SOC_FLOOR_PCT:
             return 0.0
@@ -212,6 +223,10 @@ class HeuristicOptimizer(DispatchOptimizer):
         least_healthy_id: str,
         all_assets: dict[str, Any],
     ) -> DispatchDecision:
+        # Renewables are must-take generation, not storage — handle separately.
+        if self._is_generation(asset):
+            return self._generation_decision(aid, asset, current_lmp)
+
         rated_mw = float(asset.get("rated_mw", 10.0))
         rated_mwh = float(asset.get("rated_mwh", rated_mw * 4.0))
         soh_pct = float(asset.get("soh_pct", 100.0))
@@ -278,6 +293,28 @@ class HeuristicOptimizer(DispatchOptimizer):
             constraint_cost_usd=constraint_cost,
             unconstrained_mw=round(unconstrained_mw, 2),
             revenue_expected_usd=round(recommended_mw * current_lmp * INTERVAL_HOURS, 2),
+        )
+
+    @staticmethod
+    def _generation_decision(
+        aid: str, asset: dict[str, Any], current_lmp: float
+    ) -> DispatchDecision:
+        """Must-take renewable: export current generation; never charge or curtail."""
+        output = max(0.0, float(asset.get("power_mw", 0.0)))
+        rated = float(asset.get("rated_mw", output) or output)
+        atype = str(asset.get("asset_type", "renewable")).lower()
+        cf = (output / rated * 100.0) if rated > 0 else 0.0
+        return DispatchDecision(
+            asset_id=aid,
+            recommended_mw=round(output, 2),
+            reasoning=(
+                f"Exporting {output:.1f} MW of must-take {atype} generation at "
+                f"${current_lmp:.0f}/MWh ({cf:.0f}% capacity factor)"
+            ),
+            binding_constraint=None,
+            constraint_cost_usd=0.0,
+            unconstrained_mw=round(rated, 2),
+            revenue_expected_usd=round(output * current_lmp * INTERVAL_HOURS, 2),
         )
 
     @staticmethod

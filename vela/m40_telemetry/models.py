@@ -29,6 +29,11 @@ class AssetTelemetry:
     soh_pct: float  # state of health, 0-100
     alarm: str | None = None
     connection_status: ConnectionStatus = "simulated"
+    # Static asset spec, echoed on every sample so the UI/optimizer can render
+    # capacity and route by type without a separate registry lookup.
+    asset_type: str = "BESS"
+    rated_mw: float = 0.0
+    rated_mwh: float | None = None
 
 
 @dataclass

@@ -18,7 +18,7 @@ from .base import AssetConnector
 from .generic_rest_connector import GenericRESTConnector
 from .models import AssetTelemetry, IntegrationConfig, PriceTick
 from .price_feed import ERCOTHistoricalReplay
-from .simulator import BESSSimulator, SolarSimulator
+from .simulator import BESSSimulator, SolarSimulator, WindSimulator
 from .sunspec_connector import SunSpecModbusConnector
 from .tesla_connector import TeslaGatewayConnector
 
@@ -168,16 +168,30 @@ class FleetManager:
                 manager.connectors[asset.asset_id] = SolarSimulator(
                     asset.asset_id, asset.rated_mw, tick_interval_seconds=1.0
                 )
+            elif asset.asset_type == "Wind":
+                manager.connectors[asset.asset_id] = WindSimulator(
+                    asset.asset_id, asset.rated_mw, tick_interval_seconds=1.0
+                )
             else:
+                # BESS, EV_Fleet and Flex_Load are all modelled as storage-like
+                # assets (an EV fleet / flexible load is a virtual battery), but
+                # keep their declared type so the UI renders the right identity.
                 manager.connectors[asset.asset_id] = BESSSimulator(
                     asset.asset_id,
                     asset.rated_mw,
                     asset.rated_mwh or asset.rated_mw * 4.0,
                     chemistry=asset.chemistry or "LFP",
+                    asset_type=asset.asset_type or "BESS",
                     tick_interval_seconds=1.0,
                 )
 
+        # Start mid-afternoon and loop fast so the 17:00 price spike (and the
+        # 16:00-20:00 capacity window) are on screen within ~a minute, on repeat.
         manager._price_feed = ERCOTHistoricalReplay(
-            date="2023-08-10", node="HB_HUBZONE", speed_multiplier=30.0
+            date="2023-08-10",
+            node="HB_HUBZONE",
+            speed_multiplier=90.0,
+            replay_from_hour=16,
+            loop=True,
         )
         return manager

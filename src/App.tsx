@@ -31,6 +31,8 @@ import { OnboardPage } from './pages/OnboardPage'
 import { FleetPage } from './pages/FleetPage'
 import { DispatchPage } from './pages/DispatchPage'
 import { SettlementDemoPage } from './pages/SettlementDemoPage'
+import { FleetProvider } from './context/FleetContext'
+import { ConnectorMark } from './components/ConnectorMark'
 import {
   Area,
   AreaChart,
@@ -97,8 +99,8 @@ const secondaryItems: Array<{ id: PageId; label: string; icon: typeof Network }>
 const demoItems: Array<{ id: PageId; label: string; icon: typeof Network }> = [
   { id: 'onboard', label: 'Onboard', icon: Upload },
   { id: 'fleet', label: 'Fleet', icon: BatteryCharging },
-  { id: 'dispatch', label: 'Dispatch', icon: Zap },
-  { id: 'settlement-demo', label: 'Settlement', icon: CircleDollarSign },
+  // Dispatch & Settlement are covered in the demo video; hidden from the nav
+  // but the routes below remain mounted so deep links still resolve.
 ]
 
 const pageItems = [...primaryItems, ...secondaryItems, ...demoItems]
@@ -1444,7 +1446,7 @@ function ConnectorLogo({ connector }: { connector: typeof vppConnectors[number] 
       style={{ background: connector.brand, color: connector.brandInk ?? '#ffffff' }}
       aria-hidden
     >
-      {connector.mark}
+      <ConnectorMark id={connector.id} />
     </span>
   )
 }
@@ -2057,9 +2059,15 @@ function App() {
         {activePage === 'integrations' && <IntegrationsPage />}
         {activePage === 'runlog' && <RunLogPage />}
         {activePage === 'onboard' && <OnboardPage goToPage={id => setActivePage(id as PageId)} />}
-        {activePage === 'fleet' && <FleetPage goToPage={id => setActivePage(id as PageId)} />}
-        {activePage === 'dispatch' && <DispatchPage />}
-        {activePage === 'settlement-demo' && <SettlementDemoPage />}
+        {/* Live demo pages share one WebSocket + accumulating state via FleetProvider,
+            kept mounted across fleet/dispatch/settlement so navigation never resets it. */}
+        {(activePage === 'fleet' || activePage === 'dispatch' || activePage === 'settlement-demo') && (
+          <FleetProvider>
+            {activePage === 'fleet' && <FleetPage goToPage={id => setActivePage(id as PageId)} />}
+            {activePage === 'dispatch' && <DispatchPage />}
+            {activePage === 'settlement-demo' && <SettlementDemoPage />}
+          </FleetProvider>
+        )}
       </section>
 
       {/* Floating settings */}

@@ -36,21 +36,28 @@ export function SettlementDemoPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const [sum, recs] = await Promise.all([getSettlementSummary(), getSettlementRecords()])
       setSummary(sum)
       setRecords(recs)
+      setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settlement data')
+      // 409 = no active tracker yet (dispatch hasn't been started).
+      const msg = err instanceof Error ? err.message : 'Failed to load settlement data'
+      setError(msg.includes('409') ? 'standby' : msg)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  // Initial load + gentle auto-refresh so the P&L ticks up live during the demo.
+  useEffect(() => {
+    void load()
+    const t = setInterval(() => void load(true), 5000)
+    return () => clearInterval(t)
+  }, [load])
 
   // Aggregate revenue by asset for the bar chart
   const assetRevenue = (() => {
@@ -83,8 +90,8 @@ export function SettlementDemoPage() {
     <>
       <div className="page-header">
         <div>
-          <p className="label" style={{ fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.08em', color: 'var(--muted)' }}>Demo flow · Step 4 of 4</p>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settlement summary</h1>
+          <p className="demo-eyebrow">Demo flow · Step 4 of 4</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '2px 0 0' }}>Settlement &amp; P&amp;L</h1>
         </div>
         <button
           className="icon-btn"
@@ -102,8 +109,17 @@ export function SettlementDemoPage() {
         </section>
       )}
 
-      {error && (
-        <section className="panel" style={{ padding: '16px', marginBottom: 12 }}>
+      {error === 'standby' && !summary && (
+        <section className="panel" style={{ textAlign: 'center', padding: 40 }}>
+          <p className="label">No settlement yet</p>
+          <p style={{ fontSize: 12, color: 'var(--muted-2)', marginTop: 6 }}>
+            Go live from the Onboard step and let dispatch run for a few intervals — P&amp;L accrues here in real time.
+          </p>
+        </section>
+      )}
+
+      {error && error !== 'standby' && (
+        <section className="panel" style={{ padding: '16px', marginBottom: 12, borderLeft: '3px solid var(--red)' }}>
           <p style={{ color: 'var(--red)', margin: 0, fontSize: 13 }}>
             <AlertTriangle size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} />
             {error}
@@ -278,9 +294,7 @@ export function SettlementDemoPage() {
                     {summary.obligation_records.map((rec, i) => (
                       <tr
                         key={i}
-                        style={{
-                          background: !rec.compliant ? 'var(--red-soft)' : rec.compliant ? 'var(--green-soft)' : undefined,
-                        }}
+                        style={{ background: rec.compliant ? 'var(--green-soft)' : 'var(--red-soft)' }}
                       >
                         <td><strong>{rec.obligation_id}</strong></td>
                         <td style={{ fontSize: 11, fontFamily: 'var(--mono)' }}>

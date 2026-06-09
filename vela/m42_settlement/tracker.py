@@ -19,6 +19,9 @@ from .models import DispatchRecord, ObligationRecord, SettlementSummary
 BASELINE_DISCHARGE_LMP = 120.0
 BASELINE_CHARGE_LMP = 40.0
 BASELINE_CHARGE_FRACTION = 0.5
+# Naive controllers over-cycle indiscriminately (no SOH-aware routing), so they
+# carry a heavier marginal degradation cost than Vela's healthiest-first policy.
+NAIVE_DEGRADATION_USD_PER_MWH = 12.0
 
 
 class SettlementTracker:
@@ -27,11 +30,28 @@ class SettlementTracker:
     def __init__(self, fleet_capacity_mw: float = 0.0) -> None:
         self._fleet_capacity_mw = fleet_capacity_mw
         self._dispatch_records: list[DispatchRecord] = []
-        self._obligation_records: list[ObligationRecord] = []
+        # Keyed by obligation_id so the live scheduler can upsert the running
+        # delivered-MW total each interval without duplicating rows.
+        self._obligation_records: dict[str, ObligationRecord] = {}
         self._all_lmps: list[float] = []
         self._soh_start: dict[str, float] = {}
         self._soh_current: dict[str, float] = {}
         self._date = datetime.now(timezone.utc).date().isoformat()
+        # Capacity value earned for firm MW reserved against active obligations
+        # (the payment a naive energy-only controller forfeits by selling it).
+        self._capacity_revenue = 0.0
+        # Baseline reference obligation (total committed MW + worst penalty rate).
+        self._baseline_committed_mw = 0.0
+        self._baseline_penalty_rate = 0.0
+
+    def configure_baseline(self, committed_mw: float, penalty_rate: float) -> None:
+        """Tell the baseline what capacity commitment a naive controller breaches."""
+        self._baseline_committed_mw = committed_mw
+        self._baseline_penalty_rate = penalty_rate
+
+    def record_capacity_value(self, covered_mw: float, lmp: float) -> None:
+        """Credit the firm-capacity value of reserved MW for one interval."""
+        self._capacity_revenue += round(covered_mw * lmp * INTERVAL_HOURS, 4)
 
     @property
     def dispatch_records(self) -> list[DispatchRecord]:
@@ -97,16 +117,15 @@ class SettlementTracker:
             penalty = round(shortfall * rate, 4)
 
         ts = datetime.now(timezone.utc).isoformat()
-        self._obligation_records.append(
-            ObligationRecord(
-                obligation_id=obligation_id or obligation.obligation_type,
-                window_start=window_start or ts,
-                window_end=window_end or ts,
-                committed_mw=obligation.committed_mw,
-                delivered_mw=delivered_mw,
-                compliant=compliant,
-                penalty_usd=penalty,
-            )
+        oid = obligation_id or obligation.obligation_type
+        self._obligation_records[oid] = ObligationRecord(
+            obligation_id=oid,
+            window_start=window_start or ts,
+            window_end=window_end or ts,
+            committed_mw=obligation.committed_mw,
+            delivered_mw=delivered_mw,
+            compliant=compliant,
+            penalty_usd=penalty,
         )
 
     def compute_baseline(
@@ -114,15 +133,23 @@ class SettlementTracker:
         all_lmp_values: list[float],
         fleet_capacity_mw: float,
     ) -> float:
-        """Return the revenue a simple threshold strategy would have made.
+        """Net value a naive threshold controller would have realised.
 
-        Discharges at full capacity when LMP > $120, charges at 50% capacity
-        when LMP < $40, holds otherwise.
+        Discharges the *whole* fleet whenever LMP > $120 and charges at 50%
+        capacity when LMP < $40. Because it chases energy with no obligation
+        awareness, during scarcity it sells the MW it should have reserved —
+        forfeiting that capacity payment and incurring the non-performance
+        penalty — and it over-cycles, carrying a heavier degradation cost.
         """
         total = 0.0
+        committed = self._baseline_committed_mw
+        rate = self._baseline_penalty_rate
         for lmp in all_lmp_values:
             if lmp > BASELINE_DISCHARGE_LMP:
                 total += fleet_capacity_mw * lmp * INTERVAL_HOURS
+                total -= fleet_capacity_mw * INTERVAL_HOURS * NAIVE_DEGRADATION_USD_PER_MWH
+                # Scarcity ⇒ also its delivery window: it breaches the commitment.
+                total -= committed * rate * INTERVAL_HOURS
             elif lmp < BASELINE_CHARGE_LMP:
                 # Cost of buying energy at this LMP (negative revenue when LMP > 0).
                 total -= fleet_capacity_mw * BASELINE_CHARGE_FRACTION * lmp * INTERVAL_HOURS
@@ -130,10 +157,12 @@ class SettlementTracker:
 
     def generate_summary(self) -> SettlementSummary:
         """Aggregate all records into a :class:`SettlementSummary`."""
-        total_rev = sum(r.revenue_usd for r in self._dispatch_records)
+        obligation_records = list(self._obligation_records.values())
+        energy_rev = sum(r.revenue_usd for r in self._dispatch_records)
+        total_rev = round(energy_rev + self._capacity_revenue, 2)
         total_deg = sum(r.degradation_cost_usd for r in self._dispatch_records)
-        total_pen = sum(r.penalty_usd for r in self._obligation_records)
-        net = round(total_rev - total_deg, 2)
+        total_pen = sum(r.penalty_usd for r in obligation_records)
+        net = round(total_rev - total_deg - total_pen, 2)
 
         lmps = self._all_lmps if self._all_lmps else [
             r.lmp_at_dispatch for r in self._dispatch_records
@@ -160,8 +189,8 @@ class SettlementTracker:
             baseline_revenue_usd=baseline,
             outperformance_usd=outperformance,
             outperformance_pct=outperf_pct,
-            obligation_records=list(self._obligation_records),
-            all_obligations_compliant=all(r.compliant for r in self._obligation_records),
+            obligation_records=obligation_records,
+            all_obligations_compliant=all(r.compliant for r in obligation_records),
             soh_delta_by_asset=soh_delta,
         )
 

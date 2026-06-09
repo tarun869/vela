@@ -506,7 +506,7 @@ section.band{padding:96px 0;position:relative}
     <p class="hero-sub">Co-optimization is locked inside hardware ecosystems or built for 20-person trading desks. Vela couples market revenue, live battery degradation, and your contractual constraints in one explainable solve, then hands the schedule to whatever EMS you already run.</p>
     <div class="hero-btns">
       <a class="btn btn-green" href="/app.html" target="_blank">Launch the app →</a>
-      <a class="btn btn-ghost" href="#demo">Watch the 15-second demo</a>
+      <a class="btn btn-ghost" href="#request-demo" data-demo-open>Request a demo</a>
     </div>
     <div class="hero-meta">Shadow mode onboards in 48 hours · No live dispatch, no regulatory exposure</div>
 
@@ -908,6 +908,152 @@ section.band{padding:96px 0;position:relative}
       document.querySelectorAll('.faq-item.open').forEach(function(o){ o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight=null; });
       if(!open){ item.classList.add('open'); a.style.maxHeight=a.scrollHeight+'px'; }
     });
+  });
+})();
+</script>
+
+<!-- ── Request-a-demo modal ───────────────────────────────────────────── -->
+<style>
+.demo-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.demo-modal.open{display:flex}
+.demo-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,32,.46);backdrop-filter:blur(3px)}
+.demo-modal-card{position:relative;z-index:1;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;background:var(--card,#fff);border:1px solid var(--line,#e6e8ec);border-radius:var(--r-lg,20px);box-shadow:var(--shadow,0 24px 60px rgba(15,23,32,.18));padding:28px;animation:demoPop .22s ease}
+@keyframes demoPop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.demo-modal-x{position:absolute;top:12px;right:14px;border:0;background:transparent;font-size:26px;line-height:1;color:var(--muted,#8a929c);cursor:pointer;padding:4px 8px;border-radius:8px}
+.demo-modal-x:hover{color:var(--ink,#0f1720);background:rgba(0,0,0,.04)}
+.demo-modal-head h3{margin:14px 0 0;font-size:26px;font-weight:800;letter-spacing:-.025em;color:var(--ink,#0f1720)}
+.demo-modal-head p{margin:8px 0 0;color:var(--muted,#5b6470);font-size:14.5px;line-height:1.55}
+.demo-form{margin-top:20px;display:flex;flex-direction:column;gap:14px}
+.demo-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.demo-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.demo-field label{font-size:12.5px;font-weight:600;color:var(--ink,#0f1720)}
+.demo-field .opt{color:var(--muted,#9aa3ad);font-weight:400}
+.demo-field input,.demo-field textarea{font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--line,#e6e8ec);border-radius:10px;background:#fff;color:var(--ink,#0f1720);outline:none;transition:border-color .12s,box-shadow .12s;width:100%;box-sizing:border-box}
+.demo-field input:focus,.demo-field textarea:focus{border-color:var(--green,#1A74D8);box-shadow:0 0 0 3px rgba(26,116,216,.14)}
+.demo-field textarea{resize:vertical;min-height:64px}
+.demo-submit{justify-content:center;margin-top:4px;cursor:pointer;border:0;width:100%}
+.demo-submit[disabled]{opacity:.6;cursor:default}
+.demo-form-err{color:#c0392b;font-size:13px;margin:0}
+.demo-fine{color:var(--muted,#9aa3ad);font-size:11.5px;text-align:center;margin:2px 0 0;line-height:1.5}
+.demo-hp{position:absolute!important;left:-9999px;opacity:0;height:0;width:0}
+.demo-form-done{text-align:center;padding:14px 0 4px}
+.demo-check{width:52px;height:52px;border-radius:50%;background:var(--green-soft,#e2eefb);color:var(--green,#1A74D8);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:0 auto 12px}
+.demo-form-done h3{margin:0;font-size:22px;font-weight:800;color:var(--ink,#0f1720)}
+.demo-form-done p{margin:8px 0 18px;color:var(--muted,#5b6470);font-size:14.5px}
+@media(max-width:520px){.demo-row{grid-template-columns:1fr}.demo-modal-card{padding:22px}}
+</style>
+
+<div id="demoModal" class="demo-modal" aria-hidden="true">
+  <div class="demo-modal-backdrop" data-close></div>
+  <div class="demo-modal-card" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+    <button class="demo-modal-x" type="button" data-close aria-label="Close">&times;</button>
+    <div class="demo-modal-head">
+      <span class="pill"><span class="dot"></span>Shadow mode onboards in 48 hours</span>
+      <h3 id="demoModalTitle">Request a demo</h3>
+      <p>See Vela co-optimize your fleet in shadow mode. Tell us a bit about your operation and we&rsquo;ll reach out within one business day.</p>
+    </div>
+    <form id="demoForm" class="demo-form" novalidate>
+      <input type="checkbox" name="botcheck" class="demo-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="demo-field">
+        <label for="df-name">Full name</label>
+        <input id="df-name" type="text" required placeholder="Jordan Rivera" autocomplete="name">
+      </div>
+      <div class="demo-field">
+        <label for="df-email">Work email</label>
+        <input id="df-email" type="email" required placeholder="jordan@fleetco.com" autocomplete="email">
+      </div>
+      <div class="demo-field">
+        <label for="df-company">Company</label>
+        <input id="df-company" type="text" required placeholder="FleetCo Energy" autocomplete="organization">
+      </div>
+      <div class="demo-row">
+        <div class="demo-field">
+          <label for="df-role">Role <span class="opt">(optional)</span></label>
+          <input id="df-role" type="text" placeholder="Head of Trading">
+        </div>
+        <div class="demo-field">
+          <label for="df-fleet">Fleet size (MW) <span class="opt">(optional)</span></label>
+          <input id="df-fleet" type="text" inputmode="numeric" placeholder="120">
+        </div>
+      </div>
+      <div class="demo-field">
+        <label for="df-msg">What are you hoping to optimize? <span class="opt">(optional)</span></label>
+        <textarea id="df-msg" rows="3" placeholder="ERCOT RT arbitrage + RA capacity across a 120 MW BESS &amp; solar fleet…"></textarea>
+      </div>
+      <button type="submit" class="btn btn-green demo-submit">Request demo →</button>
+      <p class="demo-form-err" hidden></p>
+      <p class="demo-fine">No live dispatch, no regulatory exposure. We&rsquo;ll only use this to contact you about Vela.</p>
+    </form>
+    <div class="demo-form-done" hidden>
+      <div class="demo-check">✓</div>
+      <h3>Request received.</h3>
+      <p>Thanks — we&rsquo;ll reach out at <strong class="demo-done-email"></strong> within one business day.</p>
+      <button class="btn btn-ghost btn-sm" type="button" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Get a free access key for tarunbatchuprof@gmail.com at https://web3forms.com
+  // (enter that email, they email you a key) and paste it below. Until then the
+  // form falls back to opening the visitor's mail client addressed to you.
+  var WEB3FORMS_ACCESS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY';
+  var DEST_EMAIL = 'tarunbatchuprof@gmail.com';
+
+  var modal=document.getElementById('demoModal');
+  var form=document.getElementById('demoForm');
+  if(!modal||!form) return;
+  var done=modal.querySelector('.demo-form-done');
+  var errEl=form.querySelector('.demo-form-err');
+  var submitBtn=form.querySelector('.demo-submit');
+  var val=function(id){ return (document.getElementById(id).value||'').trim(); };
+  var lastFocus=null;
+
+  function open(e){ if(e)e.preventDefault(); lastFocus=document.activeElement; modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; setTimeout(function(){ document.getElementById('df-name').focus(); },40); }
+  function close(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.body.style.overflow=''; if(lastFocus&&lastFocus.focus)lastFocus.focus(); }
+
+  document.querySelectorAll('[data-demo-open]').forEach(function(b){ b.addEventListener('click',open); });
+  modal.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',close); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&modal.classList.contains('open'))close(); });
+
+  function showErr(m){ errEl.textContent=m; errEl.hidden=false; }
+  function showDone(email){ form.hidden=true; done.querySelector('.demo-done-email').textContent=email; done.hidden=false; }
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    errEl.hidden=true;
+    if(form.querySelector('[name="botcheck"]').checked) return; // honeypot
+    var name=val('df-name'), email=val('df-email'), company=val('df-company');
+    var role=val('df-role'), fleet=val('df-fleet'), message=val('df-msg');
+    if(!name||!email||!company){ showErr('Please fill in name, work email, and company.'); return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr('Please enter a valid work email.'); return; }
+
+    // No service key yet → fall back to the visitor's mail client.
+    if(!WEB3FORMS_ACCESS_KEY || WEB3FORMS_ACCESS_KEY==='YOUR_WEB3FORMS_ACCESS_KEY'){
+      var lines=['Name: '+name,'Email: '+email,'Company: '+company,'Role: '+(role||'—'),'Fleet (MW): '+(fleet||'—'),'','What they want to optimize:',message||'—'];
+      window.location.href='mailto:'+DEST_EMAIL+'?subject='+encodeURIComponent('Vela demo request — '+company)+'&body='+encodeURIComponent(lines.join('\n'));
+      showDone(email);
+      return;
+    }
+
+    submitBtn.disabled=true; submitBtn.textContent='Sending…';
+    fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({
+        access_key:WEB3FORMS_ACCESS_KEY,
+        subject:'Vela demo request — '+company,
+        from_name:name,
+        replyto:email,
+        name:name, email:email, company:company,
+        role:role||'(not provided)', fleet_mw:fleet||'(not provided)',
+        message:message||'(none)'
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.success){ showDone(email); }
+      else { showErr((data&&data.message)||('Something went wrong — please email '+DEST_EMAIL+' directly.')); submitBtn.disabled=false; submitBtn.textContent='Request demo →'; }
+    }).catch(function(){ showErr('Network error — please email '+DEST_EMAIL+' directly.'); submitBtn.disabled=false; submitBtn.textContent='Request demo →'; });
   });
 })();
 </script>

@@ -52,7 +52,7 @@ def test_obligation_compliant_when_delivered_meets_commitment() -> None:
     tracker.record_obligation_window(obligation, delivered_mw=10.0)
     tracker.record_obligation_window(obligation, delivered_mw=15.0)
 
-    for rec in tracker._obligation_records:
+    for rec in tracker._obligation_records.values():
         assert rec.compliant is True
         assert rec.penalty_usd == 0.0
 
@@ -65,7 +65,7 @@ def test_penalty_when_shortfall() -> None:
     obligation = _capacity_obligation(committed_mw=10.0, penalty_rate=1_000.0)
     tracker.record_obligation_window(obligation, delivered_mw=8.0)
 
-    rec = tracker._obligation_records[0]
+    rec = next(iter(tracker._obligation_records.values()))
     assert rec.compliant is False
     assert abs(rec.penalty_usd - 2_000.0) < 0.01   # shortfall=2 MW × $1000/MWh
 
