@@ -51,7 +51,7 @@
   .topbar-cta .dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.9)}
 
   /* ── page shell ── */
-  .shell{max-width:var(--maxw);margin:0 auto;padding:44px 28px 72px}
+  .shell{max-width:var(--maxw);margin:0 auto;padding:30px 28px 64px}
   .eyebrow{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--green);display:inline-flex;align-items:center;gap:10px}
   .eyebrow::before{content:'';width:20px;height:1px;background:var(--green);opacity:.6}
   .hero h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:-.035em;line-height:1.04;margin:16px 0 0}
@@ -61,7 +61,7 @@
   .meta-chip b{color:var(--green);font-weight:600}
 
   /* ── browser frame ── */
-  .browser{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden}
+  .browser{margin-top:26px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden}
   .browser-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(var(--card),#FCFDFF)}
   .browser-dots{display:flex;gap:7px}
   .browser-dots i{width:11px;height:11px;border-radius:50%;display:block}
@@ -162,6 +162,15 @@
   .page-foot a{font-family:var(--mono);font-size:11.5px;color:var(--green);font-weight:500}
   .page-foot a:hover{color:var(--green-2)}
 
+  /* embed mode: shown only when this page is iframed (card thumbnail) — see inline script below */
+  html.embed .topbar,
+  html.embed .hero,
+  html.embed .section-head,
+  html.embed .how-steps,
+  html.embed .legend,
+  html.embed .page-foot{display:none}
+  html.embed .shell{padding-top:22px;padding-bottom:0}
+  html.embed .browser{margin-top:0}
   @media(max-width:720px){
     .how-steps{grid-template-columns:1fr}
     .legend-row{grid-template-columns:1fr;gap:6px}
@@ -170,6 +179,7 @@
     .topbar-link.hide-sm{display:none}
   }
 </style>
+<script>if(window.self!==window.top)document.documentElement.classList.add('embed');</script>
 </head>
 <body>
 <header class="topbar">
@@ -195,7 +205,7 @@
     </div>
   </section>
 
-  <div class="browser">
+  <div class="browser" id="demo">
     <div class="browser-bar">
       <div class="browser-dots"><i></i><i></i><i></i></div>
       <div class="browser-url"><span>velapwr.com/dispatch/queue</span></div>
