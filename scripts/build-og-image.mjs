@@ -61,8 +61,8 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" v
   <text x="80" y="422" font-family="${sans}" font-size="74" font-weight="800" fill="#15181B" letter-spacing="-2">for every fleet</text>
 
   <!-- subhead -->
-  <text x="82" y="486" font-family="${sans}" font-size="27" font-weight="500" fill="#5C6167">One explainable MILP solve — market revenue, live degradation, and your</text>
-  <text x="82" y="522" font-family="${sans}" font-size="27" font-weight="500" fill="#5C6167">constraints, handed to whatever EMS you already run.</text>
+  <text x="82" y="486" font-family="${sans}" font-size="27" font-weight="500" fill="#5C6167">One explainable MILP solve over market revenue, live degradation, and</text>
+  <text x="82" y="522" font-family="${sans}" font-size="27" font-weight="500" fill="#5C6167">your constraints, handed to whatever EMS you already run.</text>
 
   <!-- footer url -->
   <text x="1118" y="566" text-anchor="end" font-family="${mono}" font-size="24" font-weight="500" fill="#9AA0A6">velapwr.com</text>
