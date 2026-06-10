@@ -2,8 +2,8 @@ apiVersion: v2
 name: vela
 description: VPP Dispatch Optimization Engine
 type: application
-version: 0.0.36
-appVersion: "0.0.36"
+version: 0.0.37
+appVersion: "0.0.37"
 keywords:
   - vpp
   - energy-storage
