@@ -3,270 +3,350 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VoltaOS &mdash; Settlement</title>
+<title>Vela — Settlement</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="description" content="Verify delivery against commitments to the 15-minute interval, attribute revenue per asset, and reconcile against ISO settlement statements — with a full audit trail." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <style>
-  :root {
-    --bg-page: #080C0A;
-    --bg-panel: #0D1510;
-    --bg-chrome: #080C0A;
-    --accent: #2E8FE6;
-    --amber: #EF9F27;
-    --text: #F5F2E8;
-    --text-muted: rgba(245,242,232,0.45);
-    --rule: rgba(46,143,230,0.1);
-    --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
-    --font-mono: 'Geist Mono', ui-monospace, monospace;
+  :root{
+    --bg:#F6F8FC;--bg-soft:#EDF1F8;--bg-tint:#E5ECF6;--card:#FFFFFF;
+    --ink:#15181B;--ink-2:#33373C;--muted:#5C6167;--faint:#9AA0A6;
+    --line:rgba(21,24,27,0.10);--line-soft:rgba(21,24,27,0.06);
+    --green:#1A74D8;--green-2:#1463C2;--green-deep:#0C4D8C;
+    --green-tint:rgba(26,116,216,0.08);--green-tint-2:rgba(26,116,216,0.14);
+    --amber:#C47C1C;--amber-tint:rgba(196,124,28,0.10);--amber-line:rgba(196,124,28,0.36);
+    --up:#1B9E6E;--dn:#C2543F;
+    --sans:'Geist',ui-sans-serif,system-ui,-apple-system,sans-serif;
+    --mono:'Geist Mono',ui-monospace,monospace;
+    --maxw:920px;--r:14px;--r-lg:20px;
+    --shadow-sm:0 1px 2px rgba(21,24,27,.04),0 2px 6px rgba(21,24,27,.04);
+    --shadow:0 2px 4px rgba(21,24,27,.04),0 12px 32px rgba(21,24,27,.07);
+    --shadow-lg:0 4px 8px rgba(21,24,27,.05),0 24px 64px rgba(21,24,27,.12);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    background: var(--bg-page); color: var(--text);
-    font-family: var(--font-display); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;background:var(--bg)}
+  body{background:transparent;color:var(--ink);font-family:var(--sans);font-weight:400;line-height:1.55;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:radial-gradient(rgba(26,116,216,0.05) 1px,transparent 1.5px);background-size:24px 24px;
+    -webkit-mask-image:radial-gradient(ellipse 110% 75% at 50% 0%,#000 40%,transparent 90%);
+    mask-image:radial-gradient(ellipse 110% 75% at 50% 0%,#000 40%,transparent 90%)}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg,img{display:block;max-width:100%}
+  ::selection{background:var(--green-tint-2);color:var(--green-deep)}
+
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(246,248,252,.78);backdrop-filter:blur(16px);border-bottom:1px solid var(--line-soft)}
+  .topbar-inner{max-width:var(--maxw);margin:0 auto;padding:13px 28px;display:flex;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;letter-spacing:-.03em;color:var(--ink)}
+  .brand img{width:21px;height:21px}
+  .brand-badge{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;color:var(--green-2);border:1px solid var(--green-tint-2);background:var(--green-tint);padding:3px 8px;border-radius:5px}
+  .topbar-spacer{flex:1}
+  .topbar-link{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:var(--muted);padding:7px 12px;border-radius:9px;transition:color .15s,background .15s}
+  .topbar-link:hover{color:var(--ink);background:var(--bg-soft)}
+  .topbar-cta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#fff;background:var(--green);padding:8px 15px;border-radius:9px;box-shadow:0 1px 2px rgba(12,77,140,.18),0 6px 16px rgba(26,116,216,.16);transition:transform .14s,background .18s}
+  .topbar-cta:hover{transform:translateY(-1px);background:var(--green-2)}
+  .topbar-cta .dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.9)}
+
+  .shell{max-width:var(--maxw);margin:0 auto;padding:44px 28px 72px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--green);display:inline-flex;align-items:center;gap:10px}
+  .eyebrow::before{content:'';width:20px;height:1px;background:var(--green);opacity:.6}
+  .hero h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:-.035em;line-height:1.04;margin:16px 0 0}
+  .hero .lead{margin-top:16px;font-size:clamp(15px,1.6vw,17.5px);color:var(--muted);line-height:1.6;max-width:660px}
+  .hero-meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta-chip{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--ink-2);border:1px solid var(--line);background:var(--card);padding:6px 11px;border-radius:8px}
+  .meta-chip b{color:var(--green);font-weight:600}
+
+  .browser{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden;opacity:0}
+  .browser-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(var(--card),#FCFDFF)}
+  .browser-dots{display:flex;gap:7px}
+  .browser-dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .browser-dots i:nth-child(1){background:#FF5F57}.browser-dots i:nth-child(2){background:#FEBC2E}.browser-dots i:nth-child(3){background:#28C840}
+  .browser-url{flex:1;display:flex;justify-content:center}
+  .browser-url span{font-family:var(--mono);font-size:11.5px;color:var(--faint);background:var(--bg-soft);border:1px solid var(--line-soft);padding:4px 18px;border-radius:7px;letter-spacing:.02em}
+
+  .panel{background:var(--bg)}
+  .panel-status{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 22px;border-bottom:1px solid var(--line-soft);background:var(--card)}
+  .panel-status .left{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.12em;font-weight:500;padding-top:4px}
+  .panel-status .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .reconciled-badge{font-family:var(--mono);font-size:10px;background:var(--green-tint);color:var(--green-2);border:1px solid var(--green-tint-2);padding:4px 10px;border-radius:6px;letter-spacing:.08em;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+  .reconciled-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px rgba(27,158,110,.16)}
+  .panel-status .sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.02em}
+
+  .panel-body{padding:24px 22px 26px}
+  .section-title{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;margin-bottom:13px;font-weight:500}
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+  .metric-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;opacity:0;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .metric-card.amber{border-color:var(--amber-line)}
+  .metric-card.amber::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+  .metric-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:9px;display:block}
+  .metric-value{font-weight:800;font-size:28px;color:var(--ink);letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
+  .metric-value.dim{color:var(--ink-2)}
+  .metric-value.amber{color:var(--amber)}
+  .metric-sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em}
+  .metric-sub.amber{color:var(--amber);font-size:11px;font-weight:500}
+
+  .delivery-wrap{margin-bottom:32px;margin-top:18px}
+  .delivery-bar{height:7px;border-radius:4px;background:var(--bg-tint);display:flex;overflow:hidden}
+  .seg{height:100%;width:0}
+  .seg.delivered{background:var(--green);border-radius:4px 0 0 4px}
+  .seg.shortfall{background:var(--amber);opacity:.55;border-radius:0 4px 4px 0}
+  .delivery-labels{display:flex;justify-content:space-between;margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.04em}
+  .delivery-labels .left{color:var(--green-2)}
+  .delivery-labels .right{color:var(--amber)}
+
+  .table-section{margin-bottom:28px}
+  .compare-table{display:flex;flex-direction:column}
+  .grid-row{display:grid;grid-template-columns:1.7fr .7fr .7fr .65fr .85fr 1fr;align-items:center;gap:14px}
+  .table-header{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.08em;border-bottom:1px solid var(--line-soft);padding-bottom:9px}
+  .table-header>div:not(:first-child):not(:last-child){text-align:right}
+  .table-header>div:nth-child(5){text-align:right}
+  .table-header>div:last-child{text-align:left;padding-left:8px}
+  .table-row{border-bottom:1px solid var(--line-soft);padding:13px 0;opacity:0}
+  .table-row .asset .name{font-weight:700;font-size:13px;color:var(--ink);letter-spacing:-.005em;margin-bottom:2px}
+  .table-row .asset .sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.02em}
+  .table-row .num{font-family:var(--mono);font-size:12px;color:var(--ink);text-align:right}
+  .table-row .num.dim{color:var(--ink-2)}
+  .table-row .perf{color:var(--green-2)}
+  .table-row .perf.amber{color:var(--amber)}
+  .table-row .rev{color:var(--ink);text-align:right}
+  .status-cell{padding-left:8px}
+  .status-badge{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:6px;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px}
+  .status-badge.settled{background:var(--green-tint);color:var(--green-2);border:1px solid var(--green-tint-2)}
+  .status-badge.settled::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--up)}
+  .status-badge.under{background:var(--amber-tint);color:var(--amber);border:1px solid var(--amber-line)}
+  .status-badge.under::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--amber)}
+  .table-row.flag{background:var(--amber-tint);border-left:2px solid var(--amber-line);padding-left:10px;margin-left:-12px;border-radius:6px}
+
+  .alert-block{background:var(--amber-tint);border:1px solid var(--amber-line);border-left:3px solid var(--amber);border-radius:var(--r);padding:16px 18px;margin-top:12px;opacity:0}
+  .alert-header{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.08em;margin-bottom:13px;display:flex;align-items:center;gap:8px;font-weight:600}
+  .alert-body{display:grid;grid-template-columns:1.6fr 1fr;gap:24px;align-items:start}
+  .alert-causes{display:flex;flex-direction:column;gap:9px}
+  .cause-item{display:flex;gap:8px;align-items:baseline}
+  .cause-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;min-width:80px;flex-shrink:0}
+  .cause-text{font-family:var(--mono);font-size:11px;color:var(--ink-2);line-height:1.55}
+  .cause-text .amber-em{color:var(--amber);font-weight:500}
+  .cause-text .text-em{color:var(--ink);font-weight:500}
+  .alert-note{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6;max-width:300px;padding-left:16px;border-left:1px solid var(--amber-line);letter-spacing:.02em}
+  .alert-note .stamp{color:var(--amber);font-weight:500}
+
+  .waterfall-section{margin-top:28px}
+  .waterfall-list{display:flex;flex-direction:column}
+  .wf-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:12px;opacity:0}
+  .wf-item .label{color:var(--ink-2)}
+  .wf-item .value{color:var(--ink)}
+  .wf-item.penalty .value{color:var(--amber)}
+  .wf-item.fee .label,.wf-item.fee .value{color:var(--muted)}
+  .wf-divider{border-top:1px solid var(--line);margin-top:4px}
+  .wf-net{display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;padding-bottom:4px;opacity:0}
+  .wf-net .label{font-weight:700;font-size:14px;color:var(--ink);letter-spacing:-.005em}
+  .wf-net .value{font-weight:800;font-size:20px;color:var(--green);letter-spacing:-.02em}
+  .wf-meta{display:flex;gap:24px;margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;flex-wrap:wrap}
+  .wf-meta span{display:inline-flex;align-items:center;gap:6px}
+  .wf-meta span:first-child::before{content:"";width:5px;height:5px;background:var(--green);border-radius:50%}
+
+  .section-head{margin-top:64px;max-width:620px}
+  .section-head h2{font-size:clamp(22px,3vw,30px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-top:14px}
+  .section-head .lead{margin-top:13px;font-size:15px;color:var(--muted);line-height:1.6}
+  .how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+  .how-step{background:var(--card);padding:24px 22px;transition:background .18s}
+  .how-step:hover{background:var(--bg-soft)}
+  .step-num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--green);letter-spacing:.1em}
+  .step-name{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:11px 0 8px}
+  .step-desc{font-size:13px;color:var(--muted);line-height:1.55}
+
+  .page-foot{margin-top:56px;padding-top:24px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .page-foot span{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--faint)}
+  .page-foot a{font-family:var(--mono);font-size:11.5px;color:var(--green);font-weight:500}
+  .page-foot a:hover{color:var(--green-2)}
+
+  @media(max-width:720px){
+    .how-steps{grid-template-columns:1fr}
+    .metric-grid{grid-template-columns:1fr}
+    .alert-body{grid-template-columns:1fr;gap:14px}
+    .alert-note{max-width:none;padding-left:0;border-left:none}
+    .grid-row{grid-template-columns:1.5fr .7fr .7fr .9fr;gap:10px}
+    .grid-row>div:nth-child(5),.grid-row>div:nth-child(6),.table-header>div:nth-child(5),.table-header>div:nth-child(6){display:none}
+    .topbar-link.hide-sm{display:none}
   }
-  body {
-    background: radial-gradient(ellipse at 50% 0%, rgba(46,143,230,0.06) 0%, transparent 55%), var(--bg-page);
-    padding: 40px; display: flex; align-items: flex-start; justify-content: center;
-  }
-  .mockup {
-    width: 100%; max-width: 860px; border-radius: 8px; overflow: hidden;
-    border: 0.5px solid rgba(46,143,230,0.18);
-    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 12px 30px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.4);
-    opacity: 0;
-  }
-  .chrome {
-    background: var(--bg-chrome); height: 40px; display: flex; align-items: center;
-    padding: 0 14px; border-bottom: 0.5px solid rgba(46,143,230,0.15); position: relative;
-  }
-  .dots { display: flex; gap: 8px; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot.r { background: #FF5F57; } .dot.y { background: #FEBC2E; } .dot.g { background: #28C840; }
-  .url {
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-    font-family: var(--font-mono); font-size: 12px; color: rgba(245,242,232,0.25);
-    background: rgba(255,255,255,0.05); border-radius: 4px; padding: 4px 16px;
-    width: 260px; text-align: center; letter-spacing: 0.02em;
-  }
-  .panel { background: var(--bg-panel); }
-  .panel-status {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 12px 20px; border-bottom: 0.5px solid var(--rule);
-  }
-  .panel-status .left { font-family: var(--font-mono); font-size: 11px; color: rgba(46,143,230,0.6); letter-spacing: 0.12em; padding-top: 4px; }
-  .panel-status .right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-  .reconciled-badge {
-    font-family: var(--font-mono); font-size: 10px; background: rgba(46,143,230,0.12);
-    color: var(--accent); border: 0.5px solid rgba(46,143,230,0.3); padding: 3px 9px;
-    border-radius: 3px; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 6px;
-  }
-  .reconciled-badge::before {
-    content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
-    box-shadow: 0 0 6px rgba(46,143,230,0.7);
-  }
-  .panel-status .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.02em; }
-  .panel-body { padding: 22px 20px 24px; }
-  .section-title { font-family: var(--font-mono); font-size: 10px; color: rgba(46,143,230,0.6); letter-spacing: 0.1em; margin-bottom: 12px; }
-  .metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
-  .metric-card {
-    background: rgba(0,0,0,0.25); border: 0.5px solid rgba(46,143,230,0.12);
-    border-radius: 6px; padding: 14px 16px; opacity: 0; position: relative; overflow: hidden;
-  }
-  .metric-card.amber { border-color: rgba(239,159,39,0.25); }
-  .metric-card.amber::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(239,159,39,0.5), transparent);
-  }
-  .metric-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
-  .metric-value { font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text); letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 6px; }
-  .metric-value.dim { color: rgba(245,242,232,0.7); }
-  .metric-value.amber { color: var(--amber); }
-  .metric-sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
-  .metric-sub.amber { color: var(--amber); font-size: 11px; }
-  .delivery-wrap { margin-bottom: 32px; margin-top: 18px; }
-  .delivery-bar { height: 6px; border-radius: 3px; background: rgba(46,143,230,0.12); display: flex; overflow: hidden; }
-  .seg { height: 100%; width: 0; }
-  .seg.delivered { background: var(--accent); border-radius: 3px 0 0 3px; box-shadow: 0 0 8px rgba(46,143,230,0.4); }
-  .seg.shortfall { background: rgba(239,159,39,0.5); border-radius: 0 3px 3px 0; }
-  .delivery-labels { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
-  .delivery-labels .left { color: var(--accent); }
-  .delivery-labels .right { color: var(--amber); }
-  .table-section { margin-bottom: 28px; }
-  .compare-table { display: flex; flex-direction: column; }
-  .grid-row { display: grid; grid-template-columns: 1.7fr 0.7fr 0.7fr 0.65fr 0.85fr 1fr; align-items: center; gap: 14px; }
-  .table-header { font-family: var(--font-mono); font-size: 10px; color: rgba(245,242,232,0.3); letter-spacing: 0.08em; border-bottom: 0.5px solid var(--rule); padding-bottom: 8px; }
-  .table-header > div:not(:first-child):not(:last-child) { text-align: right; }
-  .table-header > div:nth-child(5) { text-align: right; }
-  .table-header > div:last-child { text-align: left; padding-left: 8px; }
-  .table-row { border-bottom: 0.5px solid rgba(46,143,230,0.06); padding: 12px 0; opacity: 0; }
-  .table-row .asset .name { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--text); letter-spacing: -0.005em; margin-bottom: 2px; }
-  .table-row .asset .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.02em; }
-  .table-row .num { font-family: var(--font-mono); font-size: 12px; color: var(--text); text-align: right; }
-  .table-row .num.dim { color: rgba(245,242,232,0.7); }
-  .table-row .perf { color: var(--accent); }
-  .table-row .perf.amber { color: var(--amber); }
-  .table-row .rev { color: var(--text); text-align: right; }
-  .status-cell { padding-left: 8px; }
-  .status-badge { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 5px; }
-  .status-badge.settled { background: rgba(46,143,230,0.12); color: var(--accent); border: 0.5px solid rgba(46,143,230,0.3); }
-  .status-badge.settled::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
-  .status-badge.under { background: rgba(239,159,39,0.12); color: var(--amber); border: 0.5px solid rgba(239,159,39,0.3); }
-  .status-badge.under::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--amber); }
-  .table-row.flag { background: rgba(239,159,39,0.03); border-left: 2px solid rgba(239,159,39,0.4); padding-left: 10px; margin-left: -12px; border-radius: 2px; }
-  .alert-block {
-    background: rgba(239,159,39,0.06); border: 0.5px solid rgba(239,159,39,0.25);
-    border-left: 3px solid var(--amber); border-radius: 6px; padding: 14px 16px 16px; margin-top: 10px; opacity: 0;
-  }
-  .alert-header { font-family: var(--font-mono); font-size: 10px; color: var(--amber); letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-  .alert-header::before { content: "&#9888;"; font-size: 11px; color: var(--amber); }
-  .alert-body { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
-  .alert-causes { display: flex; flex-direction: column; gap: 8px; }
-  .cause-item { display: flex; gap: 8px; align-items: baseline; }
-  .cause-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; min-width: 78px; flex-shrink: 0; }
-  .cause-text { font-family: var(--font-mono); font-size: 11px; color: rgba(245,242,232,0.6); line-height: 1.5; }
-  .cause-text .amber-em { color: var(--amber); }
-  .cause-text .text-em { color: var(--text); }
-  .alert-note { font-family: var(--font-mono); font-size: 10px; color: rgba(245,242,232,0.35); line-height: 1.6; max-width: 300px; padding-left: 16px; border-left: 0.5px solid rgba(239,159,39,0.2); letter-spacing: 0.02em; }
-  .alert-note .stamp { color: var(--amber); opacity: 0.8; }
-  .waterfall-section { margin-top: 28px; }
-  .waterfall-list { display: flex; flex-direction: column; }
-  .wf-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid rgba(46,143,230,0.06); font-family: var(--font-mono); font-size: 12px; opacity: 0; }
-  .wf-item .label { color: rgba(245,242,232,0.7); }
-  .wf-item .value { color: var(--text); }
-  .wf-item.penalty .value { color: var(--amber); }
-  .wf-item.fee .label, .wf-item.fee .value { color: rgba(245,242,232,0.45); }
-  .wf-divider { border-top: 0.5px solid rgba(46,143,230,0.25); margin-top: 4px; }
-  .wf-net { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; padding-bottom: 4px; opacity: 0; }
-  .wf-net .label { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text); letter-spacing: -0.005em; }
-  .wf-net .value { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: -0.01em; }
-  .wf-meta { display: flex; gap: 24px; margin-top: 14px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
-  .wf-meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .wf-meta span:first-child::before { content: ""; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; opacity: 0.6; }
 </style>
 </head>
 <body>
-<div class="mockup">
-  <div class="chrome">
-    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-    <div class="url">voltaos.io/settlement/2026-05-07</div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/index.html"><img src="/favicon.svg" alt="Vela" />Vela</a>
+    <span class="brand-badge">SETTLEMENT</span>
+    <span class="topbar-spacer"></span>
+    <a class="topbar-link hide-sm" href="/index.html#platform">← Back to overview</a>
+    <a class="topbar-cta" href="/app.html" target="_blank"><span class="dot"></span>Launch app</a>
   </div>
-  <div class="panel">
-    <div class="panel-status">
-      <div class="left">SETTLEMENT &middot; MAY 7 2026</div>
-      <div class="right">
-        <span class="reconciled-badge">RECONCILED</span>
-        <span class="sub">Interval meter data verified &middot; 15-min granularity</span>
+</header>
+
+<main class="shell">
+  <section class="hero">
+    <div class="eyebrow">03 · Settlement</div>
+    <h1>Reconciliation</h1>
+    <p class="lead">Verify delivery against commitments to the 15-minute interval, attribute revenue to each asset, and reconcile against the ISO settlement statement. When an asset underperforms, the root cause is already attached.</p>
+    <div class="hero-meta">
+      <span class="meta-chip"><b>15-min</b> interval granularity</span>
+      <span class="meta-chip">AMI-metered</span>
+      <span class="meta-chip">Per-asset attribution</span>
+      <span class="meta-chip">Audit-ready log</span>
+    </div>
+  </section>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="browser-dots"><i></i><i></i><i></i></div>
+      <div class="browser-url"><span>velapwr.com/settlement/2026-05-07</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-status">
+        <div class="left">SETTLEMENT · MAY 7 2026</div>
+        <div class="right">
+          <span class="reconciled-badge">RECONCILED</span>
+          <span class="sub">Interval meter data verified · 15-min granularity</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="section-title">DELIVERY SUMMARY</div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span class="metric-label">COMMITTED</span>
+            <div class="metric-value">8.4 MW</div>
+            <div class="metric-sub">day-ahead position</div>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">DELIVERED</span>
+            <div class="metric-value dim">8.1 MW</div>
+            <div class="metric-sub">verified · AMI metered</div>
+          </div>
+          <div class="metric-card amber">
+            <span class="metric-label">PERFORMANCE</span>
+            <div class="metric-value amber" id="perfValue">96.4%</div>
+            <div class="metric-sub amber">↓0.3 MW shortfall</div>
+          </div>
+        </div>
+        <div class="delivery-wrap">
+          <div class="delivery-bar">
+            <div class="seg delivered" data-w="96.4"></div>
+            <div class="seg shortfall" data-w="3.6"></div>
+          </div>
+          <div class="delivery-labels">
+            <span class="left">8.1 MW delivered</span>
+            <span class="right">0.3 MW shortfall</span>
+          </div>
+        </div>
+        <div class="table-section">
+          <div class="section-title">PER-ASSET ATTRIBUTION</div>
+          <div class="compare-table">
+            <div class="grid-row table-header">
+              <div>Asset</div><div>Committed</div><div>Delivered</div><div>Performance</div><div>Revenue</div><div>Status</div>
+            </div>
+            <div class="grid-row table-row">
+              <div class="asset"><div class="name">Meridian Warehouse</div><div class="sub">Battery · Site 1</div></div>
+              <div class="num">3.4 MW</div><div class="num dim">3.4 MW</div>
+              <div class="num perf">100%</div><div class="num rev">$1,870</div>
+              <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+            </div>
+            <div class="grid-row table-row">
+              <div class="asset"><div class="name">Riverton Cold Store</div><div class="sub">HVAC · Site 2</div></div>
+              <div class="num">1.1 MW</div><div class="num dim">1.1 MW</div>
+              <div class="num perf">100%</div><div class="num rev">$490</div>
+              <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+            </div>
+            <div class="grid-row table-row flag" id="flagRow">
+              <div class="asset"><div class="name">NorthPark Mfg</div><div class="sub">Battery · Site 3</div></div>
+              <div class="num">2.4 MW</div><div class="num dim">2.1 MW</div>
+              <div class="num perf amber">87.5%</div><div class="num rev">$940</div>
+              <div class="status-cell"><span class="status-badge under">UNDERPERFORM</span></div>
+            </div>
+            <div class="grid-row table-row">
+              <div class="asset"><div class="name">FleetCo Depot 4</div><div class="sub">EV Fleet · Site 4</div></div>
+              <div class="num">0.8 MW</div><div class="num dim">0.8 MW</div>
+              <div class="num perf">100%</div><div class="num rev">$310</div>
+              <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+            </div>
+            <div class="grid-row table-row">
+              <div class="asset"><div class="name">Meadowbrook School</div><div class="sub">Battery · Site 5</div></div>
+              <div class="num">0.7 MW</div><div class="num dim">0.7 MW</div>
+              <div class="num perf">100%</div><div class="num rev">$210</div>
+              <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
+            </div>
+          </div>
+          <div class="alert-block">
+            <div class="alert-header">⚠ UNDERPERFORMANCE · NORTHPARK MFG</div>
+            <div class="alert-body">
+              <div class="alert-causes">
+                <div class="cause-item">
+                  <span class="cause-label">Root cause:</span>
+                  <span class="cause-text">SOC fell below <span class="text-em">20% floor</span> at 15:47 CT → emergency reserve triggered</span>
+                </div>
+                <div class="cause-item">
+                  <span class="cause-label">Impact:</span>
+                  <span class="cause-text">↓0.3 MW for 42 minutes · Performance penalty: <span class="amber-em">−$124</span></span>
+                </div>
+              </div>
+              <div class="alert-note"><span class="stamp">Agent flagged risk at 14:52 CT</span> → operator override declined dispatch reduction.</div>
+            </div>
+          </div>
+        </div>
+        <div class="waterfall-section">
+          <div class="section-title">REVENUE WATERFALL</div>
+          <div class="waterfall-list">
+            <div class="wf-item"><span class="label">Gross settlement revenue</span><span class="value">$7,820</span></div>
+            <div class="wf-item penalty"><span class="label">Performance penalty (ERCOT)</span><span class="value">−$124</span></div>
+            <div class="wf-item fee"><span class="label">Platform fee (18%)</span><span class="value">−$1,388</span></div>
+            <div class="wf-divider"></div>
+            <div class="wf-net">
+              <span class="label">Customer net revenue</span>
+              <span class="value" id="netValue">$0</span>
+            </div>
+          </div>
+          <div class="wf-meta">
+            <span>Settlement period: May 7 00:00–23:59 CT</span>
+            <span>Next settlement: May 8 · estimated $7,200–$8,100</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="panel-body">
-      <div class="section-title">DELIVERY SUMMARY</div>
-      <div class="metric-grid">
-        <div class="metric-card">
-          <span class="metric-label">COMMITTED</span>
-          <div class="metric-value">8.4 MW</div>
-          <div class="metric-sub">day-ahead position</div>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">DELIVERED</span>
-          <div class="metric-value dim">8.1 MW</div>
-          <div class="metric-sub">verified &middot; AMI metered</div>
-        </div>
-        <div class="metric-card amber">
-          <span class="metric-label">PERFORMANCE</span>
-          <div class="metric-value amber" id="perfValue">96.4%</div>
-          <div class="metric-sub amber">&darr;0.3 MW shortfall</div>
-        </div>
-      </div>
-      <div class="delivery-wrap">
-        <div class="delivery-bar">
-          <div class="seg delivered" data-w="96.4"></div>
-          <div class="seg shortfall" data-w="3.6"></div>
-        </div>
-        <div class="delivery-labels">
-          <span class="left">8.1 MW delivered</span>
-          <span class="right">0.3 MW shortfall</span>
-        </div>
-      </div>
-      <div class="table-section">
-        <div class="section-title">PER-ASSET ATTRIBUTION</div>
-        <div class="compare-table">
-          <div class="grid-row table-header">
-            <div>Asset</div><div>Committed</div><div>Delivered</div><div>Performance</div><div>Revenue</div><div>Status</div>
-          </div>
-          <div class="grid-row table-row">
-            <div class="asset"><div class="name">Meridian Warehouse</div><div class="sub">Battery &middot; Site 1</div></div>
-            <div class="num">3.4 MW</div><div class="num dim">3.4 MW</div>
-            <div class="num perf">100%</div><div class="num rev">$1,870</div>
-            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
-          </div>
-          <div class="grid-row table-row">
-            <div class="asset"><div class="name">Riverton Cold Store</div><div class="sub">HVAC &middot; Site 2</div></div>
-            <div class="num">1.1 MW</div><div class="num dim">1.1 MW</div>
-            <div class="num perf">100%</div><div class="num rev">$490</div>
-            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
-          </div>
-          <div class="grid-row table-row flag" id="flagRow">
-            <div class="asset"><div class="name">NorthPark Mfg</div><div class="sub">Battery &middot; Site 3</div></div>
-            <div class="num">2.4 MW</div><div class="num dim">2.1 MW</div>
-            <div class="num perf amber">87.5%</div><div class="num rev">$940</div>
-            <div class="status-cell"><span class="status-badge under">UNDERPERFORM</span></div>
-          </div>
-          <div class="grid-row table-row">
-            <div class="asset"><div class="name">FleetCo Depot 4</div><div class="sub">EV Fleet &middot; Site 4</div></div>
-            <div class="num">0.8 MW</div><div class="num dim">0.8 MW</div>
-            <div class="num perf">100%</div><div class="num rev">$310</div>
-            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
-          </div>
-          <div class="grid-row table-row">
-            <div class="asset"><div class="name">Meadowbrook School</div><div class="sub">Battery &middot; Site 5</div></div>
-            <div class="num">0.7 MW</div><div class="num dim">0.7 MW</div>
-            <div class="num perf">100%</div><div class="num rev">$210</div>
-            <div class="status-cell"><span class="status-badge settled">SETTLED</span></div>
-          </div>
-        </div>
-        <div class="alert-block">
-          <div class="alert-header">&#9888; UNDERPERFORMANCE &middot; NORTHPARK MFG</div>
-          <div class="alert-body">
-            <div class="alert-causes">
-              <div class="cause-item">
-                <span class="cause-label">Root cause:</span>
-                <span class="cause-text">SOC fell below <span class="text-em">20% floor</span> at 15:47 CT &rarr; emergency reserve triggered</span>
-              </div>
-              <div class="cause-item">
-                <span class="cause-label">Impact:</span>
-                <span class="cause-text">&darr;0.3 MW for 42 minutes &middot; Performance penalty: <span class="amber-em">&minus;$124</span></span>
-              </div>
-            </div>
-            <div class="alert-note">
-              <span class="stamp">Agent flagged risk at 14:52 CT</span> &rarr; operator override declined dispatch reduction.
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="waterfall-section">
-        <div class="section-title">REVENUE WATERFALL</div>
-        <div class="waterfall-list">
-          <div class="wf-item"><span class="label">Gross settlement revenue</span><span class="value">$7,820</span></div>
-          <div class="wf-item penalty"><span class="label">Performance penalty (ERCOT)</span><span class="value">&minus;$124</span></div>
-          <div class="wf-item fee"><span class="label">Platform fee (18%)</span><span class="value">&minus;$1,388</span></div>
-          <div class="wf-divider"></div>
-          <div class="wf-net">
-            <span class="label">Customer net revenue</span>
-            <span class="value" id="netValue">$0</span>
-          </div>
-        </div>
-        <div class="wf-meta">
-          <span>Settlement period: May 7 00:00&ndash;23:59 CT</span>
-          <span>Next settlement: May 8 &middot; estimated $7,200&ndash;$8,100</span>
-        </div>
-      </div>
+  </div>
+
+  <section class="section-head">
+    <div class="eyebrow">From meter to payout</div>
+    <h2>Every dollar, traced to an interval.</h2>
+    <p class="lead">Settlement closes the loop: the same engine that bid and dispatched now proves what was delivered, attributes it per asset, and reconciles it against the ISO — penalty and all.</p>
+  </section>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">01 — VERIFY</div>
+      <div class="step-name">Interval-metered delivery</div>
+      <div class="step-desc">AMI meter data is matched against the committed position at 15-minute resolution. Committed vs. delivered is reconciled before any revenue is recognized.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">02 — ATTRIBUTE</div>
+      <div class="step-name">Revenue per asset</div>
+      <div class="step-desc">Delivery is allocated proportionally with no rounding leakage, so each site carries its own performance and payout. Underperformers are flagged with a root cause.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">03 — RECONCILE</div>
+      <div class="step-name">Against the ISO statement</div>
+      <div class="step-desc">Gross revenue, ERCOT performance penalty, and platform fee resolve to a customer-net figure that ties out line-by-line to the settlement statement.</div>
     </div>
   </div>
-</div>
+
+  <footer class="page-foot">
+    <span>Vela · settlement · AMI-verified · audit-ready</span>
+    <a href="/index.html#platform">← Back to all three modules</a>
+  </footer>
+</main>
+</body>
 <script>
 (function () {
-  anime({ targets: '.mockup', opacity: [0,1], duration: 400, easing: 'easeOutQuad' });
+  anime({ targets: '.browser', opacity: [0,1], duration: 400, easing: 'easeOutQuad' });
   anime({ targets: '.metric-card', translateY: [12,0], opacity: [0,1], delay: anime.stagger(80,{start:300}), duration: 600, easing: 'easeOutExpo' });
   document.querySelectorAll('.seg').forEach(el => {
     anime({ targets: el, width: el.dataset.w+'%', duration: 700, delay: 500, easing: 'easeOutCubic' });
@@ -279,9 +359,9 @@
   anime({ targets: '.table-row', translateX: [-10,0], opacity: [0,1], delay: anime.stagger(60,{start:700}), duration: 600, easing: 'easeOutExpo' });
   const flagRow = document.getElementById('flagRow');
   anime({ targets: flagRow, backgroundColor: [
-    { value: 'rgba(239,159,39,0.03)', duration: 0 },
-    { value: 'rgba(239,159,39,0.18)', duration: 400, easing: 'easeOutQuad' },
-    { value: 'rgba(239,159,39,0.03)', duration: 400, easing: 'easeInQuad' }
+    { value: 'rgba(196,124,28,0.10)', duration: 0 },
+    { value: 'rgba(196,124,28,0.26)', duration: 400, easing: 'easeOutQuad' },
+    { value: 'rgba(196,124,28,0.10)', duration: 400, easing: 'easeInQuad' }
   ], delay: 1100 });
   anime({ targets: '.alert-block', translateY: [8,0], opacity: [0,1], delay: 1300, duration: 600, easing: 'easeOutExpo' });
   anime({ targets: '.wf-item', translateX: [-8,0], opacity: [0,1], delay: anime.stagger(70,{start:1500}), duration: 500, easing: 'easeOutExpo' });
@@ -293,5 +373,4 @@
   });
 })();
 </script>
-</body>
 </html>

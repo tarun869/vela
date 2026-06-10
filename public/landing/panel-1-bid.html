@@ -3,507 +3,338 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VoltaOS &mdash; Dispatch Queue</title>
+<title>Vela — Dispatch Queue</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="description" content="Generated bid recommendations with full rationale: LMP spike probability, degradation cost, and a complete constraint audit. Approve or decline in one keystroke." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-page: #060A08;
-    --bg-panel: #0D1510;
-    --bg-card: #111916;
-    --bg-bid: #1A2420;
-    --bg-chrome: #080C0A;
-    --accent: #1D9E75;
-    --accent-dark: #0F6E56;
-    --amber: #EF9F27;
-    --text: #F5F2E8;
-    --text-muted: rgba(245,242,232,0.45);
-    --text-faint: rgba(245,242,232,0.25);
-    --rule: rgba(29,158,117,0.1);
-    --rule-mid: rgba(29,158,117,0.2);
-    --font-display: 'Syne', sans-serif;
-    --font-mono: 'DM Mono', monospace;
+  :root{
+    --bg:#F6F8FC;--bg-soft:#EDF1F8;--bg-tint:#E5ECF6;--card:#FFFFFF;
+    --ink:#15181B;--ink-2:#33373C;--muted:#5C6167;--faint:#9AA0A6;
+    --line:rgba(21,24,27,0.10);--line-soft:rgba(21,24,27,0.06);
+    --green:#1A74D8;--green-2:#1463C2;--green-deep:#0C4D8C;
+    --green-tint:rgba(26,116,216,0.08);--green-tint-2:rgba(26,116,216,0.14);
+    --amber:#C47C1C;--amber-tint:rgba(196,124,28,0.10);--amber-line:rgba(196,124,28,0.32);
+    --up:#1B9E6E;--dn:#C2543F;
+    --sans:'Geist',ui-sans-serif,system-ui,-apple-system,sans-serif;
+    --mono:'Geist Mono',ui-monospace,monospace;
+    --maxw:920px;--r:14px;--r-lg:20px;
+    --shadow-sm:0 1px 2px rgba(21,24,27,.04),0 2px 6px rgba(21,24,27,.04);
+    --shadow:0 2px 4px rgba(21,24,27,.04),0 12px 32px rgba(21,24,27,.07);
+    --shadow-lg:0 4px 8px rgba(21,24,27,.05),0 24px 64px rgba(21,24,27,.12);
   }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;background:var(--bg)}
+  body{
+    background:transparent;color:var(--ink);font-family:var(--sans);font-weight:400;line-height:1.55;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;min-height:100vh;
+  }
+  body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:radial-gradient(rgba(26,116,216,0.05) 1px,transparent 1.5px);background-size:24px 24px;
+    -webkit-mask-image:radial-gradient(ellipse 110% 75% at 50% 0%,#000 40%,transparent 90%);
+    mask-image:radial-gradient(ellipse 110% 75% at 50% 0%,#000 40%,transparent 90%)}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg,img{display:block;max-width:100%}
+  ::selection{background:var(--green-tint-2);color:var(--green-deep)}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ── top bar ── */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(246,248,252,.78);backdrop-filter:blur(16px);border-bottom:1px solid var(--line-soft)}
+  .topbar-inner{max-width:var(--maxw);margin:0 auto;padding:13px 28px;display:flex;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;letter-spacing:-.03em;color:var(--ink)}
+  .brand img{width:21px;height:21px}
+  .brand-badge{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;color:var(--green-2);
+    border:1px solid var(--green-tint-2);background:var(--green-tint);padding:3px 8px;border-radius:5px}
+  .topbar-spacer{flex:1}
+  .topbar-link{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:var(--muted);padding:7px 12px;border-radius:9px;transition:color .15s,background .15s}
+  .topbar-link:hover{color:var(--ink);background:var(--bg-soft)}
+  .topbar-cta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#fff;background:var(--green);padding:8px 15px;border-radius:9px;box-shadow:0 1px 2px rgba(12,77,140,.18),0 6px 16px rgba(26,116,216,.16);transition:transform .14s,background .18s}
+  .topbar-cta:hover{transform:translateY(-1px);background:var(--green-2)}
+  .topbar-cta .dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.9)}
 
-  html, body {
-    background: var(--bg-page);
-    color: var(--text);
-    font-family: var(--font-display);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-  }
+  /* ── page shell ── */
+  .shell{max-width:var(--maxw);margin:0 auto;padding:44px 28px 72px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--green);display:inline-flex;align-items:center;gap:10px}
+  .eyebrow::before{content:'';width:20px;height:1px;background:var(--green);opacity:.6}
+  .hero h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:-.035em;line-height:1.04;margin:16px 0 0}
+  .hero .lead{margin-top:16px;font-size:clamp(15px,1.6vw,17.5px);color:var(--muted);line-height:1.6;max-width:660px}
+  .hero-meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta-chip{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--ink-2);border:1px solid var(--line);background:var(--card);padding:6px 11px;border-radius:8px}
+  .meta-chip b{color:var(--green);font-weight:600}
 
-  body {
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(29,158,117,0.06) 0%, transparent 55%),
-      var(--bg-page);
-    padding: 48px 24px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-  }
+  /* ── browser frame ── */
+  .browser{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden}
+  .browser-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(var(--card),#FCFDFF)}
+  .browser-dots{display:flex;gap:7px}
+  .browser-dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .browser-dots i:nth-child(1){background:#FF5F57}.browser-dots i:nth-child(2){background:#FEBC2E}.browser-dots i:nth-child(3){background:#28C840}
+  .browser-url{flex:1;display:flex;justify-content:center}
+  .browser-url span{font-family:var(--mono);font-size:11.5px;color:var(--faint);background:var(--bg-soft);border:1px solid var(--line-soft);padding:4px 18px;border-radius:7px;letter-spacing:.02em}
 
-  .mockup {
-    width: 100%;
-    max-width: 880px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 0.5px solid rgba(29,158,117,0.18);
-    box-shadow:
-      0 30px 80px -20px rgba(0,0,0,0.7),
-      0 12px 30px -10px rgba(0,0,0,0.5),
-      0 0 0 1px rgba(0,0,0,0.4);
-  }
+  /* ── panel inner ── */
+  .panel{background:var(--bg)}
+  .panel-status{display:flex;justify-content:space-between;align-items:center;padding:13px 22px;border-bottom:1px solid var(--line-soft);background:var(--card)}
+  .panel-status .left{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.12em;font-weight:500}
+  .panel-status .right{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px rgba(27,158,110,.16);animation:pulse 2.2s infinite ease-in-out}
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
 
-  .chrome {
-    background: var(--bg-chrome);
-    height: 40px;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    border-bottom: 0.5px solid rgba(29,158,117,0.15);
-    position: relative;
-  }
-  .dots { display: flex; gap: 8px; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot.r { background: #FF5F57; }
-  .dot.y { background: #FEBC2E; }
-  .dot.g { background: #28C840; }
-  .url {
-    position: absolute;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: rgba(245,242,232,0.25);
-    background: rgba(255,255,255,0.05);
-    border-radius: 4px;
-    padding: 4px 16px;
-    width: 260px;
-    text-align: center;
-    letter-spacing: 0.02em;
-  }
+  .queue-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.03em}
+  .queue-header .right{color:var(--green);font-weight:500}
 
-  .panel { background: var(--bg-panel); }
+  .cards-wrap{padding:6px 22px 24px;display:flex;flex-direction:column;gap:12px}
 
-  .panel-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    border-bottom: 0.5px solid var(--rule);
-  }
-  .panel-status .left {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(29,158,117,0.6);
-    letter-spacing: 0.12em;
-  }
-  .panel-status .right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(245,242,232,0.35);
-  }
-  .pulse-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #28C840;
-    box-shadow: 0 0 8px rgba(40,200,64,0.7);
-    animation: pulse 2s infinite ease-in-out;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
-  }
+  .bid-card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+  .bid-card.collapsed{border-left-color:var(--green-tint-2)}
 
-  .queue-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px 10px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-  }
-  .queue-header .right { color: rgba(29,158,117,0.6); }
+  .bid-header{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 15px;gap:16px}
+  .bid-asset .name{font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.01em;margin-bottom:4px}
+  .bid-asset .market{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.01em}
+  .bid-meta{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 
-  .cards-wrap {
-    padding: 4px 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .risk-badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 9px;border-radius:5px;letter-spacing:.07em}
+  .risk-badge.med{background:var(--amber-tint);color:var(--amber);border:1px solid var(--amber-line)}
+  .risk-badge.low{background:var(--green-tint);color:var(--green-2);border:1px solid var(--green-tint-2)}
+  .bid-spec{font-family:var(--mono);font-size:12px;color:var(--green-2);font-weight:600;letter-spacing:.01em}
 
-  .bid-card {
-    background: var(--bg-bid);
-    border: 0.5px solid rgba(29,158,117,0.35);
-    border-left: 3px solid var(--accent);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .bid-card.collapsed { border-left-color: rgba(29,158,117,0.5); }
+  .revenue-row{display:flex;justify-content:space-between;align-items:baseline;padding:13px 20px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);background:var(--bg-soft)}
+  .revenue-row .label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+  .revenue-row .value{display:flex;align-items:baseline;gap:6px}
+  .revenue-row .value .num{font-weight:800;font-size:22px;color:var(--ink);letter-spacing:-.02em}
+  .revenue-row .value .unit{font-family:var(--mono);font-size:11px;color:var(--muted)}
 
-  .bid-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 16px 18px 14px;
-    gap: 16px;
-  }
+  .bid-body{padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+  .field-label{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;margin-bottom:9px;display:block;font-weight:500}
+  .field-label.muted{color:var(--faint)}
+  .rationale{font-size:13px;color:var(--ink-2);line-height:1.7;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:10px;padding:13px 15px}
+  .rationale .em{color:var(--green-2);font-weight:600}
+  .rationale .amber{color:var(--amber);font-weight:600}
 
-  .bid-asset .name {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--text);
-    letter-spacing: -0.005em;
-    margin-bottom: 4px;
-  }
-  .bid-asset .market {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(245,242,232,0.4);
-    letter-spacing: 0.02em;
-  }
+  .tags{display:inline-flex;flex-wrap:wrap;gap:7px}
+  .tag{font-family:var(--mono);font-size:10.5px;background:var(--bg-soft);border:1px solid var(--line-soft);color:var(--ink-2);padding:5px 10px;border-radius:7px;letter-spacing:.01em}
 
-  .bid-meta {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-  }
+  .alternatives{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .alt-item{font-family:var(--mono);font-size:11px;color:var(--faint);text-decoration:line-through;text-decoration-color:rgba(21,24,27,.2)}
+  .alt-sep{color:var(--line);font-family:var(--mono);font-size:11px}
 
-  .risk-badge {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    letter-spacing: 0.08em;
-  }
-  .risk-badge.med {
-    background: rgba(186,117,23,0.15);
-    color: var(--amber);
-    border: 0.5px solid rgba(239,159,39,0.3);
-  }
-  .risk-badge.low {
-    background: rgba(29,158,117,0.12);
-    color: var(--accent);
-    border: 0.5px solid rgba(29,158,117,0.35);
-  }
+  .action-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding:15px 20px;gap:16px}
+  .action-row .meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .actions{display:flex;gap:9px}
+  .btn{font-family:var(--sans);font-size:12.5px;font-weight:600;padding:9px 18px;border-radius:9px;cursor:pointer;transition:transform .14s,box-shadow .18s,background .18s,border-color .18s,color .18s;letter-spacing:.01em;display:inline-flex;align-items:center;gap:7px}
+  .btn-decline{border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .btn-decline:hover{color:var(--ink);border-color:var(--ink)}
+  .btn-approve{border:1px solid var(--green);background:var(--green);color:#fff;box-shadow:0 1px 2px rgba(12,77,140,.18),0 6px 16px rgba(26,116,216,.16)}
+  .btn-approve:hover{transform:translateY(-1px);background:var(--green-2);border-color:var(--green-2)}
+  .btn-approve .kbd{font-family:var(--mono);font-size:10px;opacity:.85;border:1px solid rgba(255,255,255,.4);padding:0 5px;border-radius:4px;margin-left:1px}
 
-  .bid-spec {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: 0.01em;
-  }
+  .bid-card.collapsed .bid-header{align-items:center;padding:16px 20px}
+  .collapse-right{display:flex;align-items:center;gap:18px}
+  .collapse-eta{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .collapse-eta .value{color:var(--green-2);font-weight:600}
+  .auto-flag{font-family:var(--mono);font-size:10px;color:var(--green-2);letter-spacing:.05em;display:inline-flex;align-items:center;gap:6px}
+  .auto-flag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-tint)}
+  .chevron{color:var(--faint);font-family:var(--mono);font-size:13px;line-height:1;user-select:none}
 
-  .revenue-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 12px 18px;
-    border-top: 0.5px solid var(--rule);
-    border-bottom: 0.5px solid var(--rule);
-  }
-  .revenue-row .label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
-  }
-  .revenue-row .value { display: flex; align-items: baseline; gap: 6px; }
-  .revenue-row .value .num {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 20px;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .revenue-row .value .unit {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-  }
+  .panel-footer{border-top:1px solid var(--line-soft);padding:12px 22px;display:flex;justify-content:space-between;align-items:center;background:var(--card)}
+  .panel-footer .left{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.07em}
+  .panel-footer .right{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.03em}
+  .panel-footer .key{color:var(--ink-2);border:1px solid var(--line);background:var(--bg-soft);padding:1px 6px;border-radius:4px;margin:0 2px}
 
-  .bid-body {
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+  /* ── explainer below ── */
+  .section-head{margin-top:64px;max-width:620px}
+  .section-head h2{font-size:clamp(22px,3vw,30px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-top:14px}
+  .section-head .lead{margin-top:13px;font-size:15px;color:var(--muted);line-height:1.6}
 
-  .field-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgba(29,158,117,0.6);
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .field-label.muted { color: var(--text-muted); }
+  .how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+  .how-step{background:var(--card);padding:24px 22px;transition:background .18s}
+  .how-step:hover{background:var(--bg-soft)}
+  .step-num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--green);letter-spacing:.1em}
+  .step-name{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:11px 0 8px}
+  .step-desc{font-size:13px;color:var(--muted);line-height:1.55}
 
-  .rationale {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: rgba(245,242,232,0.65);
-    line-height: 1.7;
-    background: rgba(0,0,0,0.2);
-    border-radius: 4px;
-    padding: 10px 12px;
-  }
-  .rationale .em { color: var(--accent); }
-  .rationale .amber { color: var(--amber); }
+  .legend{margin-top:18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow-sm);overflow:hidden}
+  .legend-row{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:16px 22px;border-top:1px solid var(--line-soft)}
+  .legend-row:first-child{border-top:none}
+  .legend-term{font-family:var(--mono);font-size:12px;color:var(--green-2);font-weight:500;letter-spacing:.01em}
+  .legend-def{font-size:13.5px;color:var(--ink-2);line-height:1.55}
+  .legend-def b{color:var(--ink);font-weight:600}
 
-  .tags { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    background: rgba(29,158,117,0.08);
-    border: 0.5px solid rgba(29,158,117,0.25);
-    color: rgba(29,158,117,0.8);
-    padding: 3px 8px;
-    border-radius: 3px;
-    letter-spacing: 0.02em;
-  }
+  .page-foot{margin-top:56px;padding-top:24px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .page-foot span{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--faint)}
+  .page-foot a{font-family:var(--mono);font-size:11.5px;color:var(--green);font-weight:500}
+  .page-foot a:hover{color:var(--green-2)}
 
-  .alternatives { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-  .alt-item {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(245,242,232,0.35);
-    text-decoration: line-through;
-    text-decoration-color: rgba(245,242,232,0.25);
-  }
-  .alt-sep {
-    color: rgba(245,242,232,0.18);
-    font-family: var(--font-mono);
-    font-size: 11px;
-  }
-
-  .action-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 0.5px solid var(--rule);
-    padding: 14px 18px;
-    gap: 16px;
-  }
-  .action-row .meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-  .actions { display: flex; gap: 8px; }
-  .btn {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 7px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 150ms ease;
-    letter-spacing: 0.04em;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-decline {
-    border: 0.5px solid rgba(245,242,232,0.15);
-    color: rgba(245,242,232,0.35);
-    background: transparent;
-  }
-  .btn-decline:hover { color: rgba(245,242,232,0.6); border-color: rgba(245,242,232,0.3); }
-  .btn-approve {
-    border: 0.5px solid var(--accent);
-    background: var(--accent);
-    color: #0A1410;
-    font-weight: 700;
-  }
-  .btn-approve:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
-  .btn-approve .kbd {
-    font-size: 10px;
-    opacity: 0.6;
-    border: 0.5px solid rgba(10,20,16,0.4);
-    padding: 0 4px;
-    border-radius: 2px;
-    margin-left: 2px;
-  }
-
-  .bid-card.collapsed .bid-header {
-    align-items: center;
-    padding: 14px 18px;
-  }
-  .collapse-right { display: flex; align-items: center; gap: 18px; }
-  .collapse-eta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    text-align: right;
-  }
-  .collapse-eta .value {
-    color: var(--accent);
-    display: block;
-    font-weight: 700;
-    margin-top: 2px;
-  }
-  .auto-flag {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgba(29,158,117,0.7);
-    letter-spacing: 0.06em;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .auto-flag::before {
-    content: "";
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 6px rgba(29,158,117,0.7);
-  }
-  .chevron {
-    color: rgba(245,242,232,0.25);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    line-height: 1;
-    user-select: none;
-  }
-
-  .panel-footer {
-    border-top: 0.5px solid var(--rule);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0,0,0,0.2);
-  }
-  .panel-footer .left {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-faint);
-    letter-spacing: 0.08em;
-  }
-  .panel-footer .right {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-faint);
-    letter-spacing: 0.04em;
-  }
-  .panel-footer .right .key {
-    color: rgba(245,242,232,0.5);
-    border: 0.5px solid rgba(245,242,232,0.15);
-    padding: 1px 5px;
-    border-radius: 2px;
-    margin: 0 3px;
+  @media(max-width:720px){
+    .how-steps{grid-template-columns:1fr}
+    .legend-row{grid-template-columns:1fr;gap:6px}
+    .bid-header{flex-direction:column}
+    .bid-meta{text-align:left;align-items:flex-start}
+    .topbar-link.hide-sm{display:none}
   }
 </style>
 </head>
 <body>
-<div class="mockup">
-  <div class="chrome">
-    <div class="dots">
-      <span class="dot r"></span>
-      <span class="dot y"></span>
-      <span class="dot g"></span>
-    </div>
-    <div class="url">voltaos.io/dispatch/queue</div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/index.html"><img src="/favicon.svg" alt="Vela" />Vela</a>
+    <span class="brand-badge">DISPATCH QUEUE</span>
+    <span class="topbar-spacer"></span>
+    <a class="topbar-link hide-sm" href="/index.html#platform">← Back to overview</a>
+    <a class="topbar-cta" href="/app.html" target="_blank"><span class="dot"></span>Launch app</a>
   </div>
-  <div class="panel">
-    <div class="panel-status">
-      <div class="left">DISPATCH QUEUE</div>
-      <div class="right">
-        <span class="pulse-dot"></span>
-        <span>Agent cycle 847 &middot; 14:33 CT</span>
-      </div>
-    </div>
-    <div class="queue-header">
-      <div class="left">3 recommendations pending</div>
-      <div class="right">2 auto-approvable</div>
-    </div>
-    <div class="cards-wrap">
-      <div class="bid-card">
-        <div class="bid-header">
-          <div class="bid-asset">
-            <div class="name">Meridian Warehouse &middot; Battery</div>
-            <div class="market">ERCOT Real-Time &middot; 15:00&ndash;17:00 CT</div>
-          </div>
-          <div class="bid-meta">
-            <span class="risk-badge med">MED RISK</span>
-            <span class="bid-spec">3.4 MW &middot; $92/MWh floor</span>
-          </div>
-        </div>
-        <div class="revenue-row">
-          <span class="label">EXPECTED REVENUE</span>
-          <span class="value">
-            <span class="num">$1,870</span>
-            <span class="unit">/event</span>
-          </span>
-        </div>
-        <div class="bid-body">
-          <div>
-            <span class="field-label">AGENT RATIONALE</span>
-            <div class="rationale">
-              LMP spike probability <span class="em">78%</span> at 16:00 based on ERCOT wind ramp-down signal. Battery 7 excluded &mdash; degradation cost (<span class="amber">$4.20/cycle</span>) exceeds spread below $85. Ancillary RegUp rejected &mdash; commitment conflicts with 4h backup reserve on Site 3.
-            </div>
-          </div>
-          <div>
-            <span class="field-label muted">CONSTRAINTS APPLIED</span>
-            <div class="tags">
-              <span class="tag">SOC floor &ge; 20%</span>
-              <span class="tag">Backup reserve 4h</span>
-              <span class="tag">Max 1 cycle/day &middot; Batt 7</span>
-              <span class="tag">No residential dispatch</span>
-            </div>
-          </div>
-          <div>
-            <span class="field-label muted">ALTERNATIVES REJECTED</span>
-            <div class="alternatives">
-              <span class="alt-item">RegUp ancillary &mdash; backup conflict</span>
-              <span class="alt-sep">&middot;</span>
-              <span class="alt-item">Day-ahead &mdash; $14/MWh below RT forecast</span>
-            </div>
-          </div>
-        </div>
-        <div class="action-row">
-          <div class="meta">Alternatives considered: 3</div>
-          <div class="actions">
-            <button class="btn btn-decline">DECLINE</button>
-            <button class="btn btn-approve">APPROVE <span class="kbd">&#8617;</span></button>
-          </div>
-        </div>
-      </div>
+</header>
 
-      <div class="bid-card collapsed">
-        <div class="bid-header">
-          <div class="bid-asset">
-            <div class="name">Riverside DC &middot; Battery + Solar</div>
-            <div class="market">ERCOT Real-Time &middot; 17:00&ndash;18:00 CT</div>
-          </div>
-          <div class="collapse-right">
-            <span class="auto-flag">AUTO-APPROVE IN 0:42</span>
-            <div class="collapse-eta">
-              <span class="risk-badge low">LOW RISK</span>
-              <span class="value">1.2 MW &middot; $640 /event</span>
+<main class="shell">
+  <section class="hero">
+    <div class="eyebrow">01 · Bid intelligence</div>
+    <h1>Dispatch Queue</h1>
+    <p class="lead">Every recommendation arrives with its full reasoning: LMP spike probability, live degradation cost, and a complete audit of the constraints that shaped it. Approve or decline in a single keystroke — or let the low-risk bids auto-approve.</p>
+    <div class="hero-meta">
+      <span class="meta-chip"><b>MILP</b> · co-optimized solve</span>
+      <span class="meta-chip"><b>ERCOT</b> Real-Time</span>
+      <span class="meta-chip">SOC floor &amp; reserve constraints</span>
+      <span class="meta-chip">One-keystroke approval</span>
+    </div>
+  </section>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="browser-dots"><i></i><i></i><i></i></div>
+      <div class="browser-url"><span>velapwr.com/dispatch/queue</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-status">
+        <div class="left">DISPATCH QUEUE</div>
+        <div class="right"><span class="pulse-dot"></span><span>Agent cycle 847 · 14:33 CT</span></div>
+      </div>
+      <div class="queue-header">
+        <div class="left">3 recommendations pending</div>
+        <div class="right">2 auto-approvable</div>
+      </div>
+      <div class="cards-wrap">
+        <div class="bid-card">
+          <div class="bid-header">
+            <div class="bid-asset">
+              <div class="name">Meridian Warehouse · Battery</div>
+              <div class="market">ERCOT Real-Time · 15:00–17:00 CT</div>
             </div>
-            <span class="chevron">&#9660;</span>
+            <div class="bid-meta">
+              <span class="risk-badge med">MED RISK</span>
+              <span class="bid-spec">3.4 MW · $92/MWh floor</span>
+            </div>
+          </div>
+          <div class="revenue-row">
+            <span class="label">EXPECTED REVENUE</span>
+            <span class="value"><span class="num">$1,870</span><span class="unit">/event</span></span>
+          </div>
+          <div class="bid-body">
+            <div>
+              <span class="field-label">AGENT RATIONALE</span>
+              <div class="rationale">LMP spike probability <span class="em">78%</span> at 16:00 based on ERCOT wind ramp-down signal. Battery 7 excluded — degradation cost (<span class="amber">$4.20/cycle</span>) exceeds spread below $85. Ancillary RegUp rejected — commitment conflicts with 4h backup reserve on Site 3.</div>
+            </div>
+            <div>
+              <span class="field-label muted">CONSTRAINTS APPLIED</span>
+              <div class="tags">
+                <span class="tag">SOC floor ≥ 20%</span>
+                <span class="tag">Backup reserve 4h</span>
+                <span class="tag">Max 1 cycle/day · Batt 7</span>
+                <span class="tag">No residential dispatch</span>
+              </div>
+            </div>
+            <div>
+              <span class="field-label muted">ALTERNATIVES REJECTED</span>
+              <div class="alternatives">
+                <span class="alt-item">RegUp ancillary — backup conflict</span>
+                <span class="alt-sep">·</span>
+                <span class="alt-item">Day-ahead — $14/MWh below RT forecast</span>
+              </div>
+            </div>
+          </div>
+          <div class="action-row">
+            <div class="meta">Alternatives considered: 3</div>
+            <div class="actions">
+              <button class="btn btn-decline">DECLINE</button>
+              <button class="btn btn-approve">APPROVE <span class="kbd">↵</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bid-card collapsed">
+          <div class="bid-header">
+            <div class="bid-asset">
+              <div class="name">Riverside DC · Battery + Solar</div>
+              <div class="market">ERCOT Real-Time · 17:00–18:00 CT</div>
+            </div>
+            <div class="collapse-right">
+              <span class="auto-flag">AUTO-APPROVE IN 0:42</span>
+              <div class="collapse-eta">
+                <span class="risk-badge low">LOW RISK</span>
+                <span class="value">1.2 MW · $640 /event</span>
+              </div>
+              <span class="chevron">▾</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="panel-footer">
-      <div class="left">SHADOW MODE &middot; LIVE DISPATCH OFF</div>
-      <div class="right">
-        <span class="key">J</span><span class="key">K</span> navigate &middot; <span class="key">&#8617;</span> approve &middot; <span class="key">D</span> decline
+      <div class="panel-footer">
+        <div class="left">SHADOW MODE · LIVE DISPATCH OFF</div>
+        <div class="right"><span class="key">J</span><span class="key">K</span> navigate · <span class="key">↵</span> approve · <span class="key">D</span> decline</div>
       </div>
     </div>
   </div>
-</div>
+
+  <section class="section-head">
+    <div class="eyebrow">How a recommendation is built</div>
+    <h2>Forecast, optimize, explain — every cycle.</h2>
+    <p class="lead">The queue is the surface of a closed loop that runs continuously against live ISO telemetry. Each card is the explainable output of one solve.</p>
+  </section>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">01 — FORECAST</div>
+      <div class="step-name">Price &amp; risk signals</div>
+      <div class="step-desc">Quantile LMP forecasts and ancillary-regime probabilities feed the spike estimate. The 78% figure is the modeled probability of an RT price spike at the dispatch interval.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">02 — OPTIMIZE</div>
+      <div class="step-name">Constrained MILP solve</div>
+      <div class="step-desc">Market revenue, live battery degradation cost, and your operating constraints are co-optimized in one solve. Bids that violate a floor or reserve never reach the queue.</div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">03 — EXPLAIN</div>
+      <div class="step-name">Rationale &amp; counterfactuals</div>
+      <div class="step-desc">Dual variables become the dollar cost of each constraint; rejected alternatives are surfaced with the reason they lost. Nothing is approved without a stated why.</div>
+    </div>
+  </div>
+
+  <section class="section-head">
+    <div class="eyebrow">Reading the card</div>
+    <h2>What each field means.</h2>
+  </section>
+  <div class="legend">
+    <div class="legend-row">
+      <div class="legend-term">Risk badge</div>
+      <div class="legend-def"><b>Med / Low</b> reflects forecast confidence and exposure. Low-risk bids inside your auto-approve thresholds clear on a countdown; medium and high always wait for a human.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-term">$/MWh floor</div>
+      <div class="legend-def">The breakeven price below which the bid is withheld — set by live degradation cost so a cycle is never spent for less than it costs.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-term">Constraints applied</div>
+      <div class="legend-def">The exact operating limits that bound this solve — SOC floors, backup reserve, cycle caps, dispatch exclusions. These are your rules, enforced before any revenue is chased.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-term">Alternatives rejected</div>
+      <div class="legend-def">Strategies the optimizer evaluated and discarded, each with the binding reason — a conflicting reserve, an unfavorable spread — so the decision is auditable end to end.</div>
+    </div>
+  </div>
+
+  <footer class="page-foot">
+    <span>Vela · the neutral dispatch layer · shadow mode shown</span>
+    <a href="/index.html#platform">← Back to all three modules</a>
+  </footer>
+</main>
 </body>
 </html>
