@@ -199,8 +199,10 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.05;font-weight:700}
    curls on the flanks toward the wheel; the center-top is masked clear of the headline */
 .hero-waves{position:absolute;top:-30px;left:50%;transform:translateX(-50%);
   width:min(1520px,130%);height:auto;pointer-events:none;
-  -webkit-mask-image:radial-gradient(ellipse 50% 44% at 50% 30%,transparent 0%,transparent 46%,#000 80%);
-  mask-image:radial-gradient(ellipse 50% 44% at 50% 30%,transparent 0%,transparent 46%,#000 80%)}
+  -webkit-mask-image:radial-gradient(ellipse 50% 44% at 50% 30%,transparent 0%,transparent 46%,#000 80%),linear-gradient(to right,transparent 0,#000 14%,#000 86%,transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:radial-gradient(ellipse 50% 44% at 50% 30%,transparent 0%,transparent 46%,#000 80%),linear-gradient(to right,transparent 0,#000 14%,#000 86%,transparent 100%);
+  mask-composite:intersect}
 .hero-waves path{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
 .hero-waves .wave{stroke:var(--green);stroke-width:1.2;opacity:.15}
 .hero-waves .wave-dim{stroke:var(--green);stroke-width:1;opacity:.085}
