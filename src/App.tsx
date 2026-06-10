@@ -34,6 +34,7 @@ import { DispatchPage } from './pages/DispatchPage'
 import { SettlementDemoPage } from './pages/SettlementDemoPage'
 import { FleetProvider } from './context/FleetContext'
 import { ConnectorMark } from './components/ConnectorMark'
+import { connectorLogos } from './components/connectorLogos'
 import {
   Area,
   AreaChart,
@@ -1441,6 +1442,14 @@ function ModelPage({ selectedDecision }: { selectedDecision: DecisionCandidate }
 }
 
 function ConnectorLogo({ connector }: { connector: typeof vppConnectors[number] }) {
+  const logo = connectorLogos[connector.id]
+  if (logo) {
+    return (
+      <span className={`connector-logo brand-logo tone-${logo.tone ?? 'light'}`} aria-hidden>
+        <img src={logo.src} alt="" loading="lazy" />
+      </span>
+    )
+  }
   return (
     <span
       className="connector-logo"

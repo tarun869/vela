@@ -1995,6 +1995,26 @@ h3 {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+/* Real vendor logos sit on a neutral tile so each brand keeps its own colour. */
+.connector-logo.brand-logo {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(26, 42, 36, 0.1);
+  overflow: hidden;
+}
+
+.connector-logo.brand-logo.tone-dark {
+  background: #14110f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.connector-logo.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
 .connector-card-title {
   min-width: 0;
 }
