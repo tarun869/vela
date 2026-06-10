@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.0.29 (2026-06-10)
+
+### Chores
+
+- Bump Helm chart to v0.0.28 [skip ci]
+  ([`87d6db0`](https://github.com/tarun869/vela/commit/87d6db0b3dcc95c1c132a01f2cfa454aec5c1c95))
+
+
 ## v0.0.28 (2026-06-10)
 
 ### Chores
