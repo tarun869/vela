@@ -313,7 +313,7 @@ function UploadStage({
               <Download size={13} /> CSV template
             </button>
           </div>
-          <div style={{ padding: '0 16px 16px' }}>
+          <div style={{ paddingTop: 12 }}>
             <textarea
               className="onboard-textarea"
               placeholder={
