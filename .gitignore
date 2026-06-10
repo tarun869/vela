@@ -38,3 +38,4 @@ venv/
 
 # Generated tooling artifacts
 graphify-out/
+.vercel
